@@ -64,6 +64,19 @@ body {
 
 .item{
     /*margin-bottom: 0.5rem;*/
+    position: relative;
+}
+
+.is-current:before{
+    content: '';
+    display: block;
+    position: absolute;
+    left: -0.6rem;
+    top: 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: #ccc;
 }
 
 .item-control{
@@ -88,6 +101,30 @@ body {
     height: 0.8rem;
 }
 
+.item-progress{
+    margin-right: 1rem;
+    color: #777;
+}
+
+.progress-bar{
+    margin-top: 0;
+    border: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: transparent;
+}
+
+.progress-bar-value{
+    background: #EFEFEF;
+    height: 100%;
+}
+
 .item-desp{
     display: flex;
     align-items: center;
@@ -109,4 +146,5 @@ body {
     white-space: nowrap;
     padding-right: 1rem;
     flex: 1;
+    position: relative;
 }

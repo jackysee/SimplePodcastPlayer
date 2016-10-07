@@ -16,13 +16,13 @@ decodeFeed url =
 
 decodeItem : Json.Decoder Item
 decodeItem =
-    Json.object5 Item
+    Json.object6 Item
         ("title" := Json.string)
         ("pubDate" := jsonDate)
-        (Json.maybe ("enclosure" := decodeEnclosure))
         (Json.maybe ("link" := Json.string))
-        -- ( Json.maybe decodeGuid )
+        (Json.maybe (Json.at [ "enclosure", "url" ] Json.string))
         (Json.succeed False)
+        (Json.succeed { current = -1 , duration = -1 })
 
 
 jsonDate : Json.Decoder Time
@@ -38,16 +38,16 @@ jsonDate =
                         Json.fail "not a correct date string"
 
 
-decodeGuid : Json.Decoder String
-decodeGuid =
-    Json.oneOf
-        [ (Json.at [ "guid", "content" ] Json.string)
-        , (Json.at [ "enclosure", "url" ] Json.string)
-        ]
+-- decodeGuid : Json.Decoder String
+-- decodeGuid =
+--     Json.oneOf
+--         [ (Json.at [ "guid", "content" ] Json.string)
+--         , (Json.at [ "enclosure", "url" ] Json.string)
+--         ]
 
 
-decodeEnclosure : Json.Decoder Enclosure
-decodeEnclosure =
-    Json.object2 Enclosure
-        ("type" := Json.string)
-        ("url" := Json.string)
+-- decodeEnclosure : Json.Decoder Enclosure
+-- decodeEnclosure =
+--     Json.object2 Enclosure
+--         ("type" := Json.string)
+--         ("url" := Json.string)

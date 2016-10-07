@@ -6,29 +6,57 @@ var Elm = require('./Main.elm');
 var root  = document.getElementById('root');
 
 // var app = Elm.Main.embed(root, 'https://feeds.feedburner.com/JackysBlog');
-var app = Elm.Main.embed(root, 'http://podcast.talkonly.net/feed');
+var app = Elm.Main.embed(root,
+    JSON.parse(localStorage.getItem("model"))
+    // 'http://podcast.talkonly.net/feed'
+);
 
 
-var current;
+var sound;
 app.ports.play.subscribe(function(url){
-    if(current){
-        current.unload();
+    if(sound){
+        sound.unload();
     }
-    console.log("play file", url);
-    current = new Howl({
+    sound = new Howl({
         src:[url],
-        html5: true
+        html5: true,
+        onplay: function() {
+            requestAnimationFrame(updateProgress);
+        }
     });
-    current.play();
+    console.log("play file", url, sound);
+    sound.play();
 });
 
 
-app.ports.stop.subscribe(function() {
-    if(current){
-        current.stop();
-    }
-})
+function updateProgress(){
+    app.ports.updateProgress.send({
+        current: sound.seek(),
+        duration: sound.duration()
+    });
 
+    if(sound.playing()){
+        setTimeout(updateProgress, 1000);
+    }
+}
+
+
+app.ports.stop.subscribe(function() {
+    if(sound){
+        sound.stop();
+    }
+});
+
+app.ports.pause.subscribe(function() {
+    if(sound){
+        sound.pause();
+    }
+});
+
+app.ports.storeModel.subscribe(function(storeModel){
+    console.log(storeModel);
+    localStorage.setItem("model", JSON.stringify(storeModel));
+});
 
 
 

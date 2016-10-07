@@ -3,7 +3,7 @@ port module Main exposing (..)
 import Html exposing (div, text, input, Html, span, ul, li, button, img)
 import Html.App as App
 import Html.Events exposing (onInput, on, keyCode, onClick)
-import Html.Attributes exposing (value, placeholder, class, title, src)
+import Html.Attributes exposing (value, placeholder, class, title, src, style)
 import Json.Decode as Json exposing ((:=))
 import Http
 import String
@@ -11,10 +11,10 @@ import Task exposing (Task)
 import Time exposing (Time)
 import Models exposing (..)
 import DecodeFeed exposing (decodeFeed)
-import DateFormat exposing (format)
+import DateFormat exposing (format, formatDuration)
 
 
-main : Program (Maybe String)
+main : Program (Maybe StoreModel)
 main =
     App.programWithFlags
         { init = init
@@ -24,16 +24,30 @@ main =
         }
 
 
-init : Maybe String -> ( Model, Cmd Msg )
-init url =
-    { urlToAdd = Maybe.withDefault "" url
-    , list = []
-    , loadFeedState = Empty
-    , currentTime = 0
-    , itemsToShow = 10
-    , currentItem = Nothing
-    }
-        ! [ updateCurrentTime ]
+init : Maybe StoreModel -> ( Model, Cmd Msg )
+init storeModel =
+    case storeModel of
+        Just m ->
+            { urlToAdd = m.urlToAdd
+            , list = m.list
+            , loadFeedState = Empty
+            , currentTime = 0
+            , itemsToShow = m.itemsToShow
+            , currentItemUrl = m.currentItemUrl
+            , playerState = Stopped
+            }
+                ! [ updateCurrentTime ]
+        Nothing ->
+            { urlToAdd = "" --Maybe.withDefault "" storeModel.url
+            , list = []
+            , loadFeedState = Empty
+            , currentTime = 0
+            , itemsToShow = 10
+            , currentItemUrl = Nothing
+            , playerState = Stopped
+            }
+                ! [ updateCurrentTime ]
+
 
 
 updateCurrentTime : Cmd Msg
@@ -50,72 +64,101 @@ type Msg
     | UpdateCurrentTime Time
     | ShowMoreItem String
     | Play Item
+    | Pause Item
+    | UpdateProgress Progress
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        cmds =
-            [ updateCurrentTime ]
-    in
-        case msg of
-            SetUrl value ->
-                { model
-                    | urlToAdd = value
-                    , loadFeedState = Empty
-                }
-                    ! cmds
+        cmds = [ updateCurrentTime ]
+        (model', cmds') =
+            case msg of
+                SetUrl value ->
+                    ({ model
+                        | urlToAdd = value
+                        , loadFeedState = Empty
+                    }
+                    , cmds)
 
-            AddFeed ->
-                if List.any (\feed -> feed.url == model.urlToAdd) model.list then
-                    { model | loadFeedState = AlreadyExist } ! cmds
-                else
-                    { model | loadFeedState = Loading }
-                        ! ([ loadFeed model.urlToAdd ] ++ cmds)
+                AddFeed ->
+                    if List.any (\feed -> feed.url == model.urlToAdd) model.list then
+                        ({ model | loadFeedState = AlreadyExist }, cmds)
+                    else
+                        ({ model | loadFeedState = Loading }
+                            , [ loadFeed model.urlToAdd ] ++ cmds)
 
-            ShowMoreItem feedUrl ->
-                { model
-                    | list =
-                        List.map
+                ShowMoreItem feedUrl ->
+                    ({ model
+                        | list =
+                            List.map
+                                (\feed ->
+                                    if feed.url == feedUrl then
+                                        { feed | items = showMore model.itemsToShow feed.items }
+                                    else
+                                        feed
+                                )
+                                model.list
+                    }
+                    , cmds)
+
+                FetchFeedSucceed feed ->
+                    ({ model
+                        | list =
+                            model.list
+                                ++ [ { feed | items = showMore model.itemsToShow feed.items } ]
+                        , loadFeedState = Empty
+                        , urlToAdd = ""
+                    }
+                    , cmds)
+
+                FetchFeedFail error ->
+                    let
+                        e = Debug.log "error" error
+                    in
+                        ({ model | loadFeedState = Error }, cmds)
+
+                UpdateCurrentTime time ->
+                    ({ model | currentTime = time }, [])
+
+                Play item ->
+                    case item.url of
+                        Nothing ->
+                            (model, cmds)
+
+                        Just url ->
+                            ({ model
+                                | currentItemUrl = Just url
+                                , playerState = Playing
+                            }
+                            , [ play url ] ++ cmds)
+
+                Pause item ->
+                    ({ model | playerState = Paused } , [ pause  "" ] ++ cmds)
+
+                UpdateProgress progress ->
+                    let
+                        list = List.map
                             (\feed ->
-                                if feed.url == feedUrl then
-                                    { feed | items = showMore model.itemsToShow feed.items }
-                                else
-                                    feed
+                                { feed | items = List.map
+                                    (\item ->
+                                        if isCurrent item.url model.currentItemUrl then
+                                            { item | progress = progress }
+                                        else
+                                            item
+                                    )
+                                    feed.items
+                                }
                             )
                             model.list
-                }
-                    ! cmds
+                    in
+                        ({ model | list = list }, cmds)
 
-            FetchFeedSucceed feed ->
-                { model
-                    | list =
-                        model.list
-                            ++ [ { feed | items = showMore model.itemsToShow feed.items } ]
-                    , loadFeedState = Empty
-                    , urlToAdd = ""
-                }
-                    ! cmds
+                NoOp ->
+                    (model, [])
 
-            FetchFeedFail error ->
-                let
-                    e = Debug.log "error" error
-                in
-                    { model | loadFeedState = Error } ! []
-
-            UpdateCurrentTime time ->
-                { model | currentTime = time } ! []
-
-            Play item ->
-                case item.enclosure of
-                    Nothing ->
-                        model ! []
-
-                    Just file ->
-                        { model | currentItem = Just item } ! [ play file.url ]
-
-            NoOp ->
-                model ! []
+    in
+        model' ! (cmds' ++ [ saveModel model ] )
 
 
 showMore : Int -> List Item -> List Item
@@ -133,6 +176,18 @@ showMore num list =
         list1 ++ list2'
 
 
+isCurrent : Maybe String -> Maybe String -> Bool
+isCurrent itemUrl currentUrl =
+    case itemUrl of
+        Nothing -> False
+        Just itemUrl' ->
+            case currentUrl of
+                Nothing -> False
+                Just currentUrl' ->
+                    itemUrl' == currentUrl'
+
+
+
 view : Model -> Html Msg
 view model =
     div [ class "wrap" ]
@@ -148,7 +203,7 @@ view model =
             , viewLoadFeedState model.loadFeedState
             ]
         , ul [ class "feed" ] <|
-            List.map (viewFeed model.currentTime model.currentItem) model.list
+            List.map (viewFeed model) model.list
         ]
 
 
@@ -166,15 +221,16 @@ viewLoadFeedState state =
         ]
 
 
-viewFeed : Time -> Maybe Item -> Feed -> Html Msg
-viewFeed currentTime currentItem feed =
+viewFeed : Model -> Feed -> Html Msg
+viewFeed model feed =
     let
         items =
             List.filter (\item -> item.show) feed.items
     in
         li []
             [ div [ class "feed-title" ] [ text feed.title ]
-            , ul [] <| List.map (viewItem currentTime currentItem) items
+            , ul [] <|
+                List.map (viewItem model) items
             , if List.length items < List.length feed.items then
                 button
                     [ class "feed-show-more"
@@ -186,15 +242,22 @@ viewFeed currentTime currentItem feed =
             ]
 
 
-viewItem : Time -> Maybe Item -> Item -> Html Msg
-viewItem currentTime currentItem item =
-    li [ class "item" ]
+viewItem : Model -> Item -> Html Msg
+viewItem model item =
+    li
+        [ class ("item" ++ currentItemClass (isCurrent item.url model.currentItemUrl))
+        ]
         [ div [ class "item-desp" ]
-            [ span [ class "item-control" ]
-                [ playButton item currentItem
+            [ renderControl item model.currentItemUrl model.playerState
+            , span
+                [ class "item-title", title item.title ]
+                [ viewProgress item.progress
+                , progressBar item.progress
+                , text item.title
                 ]
-            , span [ class "item-title", title item.title ] [ text item.title ]
-            , span [ class "item-date" ] [ text <| format item.pubDate currentTime ]
+            , span [ class "item-date" ]
+                [ text <| format item.pubDate model.currentTime
+                ]
             ]
         -- , div []
         --     [ text <|
@@ -208,43 +271,75 @@ viewItem currentTime currentItem item =
         ]
 
 
-playButton: Item -> Maybe Item -> Html Msg
-playButton item currentItem =
-    case item.enclosure of
-        Just enclosure ->
-            button
-                [ class "item-control-btn"
-                , onClick (Play item)
-                ]
-                [ case currentItem of
+currentItemClass : Bool -> String
+currentItemClass flag =
+    if flag then
+        " is-current"
+    else
+        ""
+
+
+renderControl: Item -> Maybe String -> PlayerState -> Html Msg
+renderControl item currentItemUrl playerState =
+    span
+        [ class "item-control" ]
+        [ case item.url of
+            Just url ->
+                case currentItemUrl of
                     Nothing ->
-                        img [ src "assets/play.svg" ] []
+                        controlButton (Play item) "assets/play.svg"
 
-                    Just currentItem' ->
-                        if item == currentItem' then
-                            img [ src "assets/stop.svg" ] []
-                          else
-                            img [ src "assets/play.svg" ] []
+                    Just currentItemUrl'->
+                        if url == currentItemUrl' && playerState == Playing then
+                            controlButton (Pause item) "assets/pause.svg"
+                        else
+                            controlButton (Play item) "assets/play.svg"
+
+            Nothing ->
+                 div
+                    [ class "item-control-btn item-not-found"
+                    , title "no file found "
+                    ]
+                    [ text "!" ]
+        ]
+
+
+viewProgress : Progress -> Html Msg
+viewProgress progress =
+    if progress.duration == -1 then
+        text ""
+    else
+        span
+            [ class "item-progress" ]
+            [ text <| formatDuration progress.current
+                ++ "/"
+                ++ formatDuration progress.duration
+            ]
+
+
+progressBar : Progress -> Html Msg
+progressBar p =
+    if p.duration == -1 then
+        text ""
+    else
+        div
+            [ class "progress-bar" ]
+            [ div
+                [ class "progress-bar-value"
+                , style [("width", toString (p.current * 100 / p.duration) ++ "%" )]
                 ]
-
-        Nothing ->
-             div
-                [ class "item-control-btn"
-                , title "no file found "
-                ]
-                [ text "!" ]
+                []
+            ]
 
 
--- isCurrent: Item -> Item -> Bool
--- isCurrent item1 item2 =
---     let
---         id1 = Maybe.oneOf [item1.link, item1.enclosure]
---             |> Maybe.withDefault item1.title
---
---         id2 = Maybe.oneOf [item2.link, item2.enclosure]
---             |> Maybe.withDefault item2.title
---     in
---         id1 == id2
+controlButton : Msg -> String -> Html Msg
+controlButton msg url =
+    button
+        [ class "item-control-btn"
+        , onClick msg
+        ]
+        [ img [ src url ] []
+        ]
 
 
 onEnter : Msg -> Html.Attribute Msg
@@ -275,10 +370,24 @@ loadFeed url =
             |> Task.perform FetchFeedFail FetchFeedSucceed
 
 
+saveModel : Model -> Cmd Msg
+saveModel model =
+    storeModel
+        { urlToAdd = model.urlToAdd
+        , list = model.list
+        , itemsToShow = model.itemsToShow
+        , currentItemUrl = model.currentItemUrl
+        }
+
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    updateProgress UpdateProgress
 
 
 port play : String -> Cmd msg
 port stop : String -> Cmd msg
+port pause : String -> Cmd msg
+port updateProgress : (Progress -> msg) -> Sub msg
+port storeModel : StoreModel -> Cmd msg
