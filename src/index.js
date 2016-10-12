@@ -13,21 +13,37 @@ var app = Elm.Main.embed(root,
 
 
 var sound;
-app.ports.play.subscribe(function(url){
+
+function playUrl(playLoad){
+    console.log('playLoad', playLoad);
     if(sound){
         sound.unload();
     }
     sound = new Howl({
-        src:[url],
+        src:[playLoad.url],
         html5: true,
         onplay: function() {
             requestAnimationFrame(updateProgress);
         }
     });
-    console.log("play file", url, sound);
+    if(playLoad.seek !== -1){
+        sound.seek(playLoad.seek);
+    }
+    console.log("play file", playLoad.url, sound);
     sound.play();
-});
+}
 
+app.ports.play.subscribe(playUrl);
+
+// app.ports.resume.subscribe(function(url){
+//     if(sound){
+//         sound.play();
+//     }
+//     else {
+//         playUrl(url)
+//     }
+// });
+//
 
 function updateProgress(){
     app.ports.updateProgress.send({
@@ -44,6 +60,10 @@ function updateProgress(){
 app.ports.stop.subscribe(function() {
     if(sound){
         sound.stop();
+        app.ports.updateProgress.send({
+            current: sound.seek(),
+            duration: sound.duration()
+        });
     }
 });
 
@@ -54,10 +74,19 @@ app.ports.pause.subscribe(function() {
 });
 
 app.ports.storeModel.subscribe(function(storeModel){
-    console.log(storeModel);
     localStorage.setItem("model", JSON.stringify(storeModel));
 });
 
+
+app.ports.seek.subscribe(function(value){
+    if(sound){
+        sound.seek(value);
+        app.ports.updateProgress.send({
+            current: sound.seek(),
+            duration: sound.duration()
+        });
+    }
+});
 
 
 // http://www.memehk.com/podcast.php?id=8

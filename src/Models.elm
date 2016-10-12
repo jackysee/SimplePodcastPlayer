@@ -28,18 +28,29 @@ type alias Feed =
     { url : String
     , title : String
     , items : List Item
+    , state : FeedState
     }
+
 
 type alias Progress =
     { duration : Time
     , current : Time
     }
 
+
+type FeedState
+    = Normal
+    | Refreshing
+    | RefreshError
+    | HasNewItem
+
+
 type LoadFeedState
     = Empty
     | Loading
     | Error
     | AlreadyExist
+
 
 type PlayerState
     = Stopped
@@ -56,13 +67,25 @@ type alias Model =
     , currentItemUrl : Maybe String
     }
 
-
 type alias StoreModel =
     { urlToAdd : String
     -- , loadFeedState : LoadFeedState
-    , list : List Feed
+    , list : List StoreFeed
     -- , currentTime : Time
     , itemsToShow : Int
     , currentItemUrl : Maybe String
     -- , playerState : PlayerState
+    }
+
+type alias StoreFeed =
+    { url : String
+    , title : String
+    , items : List Item
+    -- , state : UpdateFeedState
+    }
+
+
+type alias PlayLoad =
+    { url : String
+    , seek : Time
     }

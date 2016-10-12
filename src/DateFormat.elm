@@ -6,18 +6,21 @@ import String
 
 formatDuration: Time -> String
 formatDuration time =
-    let
-        hour = floor (time / (60*60))
-        min = floor ((time - (toFloat hour*60*60)) / 60)
-        sec = floor (time - (toFloat hour*60*60) - (toFloat min*60))
-    in
-        (if hour > 0 then
-            (String.padLeft 2 '0' (toString hour)) ++ ":"
-        else
-            ""
-        )
-        ++ (String.padLeft 2 '0' (toString min)) ++ ":"
-        ++ (String.padLeft 2 '0' (toString sec))
+    if time < 0 then
+        "--"
+    else
+        let
+            hour = floor (time / (60*60))
+            min = floor ((time - (toFloat hour*60*60)) / 60)
+            sec = floor (time - (toFloat hour*60*60) - (toFloat min*60))
+        in
+            (if hour > 0 then
+                (String.padLeft 2 '0' (toString hour)) ++ ":"
+            else
+                ""
+            )
+            ++ (String.padLeft 2 '0' (toString min)) ++ ":"
+            ++ (String.padLeft 2 '0' (toString sec))
 
 
 format : Time -> Time -> String

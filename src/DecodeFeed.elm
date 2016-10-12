@@ -8,10 +8,11 @@ import Time exposing (Time)
 
 decodeFeed : String -> Json.Decoder Feed
 decodeFeed url =
-    Json.object3 Feed
+    Json.object4 Feed
         (Json.succeed url)
         (Json.at [ "query", "results", "rss", "channel", "title" ] Json.string)
         (Json.at [ "query", "results", "rss", "channel", "item" ] (Json.list decodeItem))
+        (Json.succeed Normal)
 
 
 decodeItem : Json.Decoder Item
