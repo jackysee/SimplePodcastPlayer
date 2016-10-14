@@ -3,17 +3,6 @@ module Models exposing (..)
 import Time exposing (Time)
 
 
-{--
-type alias Enclosure =
-    { contentType : String
-    , url : String
-    }
---}
-
-
--- , length : Time
-
-
 type alias Item =
     { title : String
     , pubDate : Time
@@ -60,6 +49,7 @@ type PlayerState
     | Paused
     | SoundLoading
 
+
 type alias Model =
     { showAddPanel : Bool
     , urlToAdd : String
@@ -72,6 +62,7 @@ type alias Model =
     , playerRate : Float
     , playerVol : Float
     , playerMute : Bool
+    , groupByFeed: Bool
     }
 
 type alias StoreModel =
@@ -86,6 +77,7 @@ type alias StoreModel =
     -- , playerState : PlayerState
     , playerVol : Float
     , playerMute : Bool
+    , groupByFeed: Bool
     }
 
 type alias StoreFeed =

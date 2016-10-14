@@ -2,8 +2,8 @@ port module Main exposing (..)
 
 import Html exposing (div, text, input, Html, span, ul, li, button, img)
 import Html.App as App
-import Html.Events exposing (onClick)
-import Html.Attributes exposing (class, src, style, classList)
+import Html.Events exposing (onClick, onCheck)
+import Html.Attributes exposing (class, src, style, classList, type', checked)
 import Task exposing (Task)
 import Time exposing (Time)
 import ListUtil exposing (dropWhile)
@@ -13,7 +13,7 @@ import Models exposing (..)
 import Msgs exposing (..)
 import Feed exposing
     ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , showMore, resetShowMore, viewFeed, hideItemsUnder )
+    , showMore, resetShowMore, viewFeed, hideItemsUnder, viewItem )
 import AddFeed exposing (viewAddFeed, addFeedButton)
 import Player exposing (viewPlayer)
 
@@ -46,6 +46,7 @@ init storeModel =
                 , playerRate = m.playerRate
                 , playerVol = m.playerVol
                 , playerMute = m.playerMute
+                , groupByFeed = m.groupByFeed
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds
@@ -62,6 +63,7 @@ init storeModel =
             , playerRate = 1
             , playerVol = toFloat 1
             , playerMute = False
+            , groupByFeed = True
             }
                 ! [ updateCurrentTime ]
 
@@ -349,6 +351,10 @@ update msg model =
                     ({ model | playerVol = percentage}
                     , [setVol percentage] ++ cmds)
 
+                SetGroupByFeed flag ->
+                    ({ model | groupByFeed = flag }, cmds)
+
+
     in
         model' ! (cmds' ++ [ saveModel model ] )
 
@@ -366,23 +372,48 @@ view model =
             [ div
                 [ class "top-control-bar"]
                 [ addFeedButton
+                , button
+                    [ class "btn btn-text"
+                    , onClick (SetGroupByFeed (not model.groupByFeed))
+                    ]
+                    [ text <|
+                        if model.groupByFeed then
+                            "ungroup by feed"
+                        else
+                            "group by feed"
+                    ]
                 ]
-            , ul [ class "feed" ]
-                (model.list
-                    |> List.sortWith
-                        (\feed1 feed2 ->
-                            let
-                                getTime = (\feed ->
-                                    ((List.head feed.items)
-                                        `Maybe.andThen`
-                                        (\f -> Just f.pubDate)
-                                    ) |> Maybe.withDefault -1
-                                )
-                            in
-                                compare (getTime feed2) (getTime feed1)
-                        )
-                    |> List.map (viewFeed model)
-                )
+            , if model.groupByFeed then
+                ul [ class "feed" ]
+                    (model.list
+                        |> List.sortWith
+                            (\feed1 feed2 ->
+                                let
+                                    getTime = (\feed ->
+                                        ((List.head feed.items)
+                                            `Maybe.andThen`
+                                            (\f -> Just f.pubDate)
+                                        ) |> Maybe.withDefault -1
+                                    )
+                                in
+                                    compare (getTime feed2) (getTime feed1)
+                            )
+                        |> List.map (viewFeed model)
+                    )
+              else
+                ul [ class "item-list" ]
+                    (model.list
+                        |> List.concatMap (\feed ->
+                                List.map (\item -> (feed.title, item)) feed.items
+                            )
+                        |> List.filter (\(title, item) -> item.show )
+                        |> List.sortBy (\(title, item) -> item.pubDate)
+                        |> List.reverse
+                        |> List.map (\(title, item) ->
+                             viewItem model (Just title) item
+                          )
+                    )
+
             , viewPlayer model
             ]
         ]
@@ -398,6 +429,7 @@ saveModel model =
         , playerRate = model.playerRate
         , playerVol = model.playerVol
         , playerMute = model.playerMute
+        , groupByFeed = model.groupByFeed
         }
 
 

@@ -1,6 +1,6 @@
 module Feed exposing
     (loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , showMore, resetShowMore, viewFeed, hideItemsUnder)
+    , showMore, resetShowMore, viewFeed, hideItemsUnder, viewItem)
 
 import Task
 import Http
@@ -194,7 +194,7 @@ viewFeed model feed =
                 -- , span [ class "feed-state" ] [ text feedState ]
                 ]
             , ul [ class "item-list" ] <|
-                (List.map (viewItem model) items)
+                (List.map (viewItem model Nothing) items)
                 ++
                     if List.length items < List.length feed.items then
                         [ li [ class "item item-more"]
@@ -210,8 +210,8 @@ viewFeed model feed =
             ]
 
 
-viewItem : Model -> Item -> Html Msg
-viewItem model item =
+viewItem : Model -> Maybe String -> Item -> Html Msg
+viewItem model feedTitle item =
     li
         [ classList
             [ ("item", True)
@@ -222,6 +222,13 @@ viewItem model item =
         , toggleItem model item
         ]
         [ renderItemState item model.currentItemUrl model.playerState
+        , case feedTitle of
+            Just title ->
+                div
+                    [ class "item-feed-title" ]
+                    [ text title ]
+            Nothing ->
+                text ""
         , div [ class "item-desp" ]
             [ div
                 [ class "item-title", title item.title ]

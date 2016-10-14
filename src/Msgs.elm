@@ -33,3 +33,4 @@ type Msg
     | HideAllUnder Item
     | SetVol Float
     | TogglePlayerMute
+    | SetGroupByFeed Bool
