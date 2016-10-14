@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 24 24">
+  <g transform="rotate(180 12 12)">
+    <rect x="0" y="0" width="6" height="15">
+      <animate attributeName="height"
+        from="2" to="2" dur="0.8s" begin="0s"
+        values="2; 24; 2" keyTimes="0; 0.5; 1" repeatCount="indefinite" />
+    </rect>
+    <rect x="9" y="0" width="6" height="20">
+      <animate attributeName="height"
+        from="2" to="2" dur="0.8s" begin="0.2s"
+        values="2; 24; 2" keyTimes="0; 0.5; 1" repeatCount="indefinite" />
+    </rect>
+    <rect x="18" y="0" width="6" height="15">
+      <animate attributeName="height"
+        from="2" to="2" dur="0.8s" begin="0.3s"
+        values="2; 24; 2" keyTimes="0; 0.5; 1" repeatCount="indefinite" />
+    </rect>
+  </g>
+</svg>
