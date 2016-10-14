@@ -15,7 +15,7 @@ currentTarget decoder =
 decodeLeftPercentage : Decoder Float
 decodeLeftPercentage =
     Decode.object2
-        (\left width -> left / width )
+        (\left width -> left / width)
         decodeLeft
         ( currentTarget ( "offsetWidth" := Decode.float ) )
 
@@ -23,17 +23,17 @@ decodeLeftPercentage =
 decodeLeft : Decoder Float
 decodeLeft =
     Decode.object2
-        (\clientX posX -> clientX + posX )
-        ( "clientX" := Decode.float )
+        (\pageX posLeft -> pageX - posLeft)
+        ( "pageX" := Decode.float )
         ( currentTarget (positionLeft 0) )
 
 
 offsetParent : a -> Decoder a -> Decoder a
 offsetParent x decoder =
     Decode.oneOf
-    [ "offsetParent" := Decode.null x
-    , "offsetParent" := decoder
-    ]
+        [ "offsetParent" := Decode.null x
+        , "offsetParent" := decoder
+        ]
 
 
 positionLeft : Float -> Decoder Float

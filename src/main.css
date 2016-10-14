@@ -7,7 +7,7 @@
 }
 
 html{
-    font-size: 14px;
+    font-size: 13px;
 }
 
 body {
@@ -17,18 +17,92 @@ body {
 }
 
 .wrap{
-    padding: 5px;
+    /*padding: 5px;*/
     padding-bottom: 0;
     display: flex;
     flex-direction: column;
     height: 100vh;
+    margin-top: 0;
+}
+
+.btn{
+    border: none;
+    background: none;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+    height: 1rem;
+    display: inline-block;
+}
+
+.btn::-moz-focus-inner{
+    border: 0;
+}
+
+.btn:focus{
+    outline: none;
+}
+
+.btn img{
+    height: 100%;
+    vertical-align: top;
+}
+
+.btn-text{
+    color: #777;
+}
+
+img[src$=svg]{
+    height: 100%;
+    vertical-align: top;
+}
+
+.top-control-bar{
+    padding:5px;
+}
+
+.add-btn{
+    font-size: 1.3rem;
+    height: 1.3rem;
+    line-height: 1.3rem;
+}
+
+.add-panel{
+    position: absolute;
+    background-color: white;
+    box-shadow: 0 0 5px #BBB;
+    width: 80vw;
+    height: 7rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    top: 0;
+    left: calc(50vw - 40vw);
+    z-index: 10;
+    transform: translateY(calc(-100% - 1rem - 5px));
+    transition:all 0.3s ease-in-out;
+}
+
+.add-panel.is-show{
+    transform: translateY(0);
+}
+
+.add-close{
+    float: right;
 }
 
 .add-feed{
-    font-size: 1.2rem;
+    margin-top: 0;
+    font-size: 1.8rem;
     width: 100%;
-    border: 1px solid #ccc;
+    /*border: 1px solid #ccc;*/
+    border: none;
+    border-bottom: 1px solid #ccc;
     color: #333;
+}
+
+.add-feed-state{
+    margin-top: 0;
+    height: 1rem;
 }
 
 .feed{
@@ -50,6 +124,7 @@ body {
     display: flex;
     white-space: nowrap;
     padding: 1rem 0.5rem 0 0.5rem;
+    align-items: center;
 }
 
 .feed-header > * {
@@ -61,17 +136,29 @@ body {
 }
 
 .feed-state{
-    width: 1rem;
-    margin-left: 5px;
-}
-
-.feed-state img {
     height: 1rem;
-    vertical-align: middle;
+    margin-left: 5px;
 }
 
 .feed-state-error{
     color: rgba(255, 0, 0, 0.4);
+}
+
+
+.feed-control{
+    display: none;
+}
+
+.feed-control.is-show{
+    display: inline-block;
+}
+
+.feed-header:hover .feed-control{
+    display: inline-block;;
+}
+
+.confirm-delete > *{
+    margin-top: 0;
 }
 
 .loading {
@@ -91,14 +178,23 @@ body {
 }
 @keyframes spin4  { to { transform: translateY( -6.0rem); } }
 
+.loading-circle{
+    min-width: 1rem;
+}
+
 
 .feed-show-more{
     margin-left: 1.5rem;
     border: none;
     background: transparent;
     padding: 0;
-    color: rgba(00, 00 , 255, 0.4);
+    /*color: rgba(00, 00 , 255, 0.4);*/
+    color: #777;
     cursor: pointer;
+}
+
+.feed-show-more:hover{
+    background: #DDD;
 }
 
 .feed ul{
@@ -117,6 +213,7 @@ body {
     padding: 0.5rem;
     display: flex;
     cursor: pointer;
+    align-items: center;
 }
 
 .item.is-error{
@@ -131,7 +228,7 @@ body {
     visibility: hidden;
 }
 
-.item:not(.is-current):hover{
+.item:not(.is-current):not(.item-more):hover{
     background: #DDD;
 }
 
@@ -156,12 +253,10 @@ body {
 .item-state{
     margin-right: 0.5rem;
     width: 1rem;
+    height: 1rem;
     text-align: center;
 }
 
-.item-state > img{
-    height: 0.8rem;
-}
 
 .item-progress{
     min-width: 8rem;
@@ -223,7 +318,8 @@ body {
 
 .player-wrap{
     height: 0rem;
-    margin: 0 -5px 0 -5px;
+    /*margin: 0 -5px 0 -5px;*/
+    margin-right: 0;
     transition: all 0.3s ease-in-out;
     overflow: hidden;
     position: relative;
@@ -255,34 +351,48 @@ body {
 
 .player-buttons{
     width: 3rem;
-    margin-top: 0.7rem;
+    margin-top: 0.3rem;
 }
 
 .player-btn{
     width: 2.5rem;
     height: 2.5rem;
     padding: 0.3rem;
-    margin: 0;
-    background: transparent;
-    border: none;
-    cursor: pointer;
 }
 
 .player-btn img {
     width: 100%;
 }
 
+.player-rate{
+    margin-top: 0.3rem;
+    width: 3rem;
+    text-align: center;
+}
+.player-rate .btn{
+    height: 1.5rem;
+}
+
 .progress{
     flex: 1;
-    overflow: hidden;
     height: 2.7rem;
+    overflow: hidden;
+    padding: 0 11px;
 }
 
 .player-progress{
     margin-left: 1rem;
     text-align: right;
+    margin-top: 0.4rem;
+    min-width: 9rem;
+}
+
+.player-close{
+    margin-left: 5px;
     margin-top: 0.7rem;
 }
+
+
 
 
 .player-title{

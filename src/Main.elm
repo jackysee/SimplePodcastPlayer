@@ -2,8 +2,8 @@ port module Main exposing (..)
 
 import Html exposing (div, text, input, Html, span, ul, li, button, img)
 import Html.App as App
-import Html.Events exposing (onInput, on, keyCode, onClick)
-import Html.Attributes exposing (value, placeholder, class, title, src, style, classList)
+import Html.Events exposing (onInput, on, keyCode, onClick, onWithOptions)
+import Html.Attributes exposing (value, placeholder, class, title, src, style, classList, id)
 import Json.Decode as Json exposing ((:=))
 import Http
 import String
@@ -12,8 +12,9 @@ import Time exposing (Time)
 import Models exposing (..)
 import DecodeFeed exposing (decodeFeed)
 import DateFormat exposing (format, formatDuration)
-import ListUtil exposing (takeWhile)
+import ListUtil exposing (takeWhile, dropWhile)
 import DecodePosition exposing (decodeLeftPercentage)
+import Dom
 
 
 main : Program (Maybe StoreModel)
@@ -33,25 +34,29 @@ init storeModel =
             let
                 feeds = List.map toFeed m.list
             in
-                { urlToAdd = m.urlToAdd
+                { showAddPanel = List.length feeds  == 0
+                , urlToAdd = m.urlToAdd
                 , list = feeds
                 , loadFeedState = Empty
                 , currentTime = 0
                 , itemsToShow = m.itemsToShow
                 , currentItemUrl = m.currentItemUrl
                 , playerState = Stopped
+                , playerRate = m.playerRate
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds
                       ]
         Nothing ->
-            { urlToAdd = "" --Maybe.withDefault "" storeModel.url
+            { showAddPanel = False
+            , urlToAdd = "" --Maybe.withDefault "" storeModel.url
             , list = []
             , loadFeedState = Empty
             , currentTime = 0
             , itemsToShow = 10
             , currentItemUrl = Nothing
             , playerState = Stopped
+            , playerRate = 1
             }
                 ! [ updateCurrentTime ]
 
@@ -62,6 +67,7 @@ toFeed storeFeed =
     , title = storeFeed.title
     , items = storeFeed.items
     , state = Normal
+    , showConfirmDelete = False
     }
 
 
@@ -92,6 +98,7 @@ type Msg
     | UpdateCurrentTime Time
     | ShowMoreItem String
     | Play Item
+    | SoundLoaded Bool
     | Pause Item
     | Stop Item
     | UpdateProgress Progress
@@ -99,6 +106,14 @@ type Msg
     | UpdateFeedFail (List Feed) Feed Http.Error
     | UpdateFeedSucceed (List Feed) Feed
     | SetProgress Float
+    | ShowAddPanel
+    | HideAddPanel
+    | ShowConfirmDeleteFeed Feed
+    | HideConfirmDeleteFeed Feed
+    | ConfirmDeleteFeed Feed
+    | ClosePlayer
+    | PlayEnd String
+    | ToggleRate
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -162,9 +177,17 @@ update msg model =
                         Just url ->
                             ({ model
                                 | currentItemUrl = Just url
-                                , playerState = Playing
+                                , playerState = SoundLoading
                             }
-                            , [ play { url = url, seek = item.progress.current} ] ++ cmds)
+                            , [ play
+                                { url = url
+                                , seek = item.progress.current
+                                , rate = model.playerRate
+                                }
+                              ] ++ cmds)
+
+                SoundLoaded loaded ->
+                    ({ model | playerState = Playing } , cmds)
 
                 Pause item ->
                     ({ model | playerState = Paused } , [ pause  "" ] ++ cmds)
@@ -176,22 +199,10 @@ update msg model =
                     , [ stop "" ] ++ cmds)
 
                 UpdateProgress progress ->
-                    let
-                        list =
-                            List.map (\feed ->
-                                { feed | items =
-                                    List.map (\item ->
-                                        if isCurrent item.url model.currentItemUrl then
-                                            { item | progress = progress }
-                                        else
-                                            item
-                                    )
-                                    feed.items
-                                }
-                            )
-                            model.list
-                    in
-                        ({ model | list = list }, cmds)
+                    ( model
+                        |> updateCurrentItem (\item -> { item | progress = progress })
+                    , cmds
+                    )
 
                 UpdateFeeds feeds feed ->
                     let
@@ -208,7 +219,7 @@ update msg model =
                             else
                                 []
                     in
-                        ( updateModelFeed model feed (\f -> { f | state = RefreshError })
+                        (updateModelFeed model feed (\f -> { f | state = RefreshError })
                         , cmds' ++ cmds)
 
                 UpdateFeedSucceed feeds feed ->
@@ -219,21 +230,137 @@ update msg model =
                             else
                                 []
                     in
-                        ( updateFeedItems model feed, cmds' ++ cmds)
+                        (updateFeedItems model feed, cmds' ++ cmds)
 
                 SetProgress percentage ->
-                    case getCurrentItem model of
-                        Nothing ->
-                            (model, cmds)
+                    let
+                        a = Debug.log "percentage" percentage
+                    in
+                        case getCurrentItem model of
+                            Nothing ->
+                                ( model, cmds )
+                            Just item' ->
+                                let
+                                    current = item'.progress.duration * percentage
+                                    progress = item'.progress
+                                    progress' = { progress | current = current }
+                                    model' = model |>
+                                        updateCurrentItem (\item -> { item | progress = progress' })
+                                in
+                                    (model' , [seek current] ++ cmds)
 
-                        Just item' ->
-                            (model, [seek (item'.progress.duration * percentage) ])
+                ShowAddPanel ->
+                    ({ model | showAddPanel = True }
+                    , [ Task.perform (\_ -> NoOp) (\_ -> NoOp) (Dom.focus "add-feed") ]
+                        ++ cmds)
+
+                HideAddPanel ->
+                    ({ model | showAddPanel = False }, cmds)
+
+                ShowConfirmDeleteFeed feed ->
+                    ( updateModelFeed model feed (\f -> { f | showConfirmDelete = True })
+                    , cmds
+                    )
+
+                HideConfirmDeleteFeed feed ->
+                    ( updateModelFeed model feed (\f -> { f | showConfirmDelete = False })
+                    , cmds
+                    )
+
+                ConfirmDeleteFeed feed ->
+                    let
+                        list = List.filter (\f -> f.url /= feed.url ) model.list
+                        currentItemDeleted = list
+                            |> List.concatMap (\feed -> feed.items)
+                            |> List.filter (\item -> isCurrent item.url model.currentItemUrl)
+                            |> List.length
+                            |> (==) 0
+                        currentItemUrl =
+                            if currentItemDeleted then
+                                Nothing
+                            else
+                                model.currentItemUrl
+                        cmds' =
+                            if currentItemDeleted then
+                                [ stop "" ]
+                            else
+                                []
+                    in
+                        ({ model
+                            | list = list
+                            , currentItemUrl = currentItemUrl
+                        }
+                        , cmds' ++ cmds
+                        )
+
+                ClosePlayer ->
+                    ({ model
+                        | playerState = Paused
+                        , currentItemUrl = Nothing
+                    }
+                    , [ pause  "" ] ++ cmds
+                    )
+
+                PlayEnd url ->
+                    let
+                        model' = updateCurrentItem
+                                    (\item ->
+                                        let
+                                            progress = item.progress
+                                            progress' = { progress | current = 0 }
+                                        in
+                                            { item | progress = progress' }
+                                    )
+                                    model
+                        nextItem = model.list
+                             |> List.concatMap (\feed -> feed.items)
+                             |> dropWhile (\item -> (Maybe.withDefault "" item.url) /= url)
+                             |> List.take 2
+                             |> List.reverse
+                             |> List.head
+                    in
+                        case nextItem of
+                            Just item' ->
+                                let
+                                    (model'', cmd') = update (Play item') model'
+                                in
+                                    (model'', [cmd'] ++ cmds)
+
+                            Nothing ->
+                                ({ model' | currentItemUrl = Nothing }, cmds)
+
+                ToggleRate ->
+                    let
+                        rate = [1, 1.2, 1.5, 2.0]
+                            |> dropWhile (\r -> r <= model.playerRate)
+                            |> List.head
+                            |> Maybe.withDefault 1
+                    in
+                        ({ model | playerRate = rate }, [ setRate rate ] ++ cmds)
 
                 NoOp ->
                     (model, [])
 
     in
         model' ! (cmds' ++ [ saveModel model ] )
+
+
+updateCurrentItem : (Item -> Item) -> Model -> Model
+updateCurrentItem updater model =
+    { model | list =
+        List.map (\feed ->
+            { feed | items =
+                List.map (\item ->
+                    if isCurrent item.url model.currentItemUrl then
+                        updater item
+                    else
+                        item
+                )
+                feed.items
+            }
+        )
+        model.list
+    }
 
 
 updateModelFeed : Model -> Feed -> (Feed -> Feed) -> Model
@@ -320,10 +447,21 @@ isCurrent itemUrl currentUrl =
 
 view : Model -> Html Msg
 view model =
-    div [ class "wrap" ]
-        [ div []
-            [ input
-                [ class "add-feed"
+    div []
+        [ div
+            [ classList
+                [ ("add-panel", True)
+                , ("is-show", model.showAddPanel)
+                ]
+            ]
+            [ button
+                [ class "btn add-close"
+                , onClick HideAddPanel
+                ]
+                [ img [ src "assets/close.svg"] [] ]
+            , input
+                [ id "add-feed"
+                , class "add-feed"
                 , onInput SetUrl
                 , onEnter AddFeed
                 , value model.urlToAdd
@@ -332,15 +470,28 @@ view model =
                 []
             , viewLoadFeedState model.loadFeedState
             ]
-        , ul [ class "feed" ] <|
-            List.map (viewFeed model) model.list
-        , viewPlayer model
+        , div
+            [ class "wrap"
+            , onClick HideAddPanel
+            ]
+            [ div
+                [ class "top-control-bar"]
+                [ button
+                    [ class "btn add-btn"
+                    , onInternalClick ShowAddPanel
+                    ]
+                    [ text "+" ]
+                ]
+            , ul [ class "feed" ] <|
+                List.map (viewFeed model) model.list
+            , viewPlayer model
+            ]
         ]
 
 
 viewLoadFeedState : LoadFeedState -> Html Msg
 viewLoadFeedState state =
-    div []
+    div [ class "add-feed-state" ]
         [ if state == Loading then
             span [] [ text "Loading feed..." ]
           else if state == Error then
@@ -348,6 +499,7 @@ viewLoadFeedState state =
           else if state == AlreadyExist then
             span [] [ text "The feed is added already." ]
           else
+            -- span [] [ text "Loading feed" ]
             text ""
         ]
 
@@ -358,21 +510,52 @@ viewFeed model feed =
         items = List.filter (\item -> item.show) feed.items
         feedState =
             case feed.state of
-                Normal ->
-                    text ""
                 Refreshing ->
-                    span [ class "feed-state" ]  [ div [ class "loading dots" ] [] ]
+                    span [ class "feed-state" ]
+                        [ img [src  "assets/loading-spin.svg" ] [] ]
                 RefreshError ->
                     span
                         [ class "feed-state feed-state-error", title "Error in updating feed" ]
                         [ img [ src "assets/exclamation.svg" ] [] ]
-                HasNewItem ->
-                    span [ class "feed-state" ] [ text "*" ]
+                _ ->
+                    text ""
+        refreshBtn =
+            case feed.state of
+                Refreshing -> text ""
+                _ ->
+                    button
+                        [ class "btn feed-control feed-refresh"
+                        , onClick (UpdateFeeds [] feed) ]
+                        [ img [ src "assets/refresh.svg" ] [] ]
+            -- span [ class "feed-state" ] [ text "*" ]
     in
         li []
             [ div [ class "feed-header" ]
                 [ span [ class "feed-title" ] [ text feed.title ]
                 , feedState
+                , refreshBtn
+                , button
+                    [ classList
+                        [ ("btn feed-control feed-trash", True) ]
+                    , onClick (ShowConfirmDeleteFeed feed)
+                    ]
+                    [ img [ src "assets/trash.svg"] [] ]
+                , if feed.showConfirmDelete then
+                    div [ class "confirm-delete feed-control" ]
+                        [ span [] [ text "Delete?" ]
+                        , button
+                            [ class "btn btn-text"
+                            , onClick (ConfirmDeleteFeed feed)
+                            ]
+                            [ text "Yes "]
+                        , button
+                            [ class "btn btn-text"
+                            , onClick (HideConfirmDeleteFeed feed)
+                            ]
+                            [ text "No" ]
+                        ]
+                  else
+                      text ""
                 -- , span [ class "feed-state" ] [ text feedState ]
                 ]
             , ul [ class "item-list" ] <|
@@ -399,7 +582,7 @@ viewItem model item =
             [ ("item", True)
             , ("is-current", isCurrent item.url model.currentItemUrl)
             , ("is-error", item.url == Nothing)
-            , ("is-unplayed", item.progress.duration == -1)
+            , ("is-unplayed", item.progress.current == -1)
             ]
         , toggleItem model item
         ]
@@ -432,7 +615,9 @@ renderItemState item currentItemUrl playerState =
     if isCurrent item.url currentItemUrl then
         div
             [ class "item-state" ]
-            [ if playerState == Playing then
+            [ if playerState == SoundLoading then
+                img [ src "assets/loading-spin.svg" ] []
+              else if playerState == Playing then
                 img [ src "assets/equalizer-playing.svg" ] []
               else
                 img [ src "assets/equalizer-stop.svg" ] []
@@ -489,6 +674,16 @@ onSetProgress tagger =
         Json.map tagger decodeLeftPercentage
 
 
+onInternalClick : Msg -> Html.Attribute Msg
+onInternalClick msg =
+    onWithOptions
+        "click"
+        { stopPropagation = True
+        , preventDefault = True
+        }
+        (Json.succeed msg)
+
+
 viewPlayer : Model -> Html Msg
 viewPlayer model =
     let
@@ -505,25 +700,22 @@ viewPlayer model =
                             [ class "player-control "]
                             [ div
                                 [ class "player-buttons" ]
-                                [ showIf (model.playerState == Stopped || model.playerState == Paused) <|
-                                    button
-                                        [ class "player-btn"
-                                        , onClick (Play item')
-                                        ]
-                                        [ img [ src "assets/play.svg" ] [] ]
-                                , showIf (model.playerState == Playing) <|
-                                    div []
-                                        [ button
-                                            [ class "player-btn"
+                                [
+                                    if model.playerState == SoundLoading then
+                                        div [ class "btn player-btn" ]
+                                            [ img [ src "assets/loading-spin.svg" ] [] ]
+                                    else if (model.playerState == Stopped || model.playerState == Paused) then
+                                        button
+                                            [ class "btn player-btn"
+                                            , onClick (Play item')
+                                            ]
+                                            [ img [ src "assets/play.svg" ] [] ]
+                                    else
+                                        button
+                                            [ class "btn player-btn"
                                             , onClick (Pause item')
                                             ]
                                             [ img [ src "assets/pause.svg" ] [] ]
-                                        -- , button
-                                        --     [ class "player-btn"
-                                        --     , onClick (Stop item')
-                                        --     ]
-                                        --     [ img [ src "assets/stop.svg" ] [] ]
-                                        ]
                                 ]
                             , div [ class "progress" ]
                                 [ div
@@ -532,12 +724,27 @@ viewPlayer model =
                                     ]
                                 , progressBar item'.progress
                                 ]
+                            , div [ class "player-rate" ]
+                                [ button
+                                    [ class "btn"
+                                    , onClick ToggleRate
+                                    ]
+                                    [ text <| (toString model.playerRate) ++ "X" ]
+                                ]
                             , div
                                 [ class "player-progress" ]
                                 [ text <|
                                     formatDuration item'.progress.current
                                     ++ "/"
                                     ++ formatDuration item'.progress.duration
+                                ]
+                            , div
+                                [ class "player-close" ]
+                                [ button
+                                    [ class "btn"
+                                    , onClick ClosePlayer
+                                    ]
+                                    [ img [ src "assets/close.svg"] [] ]
                                 ]
                             -- , div
                             --     [ class "player-title "]
@@ -611,6 +818,7 @@ saveModel model =
         , list = List.map saveFeed model.list
         , itemsToShow = model.itemsToShow
         , currentItemUrl = model.currentItemUrl
+        , playerRate = model.playerRate
         }
 
 
@@ -624,12 +832,19 @@ saveFeed feed =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    updateProgress UpdateProgress
+    Sub.batch
+        [ updateProgress UpdateProgress
+        , soundLoaded SoundLoaded
+        , playEnd PlayEnd
+        ]
 
 
 port play : PlayLoad -> Cmd msg
 port stop : String -> Cmd msg
 port pause : String -> Cmd msg
 port updateProgress : (Progress -> msg) -> Sub msg
+port soundLoaded : (Bool -> msg) -> Sub msg
 port storeModel : StoreModel -> Cmd msg
 port seek : Float -> Cmd msg
+port playEnd: (String -> msg) -> Sub msg
+port setRate : Float -> Cmd msg

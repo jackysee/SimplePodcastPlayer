@@ -20,4 +20,3 @@ dropWhile predicate list =
                 dropWhile predicate xs
             else
                 list
-                

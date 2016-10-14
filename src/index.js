@@ -24,10 +24,29 @@ function playUrl(playLoad){
         html5: true,
         onplay: function() {
             requestAnimationFrame(updateProgress);
+        },
+        onload: function(){
+            app.ports.soundLoaded.send(true);
+        },
+        onend: function(){
+            console.log( 'end, state = ', sound ? sound.state() : 'no sound' );
+            if(sound && sound.state() == "loading"){
+                console.log( 'end called when loading' );
+                return;
+            }
+            if(sound){
+                console.log('playnext');
+                app.ports.playEnd.send(sound._src);
+                sound.unload();
+                sound = undefined;
+            }
         }
     });
     if(playLoad.seek !== -1){
         sound.seek(playLoad.seek);
+    }
+    if(playLoad.rate){
+        sound.rate(playLoad.rate);
     }
     console.log("play file", playLoad.url, sound);
     sound.play();
@@ -35,41 +54,38 @@ function playUrl(playLoad){
 
 app.ports.play.subscribe(playUrl);
 
-// app.ports.resume.subscribe(function(url){
-//     if(sound){
-//         sound.play();
-//     }
-//     else {
-//         playUrl(url)
-//     }
-// });
-//
-
+var updateProgressTimer;
 function updateProgress(){
+    if(!sound){
+        return;
+    }
     app.ports.updateProgress.send({
         current: sound.seek(),
         duration: sound.duration()
     });
 
     if(sound.playing()){
-        setTimeout(updateProgress, 1000);
+        updateProgressTimer = setTimeout(updateProgress, 1000);
     }
 }
 
 
 app.ports.stop.subscribe(function() {
     if(sound){
-        sound.stop();
+        clearTimeout(updateProgressTimer);
         app.ports.updateProgress.send({
             current: sound.seek(),
             duration: sound.duration()
         });
+        sound.unload();
+        sound = undefined;
     }
 });
 
 app.ports.pause.subscribe(function() {
     if(sound){
         sound.pause();
+        clearTimeout(updateProgressTimer);
     }
 });
 
@@ -87,6 +103,12 @@ app.ports.seek.subscribe(function(value){
         });
     }
 });
+
+app.ports.setRate.subscribe(function(rate) {
+    if(sound){
+        sound.rate(rate);
+    }
+})
 
 
 // http://www.memehk.com/podcast.php?id=8

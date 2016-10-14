@@ -1,8 +1,9 @@
-module DateFormat exposing (format, formatDuration)
+module DateFormat exposing (format, formatDuration, parseDuration)
 
 import Date exposing (..)
 import Time exposing (Time)
 import String
+import Result
 
 formatDuration: Time -> String
 formatDuration time =
@@ -21,6 +22,24 @@ formatDuration time =
             )
             ++ (String.padLeft 2 '0' (toString min)) ++ ":"
             ++ (String.padLeft 2 '0' (toString sec))
+
+
+parseDuration : String -> Result String Time
+parseDuration str =
+    let
+        list = String.split ":" str
+            |> List.map String.toFloat
+            |> List.reverse
+            |> List.map2
+                (\seconds part -> Result.map2 (*) seconds part)
+                [Ok 1, Ok 60, Ok 3600]
+        sum = (\list' ->
+            case list' of
+                [] -> Ok 0
+                x::xs -> Result.map2 (+) x (sum xs)
+        )
+    in
+        sum list
 
 
 format : Time -> Time -> String

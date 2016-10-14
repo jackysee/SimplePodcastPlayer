@@ -29,6 +29,7 @@ type alias Feed =
     , title : String
     , items : List Item
     , state : FeedState
+    , showConfirmDelete : Bool
     }
 
 
@@ -56,24 +57,29 @@ type PlayerState
     = Stopped
     | Playing
     | Paused
+    | SoundLoading
 
 type alias Model =
-    { urlToAdd : String
+    { showAddPanel : Bool
+    , urlToAdd : String
     , loadFeedState : LoadFeedState
     , playerState : PlayerState
     , list : List Feed
     , currentTime : Time
     , itemsToShow : Int
     , currentItemUrl : Maybe String
+    , playerRate : Float
     }
 
 type alias StoreModel =
+    -- { showAddPanel : Bool
     { urlToAdd : String
     -- , loadFeedState : LoadFeedState
     , list : List StoreFeed
     -- , currentTime : Time
     , itemsToShow : Int
     , currentItemUrl : Maybe String
+    , playerRate : Float
     -- , playerState : PlayerState
     }
 
@@ -88,4 +94,5 @@ type alias StoreFeed =
 type alias PlayLoad =
     { url : String
     , seek : Time
+    , rate : Float
     }
