@@ -48,6 +48,13 @@ function playUrl(playLoad){
     if(playLoad.rate){
         sound.rate(playLoad.rate);
     }
+    if(playLoad.vol){
+        sound.volume(playLoad.vol);
+    }
+    if(playLoad.muted){
+        sound.mute(true);
+    }
+
     console.log("play file", playLoad.url, sound);
     sound.play();
 }
@@ -108,8 +115,23 @@ app.ports.setRate.subscribe(function(rate) {
     if(sound){
         sound.rate(rate);
     }
-})
+});
 
+app.ports.openNewLink.subscribe(function(url){
+    window.open(url, '_blank');
+});
+
+app.ports.setVol.subscribe(function(vol) {
+    if(sound){
+        sound.volume(vol);
+    }
+});
+
+app.ports.setMute.subscribe(function(muted) {
+    if(sound){
+        sound.mute(muted);
+    }
+});
 
 // http://www.memehk.com/podcast.php?id=8
 // http://feeds.soundcloud.com/users/soundcloud:users:62921190/sounds.rss

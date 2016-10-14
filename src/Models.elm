@@ -21,6 +21,7 @@ type alias Item =
     , url: Maybe String
     , show : Bool
     , progress : Progress
+    , playCount : Int
     }
 
 
@@ -69,6 +70,8 @@ type alias Model =
     , itemsToShow : Int
     , currentItemUrl : Maybe String
     , playerRate : Float
+    , playerVol : Float
+    , playerMute : Bool
     }
 
 type alias StoreModel =
@@ -81,6 +84,8 @@ type alias StoreModel =
     , currentItemUrl : Maybe String
     , playerRate : Float
     -- , playerState : PlayerState
+    , playerVol : Float
+    , playerMute : Bool
     }
 
 type alias StoreFeed =
@@ -95,4 +100,36 @@ type alias PlayLoad =
     { url : String
     , seek : Time
     , rate : Float
+    , vol : Float
+    }
+
+
+isCurrent : Maybe String -> Model -> Bool
+isCurrent itemUrl model =
+    (Maybe.map2 (==) itemUrl model.currentItemUrl) == Just True
+
+
+getCurrentItem : Model -> Maybe Item
+getCurrentItem model =
+    model.list
+        |> List.concatMap (\feed -> feed.items)
+        |> List.filter (\item -> isCurrent item.url model)
+        |> List.head
+
+
+updateCurrentItem : (Item -> Item) -> Model -> Model
+updateCurrentItem updater model =
+    { model | list =
+        List.map (\feed ->
+            { feed | items =
+                List.map (\item ->
+                    if isCurrent item.url model then
+                        updater item
+                    else
+                        item
+                )
+                feed.items
+            }
+        )
+        model.list
     }

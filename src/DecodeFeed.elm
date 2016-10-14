@@ -1,7 +1,10 @@
 module DecodeFeed exposing (decodeFeed)
 
-import Models exposing (..)
 import Json.Decode as Json exposing ((:=))
+import Json.Decode.Pipeline exposing
+    ( decode, required, hardcoded, requiredAt, custom, nullable
+    , optional )
+import Models exposing (..)
 import Date exposing (Date)
 import Time exposing (Time)
 import DateFormat exposing (parseDuration)
@@ -9,46 +12,44 @@ import DateFormat exposing (parseDuration)
 
 decodeFeed : String -> Json.Decoder Feed
 decodeFeed url =
-    Json.object5 Feed
-        (Json.succeed url)
-        (Json.at [ "query", "results", "rss", "channel", "title" ] Json.string)
-        (Json.at [ "query", "results", "rss", "channel", "item" ] (Json.list decodeItem))
-        (Json.succeed Normal)
-        (Json.succeed False)
+    decode Feed
+        |> hardcoded url
+        |> requiredAt ["query", "results", "rss", "channel", "title"] Json.string
+        |> requiredAt ["query", "results", "rss", "channel", "item"] (Json.list decodeItem)
+        |> hardcoded Normal
+        |> hardcoded False
 
 
 decodeItem : Json.Decoder Item
 decodeItem =
-    Json.object6 Item
-        ("title" := Json.string)
-        ("pubDate" := jsonDate)
-        (Json.maybe ("link" := Json.string))
-        (Json.oneOf
+    decode Item
+        |> required "title" Json.string
+        |> required "pubDate" jsonDate
+        |> custom (Json.maybe ("link" := Json.string))
+        |> custom decodeEnclosure
+        |> hardcoded False
+        |> custom (
+            decode Progress
+                |> optional "duration" decodeDuration -1
+                |> hardcoded -1
+        )
+        |> hardcoded 0
+
+decodeEnclosure : Json.Decoder (Maybe String)
+decodeEnclosure =
+    Json.maybe
+        ( Json.oneOf
             [ (Json.at ["enclosure", "url"] Json.string)
+            , ("enclosure" := Json.list ("url" := Json.string))
                 `Json.andThen`
-                (\url -> Json.succeed (Just url))
-            , ("enclosure" := Json.list
-                ( Json.maybe ("url" := Json.string))
-              )
-              `Json.andThen`
                 (\list ->
-                    case List.head (Debug.log "list" list)  of
+                    case List.head list of
                         Just first ->
                             Json.succeed first
                         Nothing ->
-                            Json.fail "fail to get enclosures"
-                )
-             , Json.succeed Nothing
+                            Json.fail  "cannot get enclosure"
+                 )
             ]
-        )
-        (Json.succeed False)
-        (Json.object2 Progress
-            (Json.oneOf
-                [ "duration" := decodeDuration
-                , Json.succeed -1
-                ]
-            )
-            (Json.succeed -1)
         )
 
 jsonDate : Json.Decoder Time
@@ -73,18 +74,3 @@ decodeDuration =
                     Json.succeed value
                 Err error ->
                     Json.fail "not a correct duration"
-
-
--- decodeGuid : Json.Decoder String
--- decodeGuid =
---     Json.oneOf
---         [ (Json.at [ "guid", "content" ] Json.string)
---         , (Json.at [ "enclosure", "url" ] Json.string)
---         ]
-
-
--- decodeEnclosure : Json.Decoder Enclosure
--- decodeEnclosure =
---     Json.object2 Enclosure
---         ("type" := Json.string)
---         ("url" := Json.string)

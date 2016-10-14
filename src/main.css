@@ -16,6 +16,11 @@ body {
   color: #333;
 }
 
+.app-wrap{
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 .wrap{
     /*padding: 5px;*/
     padding-bottom: 0;
@@ -257,12 +262,27 @@ img[src$=svg]{
     text-align: center;
 }
 
+.item-control{
+    display: none;
+}
+
+.item:hover .item-control{
+    display: flex
+}
+
+.item-control .btn{
+    vertical-align: middle;
+    margin-top: 0;
+}
+
 
 .item-progress{
-    min-width: 8rem;
+    min-width: 5rem;
     text-align: right;
     color: #333;
 }
+
+
 
 .progress-bar{
     margin-top: 0;
@@ -275,7 +295,7 @@ img[src$=svg]{
 }
 
 .progress-bar-value{
-    background: #666;
+    background: black;
     height: 100%;
     position: relative;
 }
@@ -291,7 +311,7 @@ img[src$=svg]{
     right: -0.5rem;
     top: -0.225rem;
     z-index: 1;
-    background: #666;
+    background: black;
 }
 
 .item-desp{
@@ -350,8 +370,9 @@ img[src$=svg]{
 }
 
 .player-buttons{
-    width: 3rem;
+    /*width: 3rem;*/
     margin-top: 0.3rem;
+    position: relative;
 }
 
 .player-btn{
@@ -369,6 +390,7 @@ img[src$=svg]{
     width: 3rem;
     text-align: center;
 }
+
 .player-rate .btn{
     height: 1.5rem;
 }
@@ -392,14 +414,31 @@ img[src$=svg]{
     margin-top: 0.7rem;
 }
 
+.player-vol{
+    display: flex;
+    align-items: center;
+}
 
+.player-vol-bar{
+    width: 0;
+    overflow: hidden;
+    margin-top: 5px;
+    transition: width 0.3s ease-in-out;
+}
 
+.player-vol-bar .progress-bar{
+    width: calc(5rem - 20px);
+    margin: 5px 10px;
+}
+
+.player-vol:hover .player-vol-bar{
+    width: 5rem;
+}
 
 .player-title{
     overflow: hidden;
     margin-bottom: 0.3rem;
 }
-
 
 .player-title-text{
     overflow: hidden;
