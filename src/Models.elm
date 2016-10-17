@@ -8,7 +8,6 @@ type alias Item =
     , pubDate : Time
     , link : Maybe String
     , url: Maybe String
-    , show : Bool
     , progress : Progress
     , playCount : Int
     }

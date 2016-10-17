@@ -1,0 +1,36 @@
+
+* {
+    box-sizing: border-box;
+}
+
+* + *{
+    margin-top: 1.5em;
+}
+
+html{
+    font-size: 18px;
+}
+
+body {
+  margin: 0;
+  font-family:  Pingfang SC,Lantinghei SC,Microsoft YaHei New,Microsoft Yahei,\\5FAE软雅黑,arial,sans-serif;
+  color: #333;
+}
+
+.app-wrap{
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+.wrap{
+    /*padding: 5px;*/
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin-top: 0;
+}
+
+.top-control-bar{
+    padding:5px;
+}

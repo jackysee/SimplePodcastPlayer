@@ -11,7 +11,7 @@ type Msg
     | FetchFeedSucceed Feed
     | FetchFeedFail Http.Error
     | UpdateCurrentTime Time
-    | ShowMoreItem Feed
+    -- | ShowMoreItem Feed
     | Play Item
     | SoundLoaded Bool
     | Pause Item
@@ -30,7 +30,7 @@ type Msg
     | PlayEnd String
     | ToggleRate
     | OpenNewLink String
-    | HideAllUnder Item
+    -- | HideAllUnder Item
     | SetVol Float
     | TogglePlayerMute
     | SetGroupByFeed Bool

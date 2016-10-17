@@ -1,0 +1,143 @@
+
+.player-wrap{
+    height: 0rem;
+    margin-right: 0;
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 4px #CCC;
+    border: 1px solid #ccc;
+    margin-top: 0;
+}
+
+$player-height: 4.5rem;
+
+.player-wrap.is-show{
+    height: $player-height;
+}
+
+.player{
+    height: $player-height;
+    /*margin-top: 5px;*/
+    margin:0 5px 0 5px;
+    padding: 1rem;
+}
+
+.player-control{
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.player-control > *{
+    margin-top :0;
+}
+
+.player-buttons{
+    /*width: 3rem;*/
+    // margin-top: 0.3rem;
+    position: relative;
+}
+
+.player-btn{
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.3rem;
+}
+
+.player-btn img {
+    width: 100%;
+}
+
+.player-rate{
+    // margin-top: 0.3rem;
+    width: 4rem;
+    text-align: center;
+}
+
+.player-rate .btn{
+    // height: 1.5rem;
+    font-size: 1rem;
+}
+
+.progress{
+    position: relative;
+    flex: 1;
+    margin-top: 0.2rem;
+}
+
+.player-progress{
+    margin-left: 1rem;
+    text-align: right;
+    /*margin-top: 0.4rem;*/
+    min-width: 4rem;
+    // height: 1rem;
+    vertical-align: middle;
+}
+
+.player-close{
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 0.2rem;
+}
+
+.player-vol{
+    display: flex;
+    align-items: center;
+}
+
+.player-vol-bar{
+    width: 0;
+    overflow: hidden;
+    margin-top: 5px;
+    transition: width 0.3s ease-in-out;
+}
+
+.player-vol-bar .progress-bar{
+    width: calc(5rem - 20px);
+    margin: 5px 10px;
+}
+
+.player-vol:hover .player-vol-bar{
+    width: 5rem;
+}
+
+.player-title{
+    overflow: hidden;
+    position: absolute;
+    top: -1.2rem;
+    width: 100%;
+}
+
+.player-title-text{
+    overflow: hidden;
+    font-size: 0.85rem;
+    color: #555;
+    position: relative;
+}
+
+.marquee-text{
+    position: relative;
+    display: inline-block;
+    width: auto;
+    white-space: nowrap;
+}
+
+.marquee-text.is-playing{
+    transform: translateX(-50%);
+    left: 50%;
+    animation: 20s linear infinite marquee;
+}
+
+@keyframes marquee{
+    from {
+        transform: translateX(0);
+        left: 100%;
+    }
+    to {
+        transform: translateX(-100%);
+        left: 0%;
+    }
+}

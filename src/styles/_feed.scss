@@ -1,0 +1,180 @@
+
+.feed{
+    list-style: none;
+    padding: 0;
+    flex: 1;
+    margin-top: 0;
+    margin-bottom: 0;
+    overflow: auto;
+}
+
+.feed > li{
+    /*border: 1px solid #ccc;*/
+    margin-top: 0;
+}
+
+
+.feed-header{
+    display: flex;
+    white-space: nowrap;
+    padding: 1rem 0.5rem 0 0.5rem;
+    align-items: center;
+}
+
+.feed-header > * {
+    margin-top: 0;
+}
+
+.feed-title{
+    font-weight: 600;
+    margin-right: 1rem;
+}
+
+.feed-state{
+    height: 1rem;
+    margin-left: 5px;
+}
+
+.feed-state-error{
+    color: rgba(255, 0, 0, 0.4);
+}
+
+
+.feed-control{
+    display: none;
+}
+
+.feed-control.is-show{
+    display: inline-block;
+}
+
+.feed-header:hover .feed-control{
+    display: inline-block;;
+}
+
+.confirm-delete{
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+}
+
+.confirm-delete > *{
+    margin-top: 0;
+}
+
+.confirm-delete .btn{
+    margin-left: 0.5rem;
+}
+
+.feed-show-more{
+    margin-left: 1.5rem;
+    border: none;
+    background: transparent;
+    padding: 0;
+    /*color: rgba(00, 00 , 255, 0.4);*/
+    /* color: #777; */
+    cursor: pointer;
+    font-size: 100%;
+}
+
+.item-list{
+    list-style: none;
+    padding: 0;
+    padding-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.5rem;
+    flex: 1;
+    overflow: auto;
+    margin-bottom: 0;
+}
+
+.item{
+    position: relative;
+    margin: 0;
+    padding: 0.5rem;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+}
+
+.item.is-error{
+    color: rgba(255, 0, 0, 0.4);
+}
+
+.item.is-unplayed .item-title{
+    font-weight: bold;
+}
+
+.item:not(.is-current):not(.is-error) .item-state{
+    visibility: hidden;
+}
+
+.item:not(.is-current):not(.item-more):hover{
+    background: #DDD;
+}
+
+.item:not(.is-current):hover .item-state{
+    visibility: visible;
+}
+
+
+.item > * {
+    margin-top: 0;
+    margin-right: 1rem;
+}
+
+.item > *:last-child{
+    margin-right: 0;
+}
+
+.is-current{
+    background: #F5F5F5;
+}
+
+.item-state{
+    margin-right: 0.5rem;
+    width: 1rem;
+    height: 1rem;
+    text-align: center;
+}
+
+.item-control{
+    display: none;
+}
+
+.item:hover .item-control{
+    display: flex
+}
+
+.item-control .btn{
+    vertical-align: middle;
+    margin-top: 0;
+}
+
+.item-progress{
+    min-width: 5rem;
+    text-align: right;
+}
+
+.item-desp{
+    min-height: 1.5rem;
+    margin: top;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item-date{
+    text-align: right;
+    min-width : 5rem;
+}
+
+.item-title{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 1rem;
+    flex: 1;
+    position: relative;
+}

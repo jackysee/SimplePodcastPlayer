@@ -1,4 +1,5 @@
-require('./main.css');
+//require('./main.css');
+require('./styles/main.scss')
 
 require('howler'); //Howl
 var Elm = require('./Main.elm');

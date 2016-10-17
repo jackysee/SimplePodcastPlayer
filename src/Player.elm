@@ -1,36 +1,55 @@
 module Player exposing (viewPlayer)
 
-import Html exposing (Html, text, div, img, button)
-import Html.Attributes exposing (class, style, src, classList)
-import Html.Events exposing (on, onClick)
-import Json.Decode as Json
+import Html exposing (Html, text, div, img, button, input)
+import Html.Attributes exposing (class, style, src, classList, type', min, max, value)
+import Html.Events exposing (on, onClick, onInput)
 
-import DecodePosition exposing (decodeLeftPercentage)
 import Models exposing (..)
 import Msgs exposing (..)
 import DateFormat exposing (formatDuration)
+import String
+
+range: Float -> Float -> Float -> Float -> (Float -> msg) -> Html msg
+range min max step value' msg =
+    let
+        percentage = value' * 100 / max
+    in
+        div
+            [ class "range-wrap" ]
+            [ input
+                [ type' "range"
+                , Html.Attributes.min (toString min)
+                , Html.Attributes.max (toString max)
+                , Html.Attributes.step (toString step)
+                , value (toString value')
+                , onInput (setFloat msg)
+                ]
+                []
+            , div
+                [ class "range-progress"
+                , style
+                    [("width"
+                    , "calc((100% - 4px) * " ++ toString (percentage / 100) ++ ")"
+                    )]
+                ]
+                []
+            ]
+
 
 progressBar : Progress -> Html Msg
 progressBar p =
     if p.duration == -1 then
         text ""
     else
-        div
-            [ class "progress-bar"
-            , onSetProgress SetProgress
-            ]
-            [ div
-                [ class "progress-bar-value"
-                , style [("width", toString (p.current * 100 / p.duration) ++ "%" )]
-                ]
-                []
-            ]
+        range 0 p.duration 1 p.current SetProgress
 
 
-onSetProgress : (Float -> Msg) -> Html.Attribute Msg
-onSetProgress tagger =
-    on "mouseup" <|
-        Json.map tagger decodeLeftPercentage
+setFloat: (Float -> msg) -> String -> msg
+setFloat msg' input =
+    input
+        |> String.toFloat
+        |> Result.withDefault 0
+        |> msg'
 
 
 getCurrentItem : Model -> Maybe Item
@@ -103,24 +122,13 @@ viewPlayer model =
                                     ]
                                 , div
                                     [ class "player-vol-bar" ]
-                                    [ div
-                                        [ class "progress-bar"
-                                        , onSetProgress SetVol
-                                        ]
-                                        [ div
-                                            [ class "progress-bar-value"
-                                            , style [("width", toString (model.playerVol * 100) ++ "%" )]
-                                            ]
-                                            []
-                                        ]
+                                    [ range 0 1 0.01 model.playerVol SetVol
                                     ]
                                 ]
                             , div
                                 [ class "player-progress" ]
-                                [ text <|
-                                    formatDuration item'.progress.current
-                                    ++ "/"
-                                    ++ formatDuration item'.progress.duration
+                                [ text <| "-"
+                                    ++ formatDuration (item'.progress.duration - item'.progress.current)
                                 ]
                             , div
                                 [ class "player-close" ]

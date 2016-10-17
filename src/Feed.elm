@@ -1,6 +1,10 @@
 module Feed exposing
     (loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , showMore, resetShowMore, viewFeed, hideItemsUnder, viewItem)
+    , viewFeed , viewItem
+    -- , showMore
+    -- , resetShowMore
+    -- , hideItemsUnder
+    )
 
 import Task
 import Http
@@ -12,7 +16,7 @@ import Html.Attributes exposing (class, title, src, classList)
 import Models exposing (..)
 import Msgs exposing (..)
 import DecodeFeed exposing (decodeFeed)
-import ListUtil exposing (takeWhile, dropWhile)
+-- import ListUtil exposing (takeWhile, dropWhile)
 import DateFormat exposing (formatDuration, format)
 import Events exposing (onInternalClick)
 
@@ -69,12 +73,12 @@ updateFeedItems model newFeed =
 
                             Just head' ->
                                 newFeed.items
-                                    |> takeWhile (\item ->
-                                        case Maybe.map2 (/=) item.url head'.url of
-                                            Nothing -> False
-                                            Just notEqual -> notEqual
-                                    )
-                                    |> List.map (\item -> { item | show = True })
+                                    -- |> takeWhile (\item ->
+                                    --     case Maybe.map2 (/=) item.url head'.url of
+                                    --         Nothing -> False
+                                    --         Just notEqual -> notEqual
+                                    -- )
+                                    -- |> List.map (\item -> { item | show = True })
                 in
                     updateModelFeed
                         { feed'
@@ -91,47 +95,47 @@ updateFeedItems model newFeed =
                 model
 
 
-showMore : Int -> List Item -> List Item
-showMore num list =
-    let
-        ( list1, list2 ) =
-            List.partition (\item -> item.show) list
-
-        list2' =
-            (List.take num list2
-                |> List.map (\item -> { item | show = True })
-            )
-                ++ List.drop num list2
-    in
-        list1 ++ list2'
-
-
-resetShowMore : Int -> List Item -> List Item
-resetShowMore num list =
-    (List.take num list
-        |> List.map (\item -> { item | show = True })
-    )
-    ++
-    (List.drop num list
-        |> List.map (\item -> { item | show = False })
-    )
+-- showMore : Int -> List Item -> List Item
+-- showMore num list =
+--     let
+--         ( list1, list2 ) =
+--             List.partition (\item -> item.show) list
+--
+--         list2' =
+--             (List.take num list2
+--                 |> List.map (\item -> { item | show = True })
+--             )
+--                 ++ List.drop num list2
+--     in
+--         list1 ++ list2'
 
 
-hideItemsUnder : Item -> List Item -> List Item
-hideItemsUnder item list =
-    let
-        predicate = \i -> not (maybeEqual item.url i.url)
-        list1 = takeWhile predicate list
-        list2 = dropWhile predicate list
-        -- (list1', list2') =
-        --     case list2 of
-        --         [] ->
-        --             (list1, [])
-        --         x::xs ->
-        --             (list1 ++ [x], xs)
-    in
-        -- list1' ++ (List.map (\i -> { i | show = False }) list2')
-        list1 ++ (List.map (\i -> { i | show = False }) list2)
+-- resetShowMore : Int -> List Item -> List Item
+-- resetShowMore num list =
+--     (List.take num list
+--         |> List.map (\item -> { item | show = True })
+--     )
+--     ++
+--     (List.drop num list
+--         |> List.map (\item -> { item | show = False })
+--     )
+--
+--
+-- hideItemsUnder : Item -> List Item -> List Item
+-- hideItemsUnder item list =
+--     let
+--         predicate = \i -> not (maybeEqual item.url i.url)
+--         list1 = takeWhile predicate list
+--         list2 = dropWhile predicate list
+--         -- (list1', list2') =
+--         --     case list2 of
+--         --         [] ->
+--         --             (list1, [])
+--         --         x::xs ->
+--         --             (list1 ++ [x], xs)
+--     in
+--         -- list1' ++ (List.map (\i -> { i | show = False }) list2')
+--         list1 ++ (List.map (\i -> { i | show = False }) list2)
 
 
 maybeEqual : Maybe a -> Maybe a -> Bool
@@ -142,7 +146,7 @@ maybeEqual a b =
 viewFeed : Model -> Feed -> Html Msg
 viewFeed model feed =
     let
-        items = List.filter (\item -> item.show) feed.items
+        items = feed.items -- List.filter (\item -> item.show) feed.items
         feedState =
             case feed.state of
                 Refreshing ->
@@ -176,18 +180,22 @@ viewFeed model feed =
                     ]
                     [ img [ src "assets/trash.svg"] [] ]
                 , if feed.showConfirmDelete then
-                    div [ class "confirm-delete feed-control" ]
-                        [ span [] [ text "Delete?" ]
-                        , button
-                            [ class "btn btn-text"
-                            , onClick (ConfirmDeleteFeed feed)
+                    div
+                        [ class "feed-control" ]
+                        [ div
+                            [ class "confirm-delete feed-control" ]
+                            [ span [] [ text "Delete?" ]
+                            , button
+                                [ class "btn btn-text"
+                                , onClick (ConfirmDeleteFeed feed)
+                                ]
+                                [ text "Yes "]
+                            , button
+                                [ class "btn btn-text"
+                                , onClick (HideConfirmDeleteFeed feed)
+                                ]
+                                [ text "No" ]
                             ]
-                            [ text "Yes "]
-                        , button
-                            [ class "btn btn-text"
-                            , onClick (HideConfirmDeleteFeed feed)
-                            ]
-                            [ text "No" ]
                         ]
                   else
                       text ""
@@ -199,8 +207,8 @@ viewFeed model feed =
                     if List.length items < List.length feed.items then
                         [ li [ class "item item-more"]
                             [ button
-                                [ class "feed-show-more"
-                                , onClick (ShowMoreItem feed)
+                                [ class "btn btn-text feed-show-more"
+                                -- , onClick (ShowMoreItem feed)
                                 ]
                                 [ text "...more" ]
                             ]
@@ -248,7 +256,7 @@ viewItem model feedTitle item =
             , button
                 [ class "btn"
                 , title "Hide item and items below"
-                , onInternalClick (HideAllUnder item)
+                -- , onInternalClick (HideAllUnder item)
                 ]
                 [ img [ src "assets/arrow-down.svg" ] [] ]
             ]
