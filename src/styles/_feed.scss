@@ -19,6 +19,7 @@
     white-space: nowrap;
     padding: 1rem 0.5rem 0 0.5rem;
     align-items: center;
+    position: relative;
 }
 
 .feed-header > * {
@@ -216,4 +217,10 @@
 }
 .item-feed-title:hover{
     text-decoration: underline;
+}
+
+.status{
+    margin: 0;
+    position: absolute;
+    right: 0;
 }

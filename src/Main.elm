@@ -346,6 +346,82 @@ view model =
         feed' = model.list
             |> List.filter (\f -> Just f.url == model.showFeedUrl)
             |> List.head
+        title' =
+            case feed' of
+                Just feed ->
+                    div 
+                        []
+                        [ viewFeedTitle model feed
+                        ]
+
+                Nothing ->
+                    div
+                        [ class "feed-header" ]
+                        [ addFeedButton
+                        , div
+                            [ class "feed-title" ]
+                            [ if List.length model.list == 0 then
+                                span
+                                    [ class "feed-empty" ]
+                                    [ text "← Click to add feed" ]
+                              else
+                                text "All"
+                            ]
+                        , div 
+                            [ class "status" ]
+                            [ text "status" ]
+                        ]
+        filterBar =
+            if List.length model.list > 0 then
+                div
+                    [ class "feed-filter" ]
+                    [ filterButton "All" All model.itemFilter
+                    , filterButton "Unlistened" Unlistened model.itemFilter
+                    , filterButton "Listening" Listening model.itemFilter
+                    ]
+            else 
+                text ""
+        itemlist' =
+            case feed' of
+                Just feed ->
+                    div
+                        [ class "item-list-wrap" ]
+                        [ ul [ class "item-list" ]
+                            (feed.items
+                                |> List.filter (filterByItemFilter model.itemFilter)
+                                |> List.map (viewItem model Nothing)
+                            )
+                        ]
+
+                Nothing ->
+                    let
+                        (list, hasMoreItem) = itemList model
+                    in
+                        div
+                            [ class "item-list-wrap" ]
+                            [ if List.length list == 0 then
+                                div
+                                    [ class "item-empty" ]
+                                    [ text "This list is empty." ]
+                            else
+                                ul
+                                    [ class "item-list"]
+                                    ( List.map (\(feed, item) ->
+                                         viewItem model (Just feed) item
+                                      ) list
+                                    )
+                            , if hasMoreItem then
+                                div
+                                    [ class "feed-show-more" ]
+                                    [ button
+                                        [ class "btn btn-text"
+                                        , onClick ShowMoreItem
+                                        ]
+                                        [ text "show more"]
+                                    ]
+                              else
+                                  text ""
+                            ]
     in
         div [ class "app-wrap" ]
             [ viewAddFeed model
@@ -355,71 +431,10 @@ view model =
                 ]
                 [ div
                     [ class "top-bar"]
-                    [ case feed' of
-                        Just feed ->
-                            viewFeedTitle model feed
-
-                        Nothing ->
-                            div
-                                [ class "feed-header" ]
-                                [ addFeedButton
-                                , div
-                                    [ class "feed-title" ]
-                                    [ if List.length model.list == 0 then
-                                        span
-                                            [ class "feed-empty" ]
-                                            [ text "← Click to add feed" ]
-                                      else
-                                        text "All"
-                                    ]
-                                ]
-                    , div
-                        [ class "feed-filter" ]
-                        [ filterButton "All" All model.itemFilter
-                        , filterButton "Unlistened" Unlistened model.itemFilter
-                        , filterButton "Listening" Listening model.itemFilter
-                        ]
+                    [ title'
+                    , filterBar
                     ]
-                , case feed' of
-                    Just feed ->
-                        div
-                            [ class "item-list-wrap" ]
-                            [ ul [ class "item-list" ]
-                                (feed.items
-                                    |> List.filter (filterByItemFilter model.itemFilter)
-                                    |> List.map (viewItem model Nothing)
-                                )
-                            ]
-
-                    Nothing ->
-                        let
-                            (list, hasMoreItem) = itemList model
-                        in
-                            div
-                                [ class "item-list-wrap" ]
-                                [ if List.length list == 0 then
-                                    div
-                                        [ class "item-empty" ]
-                                        [ text "This list is empty." ]
-                                else
-                                    ul
-                                        [ class "item-list"]
-                                        ( List.map (\(feed, item) ->
-                                             viewItem model (Just feed) item
-                                          ) list
-                                        )
-                                , if hasMoreItem then
-                                    div
-                                        [ class "feed-show-more" ]
-                                        [ button
-                                            [ class "btn btn-text"
-                                            , onClick ShowMoreItem
-                                            ]
-                                            [ text "show more"]
-                                        ]
-                                  else
-                                      text ""
-                                ]
+                , itemlist'
                 , viewPlayer model
                 ]
             ]
