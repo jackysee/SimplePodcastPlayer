@@ -8,7 +8,8 @@ type alias Item =
     , pubDate : Time
     , link : Maybe String
     , url: Maybe String
-    , progress : Progress
+    , duration : Time
+    , progress : Time
     , playCount : Int
     }
 
@@ -21,10 +22,9 @@ type alias Feed =
     , showConfirmDelete : Bool
     }
 
-
 type alias Progress =
-    { duration : Time
-    , current : Time
+    { progress : Time
+    , duration : Time
     }
 
 
@@ -32,7 +32,6 @@ type FeedState
     = Normal
     | Refreshing
     | RefreshError
-    | HasNewItem
 
 
 type LoadFeedState
@@ -49,6 +48,12 @@ type PlayerState
     | SoundLoading
 
 
+type ItemFilter
+    = All
+    | Listening
+    | Unlistened
+
+
 type alias Model =
     { showAddPanel : Bool
     , urlToAdd : String
@@ -61,7 +66,8 @@ type alias Model =
     , playerRate : Float
     , playerVol : Float
     , playerMute : Bool
-    , groupByFeed: Bool
+    , showFeedUrl : Maybe String
+    , itemFilter: ItemFilter
     }
 
 type alias StoreModel =
@@ -76,7 +82,7 @@ type alias StoreModel =
     -- , playerState : PlayerState
     , playerVol : Float
     , playerMute : Bool
-    , groupByFeed: Bool
+    , itemFilter : String
     }
 
 type alias StoreFeed =
@@ -124,3 +130,19 @@ updateCurrentItem updater model =
         )
         model.list
     }
+
+
+toItemFilter : String -> ItemFilter
+toItemFilter str =
+    case str of
+        "Unlistened" -> Unlistened
+        "Listening" -> Listening
+        _ -> All
+
+
+itemFilterToStr : ItemFilter -> String
+itemFilterToStr filter =
+    case filter of
+        Unlistened -> "Unlistened"
+        Listening -> "Listening"
+        All -> "All"

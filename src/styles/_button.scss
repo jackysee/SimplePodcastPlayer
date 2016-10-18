@@ -5,10 +5,11 @@
     cursor: pointer;
     outline: none;
     padding: 0;
-    height: 1rem;
+    // height: 1rem;
     display: inline-block;
     color: #666;
     border-radius: 3px;
+    font-size: 100%;
 }
 
 .btn::-moz-focus-inner{
@@ -24,8 +25,12 @@
     vertical-align: middle;
 }
 
+.btn-icon{
+    height: 1rem;
+}
+
 .btn-text{
-    color: #333;
+    color: #666;
     background: #DFF;
     padding-left: 3px;
     padding-right: 3px;
@@ -34,4 +39,9 @@
 img[src$=svg]{
     height: 100%;
     vertical-align: top;
+}
+
+.btn.is-active{
+    background: #333;
+    color: #CCC;
 }

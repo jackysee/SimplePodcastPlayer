@@ -68,7 +68,7 @@ function updateProgress(){
         return;
     }
     app.ports.updateProgress.send({
-        current: sound.seek(),
+        progress: sound.seek(),
         duration: sound.duration()
     });
 

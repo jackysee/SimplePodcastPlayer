@@ -18,8 +18,8 @@ body {
 }
 
 .app-wrap{
-    max-width: 850px;
-    margin: 0 auto;
+    // max-width: 850px;
+    // margin: 0 auto;
 }
 
 .wrap{
@@ -31,6 +31,25 @@ body {
     margin-top: 0;
 }
 
-.top-control-bar{
-    padding:5px;
+@media (max-width:1024px){
+    wrap >* {
+        padding : 0;
+    }
+}
+
+@media (min-width:1025px){
+    .wrap > *{
+        padding: calc(( 100% - 1024px ) / 2);
+    }
+
+}
+
+
+.top-bar{
+    position: relative;
+}
+
+.top-bar-outset-btn{
+    margin-left: -0.5rem;
+    margin-right: 0.5rem;
 }

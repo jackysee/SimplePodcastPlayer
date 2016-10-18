@@ -1,6 +1,6 @@
 module Feed exposing
     (loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , viewFeed , viewItem
+    , viewFeedTitle , viewItem
     -- , showMore
     -- , resetShowMore
     -- , hideItemsUnder
@@ -16,7 +16,7 @@ import Html.Attributes exposing (class, title, src, classList)
 import Models exposing (..)
 import Msgs exposing (..)
 import DecodeFeed exposing (decodeFeed)
--- import ListUtil exposing (takeWhile, dropWhile)
+import ListUtil exposing (takeWhile, dropWhile)
 import DateFormat exposing (formatDuration, format)
 import Events exposing (onInternalClick)
 
@@ -73,21 +73,15 @@ updateFeedItems model newFeed =
 
                             Just head' ->
                                 newFeed.items
-                                    -- |> takeWhile (\item ->
-                                    --     case Maybe.map2 (/=) item.url head'.url of
-                                    --         Nothing -> False
-                                    --         Just notEqual -> notEqual
-                                    -- )
-                                    -- |> List.map (\item -> { item | show = True })
+                                    |> takeWhile
+                                        (\item ->
+                                            not <| maybeEqual item.url head'.url
+                                        )
                 in
                     updateModelFeed
                         { feed'
                             | items = newItems ++ feed'.items
-                            , state =
-                                if List.length newItems > 0 then
-                                    HasNewItem
-                                else
-                                    Normal
+                            , state = Normal
                         }
                         model
 
@@ -95,56 +89,13 @@ updateFeedItems model newFeed =
                 model
 
 
--- showMore : Int -> List Item -> List Item
--- showMore num list =
---     let
---         ( list1, list2 ) =
---             List.partition (\item -> item.show) list
---
---         list2' =
---             (List.take num list2
---                 |> List.map (\item -> { item | show = True })
---             )
---                 ++ List.drop num list2
---     in
---         list1 ++ list2'
-
-
--- resetShowMore : Int -> List Item -> List Item
--- resetShowMore num list =
---     (List.take num list
---         |> List.map (\item -> { item | show = True })
---     )
---     ++
---     (List.drop num list
---         |> List.map (\item -> { item | show = False })
---     )
---
---
--- hideItemsUnder : Item -> List Item -> List Item
--- hideItemsUnder item list =
---     let
---         predicate = \i -> not (maybeEqual item.url i.url)
---         list1 = takeWhile predicate list
---         list2 = dropWhile predicate list
---         -- (list1', list2') =
---         --     case list2 of
---         --         [] ->
---         --             (list1, [])
---         --         x::xs ->
---         --             (list1 ++ [x], xs)
---     in
---         -- list1' ++ (List.map (\i -> { i | show = False }) list2')
---         list1 ++ (List.map (\i -> { i | show = False }) list2)
-
-
 maybeEqual : Maybe a -> Maybe a -> Bool
 maybeEqual a b =
     (Maybe.map2 (==) a b) == Just True
 
 
-viewFeed : Model -> Feed -> Html Msg
-viewFeed model feed =
+viewFeedTitle : Model -> Feed -> Html Msg
+viewFeedTitle model feed =
     let
         items = feed.items -- List.filter (\item -> item.show) feed.items
         feedState =
@@ -163,78 +114,69 @@ viewFeed model feed =
                 Refreshing -> text ""
                 _ ->
                     button
-                        [ class "btn feed-control feed-refresh"
+                        [ class "btn btn-icon feed-control feed-refresh"
                         , onClick (UpdateFeeds [] feed) ]
                         [ img [ src "assets/refresh.svg" ] [] ]
             -- span [ class "feed-state" ] [ text "*" ]
     in
-        li []
-            [ div [ class "feed-header" ]
-                [ span [ class "feed-title" ] [ text feed.title ]
-                , feedState
-                , refreshBtn
-                , button
-                    [ classList
-                        [ ("btn feed-control feed-trash", True) ]
-                    , onClick (ShowConfirmDeleteFeed feed)
-                    ]
-                    [ img [ src "assets/trash.svg"] [] ]
-                , if feed.showConfirmDelete then
-                    div
-                        [ class "feed-control" ]
-                        [ div
-                            [ class "confirm-delete feed-control" ]
-                            [ span [] [ text "Delete?" ]
-                            , button
-                                [ class "btn btn-text"
-                                , onClick (ConfirmDeleteFeed feed)
-                                ]
-                                [ text "Yes "]
-                            , button
-                                [ class "btn btn-text"
-                                , onClick (HideConfirmDeleteFeed feed)
-                                ]
-                                [ text "No" ]
-                            ]
-                        ]
-                  else
-                      text ""
-                -- , span [ class "feed-state" ] [ text feedState ]
+        div [ class "feed-header" ]
+            [ button
+                [ class "btn btn-icon top-bar-outset-btn"
+                , onClick HideFeed
                 ]
-            , ul [ class "item-list" ] <|
-                (List.map (viewItem model Nothing) items)
-                ++
-                    if List.length items < List.length feed.items then
-                        [ li [ class "item item-more"]
-                            [ button
-                                [ class "btn btn-text feed-show-more"
-                                -- , onClick (ShowMoreItem feed)
-                                ]
-                                [ text "...more" ]
+                [ img [ src "assets/arrow-left.svg" ] [] ]
+            , span [ class "feed-title" ] [ text feed.title ]
+            , feedState
+            , refreshBtn
+            , button
+                [ classList
+                    [ ("btn btn-icon feed-control feed-trash", True) ]
+                , onClick (ShowConfirmDeleteFeed feed)
+                ]
+                [ img [ src "assets/trash.svg"] [] ]
+            , if feed.showConfirmDelete then
+                div
+                    [ class "feed-control" ]
+                    [ div
+                        [ class "confirm-delete feed-control" ]
+                        [ span [] [ text "Delete?" ]
+                        , button
+                            [ class "btn btn-text"
+                            , onClick (ConfirmDeleteFeed feed)
                             ]
+                            [ text "Yes "]
+                        , button
+                            [ class "btn btn-text"
+                            , onClick (HideConfirmDeleteFeed feed)
+                            ]
+                            [ text "No" ]
                         ]
-                    else
-                      []
+                    ]
+              else
+                  text ""
             ]
 
 
-viewItem : Model -> Maybe String -> Item -> Html Msg
-viewItem model feedTitle item =
+viewItem : Model -> Maybe Feed -> Item -> Html Msg
+viewItem model feed item =
     li
         [ classList
             [ ("item", True)
             , ("is-current", maybeEqual item.url model.currentItemUrl)
             , ("is-error", item.url == Nothing)
-            , ("is-unplayed", item.progress.current == -1)
+            , ("is-unplayed", item.progress == -1)
+            , ("is-played", item.playCount > 0)
             ]
         , toggleItem model item
         ]
         [ renderItemState item model.currentItemUrl model.playerState
-        , case feedTitle of
-            Just title ->
+        , case feed of
+            Just feed' ->
                 div
-                    [ class "item-feed-title" ]
-                    [ text title ]
+                    [ class "item-feed-title"
+                    , onInternalClick (ShowFeed feed'.url)
+                    ]
+                    [ text feed'.title ]
             Nothing ->
                 text ""
         , div [ class "item-desp" ]
@@ -246,24 +188,18 @@ viewItem model feedTitle item =
             [ case item.link of
                 Just link ->
                     button
-                        [ class "btn"
+                        [ class "btn btn-icon"
                         , onInternalClick (OpenNewLink link)
                         , title "open link"
                         ]
                         [ img [ src "assets/external-link.svg"] [] ]
                 Nothing ->
                     text ""
-            , button
-                [ class "btn"
-                , title "Hide item and items below"
-                -- , onInternalClick (HideAllUnder item)
-                ]
-                [ img [ src "assets/arrow-down.svg" ] [] ]
             ]
         , div [ class "item-date" ]
             [ text <| format item.pubDate model.currentTime ]
         , div [ class "item-progress" ]
-            [ text <| formatDuration item.progress.duration ]
+            [ text <| formatDuration item.duration ]
         ]
 
 toggleItem : Model -> Item -> Html.Attribute Msg

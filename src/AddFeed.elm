@@ -18,7 +18,7 @@ viewAddFeed model =
             ]
         ]
         [ button
-            [ class "btn add-close"
+            [ class "btn btn-icon add-close"
             , onClick HideAddPanel
             ]
             [ img [ src "assets/close.svg"] [] ]
@@ -53,7 +53,8 @@ viewLoadFeedState state =
 addFeedButton : Html Msg
 addFeedButton =
     button
-        [ class "btn add-btn"
+        [ class "btn add-btn btn-icon top-bar-outset-btn"
         , onInternalClick ShowAddPanel
         ]
-        [ text "+" ]
+        [ img [ src "assets/plus-circle.svg" ] []
+            ]

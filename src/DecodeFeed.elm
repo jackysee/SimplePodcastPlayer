@@ -27,12 +27,8 @@ decodeItem =
         |> required "pubDate" jsonDate
         |> custom (Json.maybe ("link" := Json.string))
         |> custom decodeEnclosure
-        -- |> hardcoded False
-        |> custom (
-            decode Progress
-                |> optional "duration" decodeDuration -1
-                |> hardcoded -1
-        )
+        |> optional "duration" decodeDuration -1
+        |> hardcoded -1
         |> hardcoded 0
 
 decodeEnclosure : Json.Decoder (Maybe String)

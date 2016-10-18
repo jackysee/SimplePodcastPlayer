@@ -6,12 +6,14 @@ import Time exposing (Time)
 
 type Msg
     = NoOp
+    | ShowAddPanel
+    | HideAddPanel
     | SetUrl String
     | AddFeed
     | FetchFeedSucceed Feed
     | FetchFeedFail Http.Error
     | UpdateCurrentTime Time
-    -- | ShowMoreItem Feed
+    | ShowMoreItem
     | Play Item
     | SoundLoaded Bool
     | Pause Item
@@ -21,8 +23,8 @@ type Msg
     | UpdateFeedFail (List Feed) Feed Http.Error
     | UpdateFeedSucceed (List Feed) Feed
     | SetProgress Float
-    | ShowAddPanel
-    | HideAddPanel
+    | ShowFeed String
+    | HideFeed
     | ShowConfirmDeleteFeed Feed
     | HideConfirmDeleteFeed Feed
     | ConfirmDeleteFeed Feed
@@ -30,7 +32,6 @@ type Msg
     | PlayEnd String
     | ToggleRate
     | OpenNewLink String
-    -- | HideAllUnder Item
     | SetVol Float
     | TogglePlayerMute
-    | SetGroupByFeed Bool
+    | SetItemFilter ItemFilter

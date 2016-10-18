@@ -13,8 +13,7 @@ import Models exposing (..)
 import Msgs exposing (..)
 import Feed exposing
     ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    -- , showMore, resetShowMore , hideItemsUnder
-    , viewFeed , viewItem )
+    , viewFeedTitle , viewItem )
 import AddFeed exposing (viewAddFeed, addFeedButton)
 import Player exposing (viewPlayer)
 
@@ -41,13 +40,14 @@ init storeModel =
                 , list = feeds
                 , loadFeedState = Empty
                 , currentTime = 0
-                , itemsToShow = m.itemsToShow
+                , itemsToShow = 30 -- m.itemsToShow
                 , currentItemUrl = m.currentItemUrl
                 , playerState = Stopped
                 , playerRate = m.playerRate
                 , playerVol = m.playerVol
                 , playerMute = m.playerMute
-                , groupByFeed = m.groupByFeed
+                , showFeedUrl = Nothing
+                , itemFilter = toItemFilter m.itemFilter
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds
@@ -58,13 +58,14 @@ init storeModel =
             , list = []
             , loadFeedState = Empty
             , currentTime = 0
-            , itemsToShow = 10
+            , itemsToShow = 30
             , currentItemUrl = Nothing
             , playerState = Stopped
             , playerRate = 1
             , playerVol = toFloat 1
             , playerMute = False
-            , groupByFeed = True
+            , showFeedUrl = Nothing
+            , itemFilter = All
             }
                 ! [ updateCurrentTime ]
 
@@ -121,17 +122,16 @@ update msg model =
                         , [ loadFeed model.urlToAdd ] ++ cmds
                         )
 
-                -- ShowMoreItem feed ->
-                --     ( updateModelFeed { feed | items = showMore model.itemsToShow feed.items } model
-                --     , cmds
-                --     )
+                ShowMoreItem ->
+                    ( { model | itemsToShow = model.itemsToShow + 30 }
+                    , cmds
+                    )
 
                 FetchFeedSucceed feed ->
                     ({ model
                         | list =
                             model.list
                                 ++ [ { feed | items = feed.items } ]
-                                -- ++ [ { feed | items = showMore model.itemsToShow feed.items } ]
                         , loadFeedState = Empty
                         , urlToAdd = ""
                     }
@@ -158,7 +158,7 @@ update msg model =
                             }
                             , [ play
                                 { url = url
-                                , seek = item.progress.current
+                                , seek = item.progress
                                 , rate = model.playerRate
                                 , vol = model.playerVol
                                 }
@@ -175,7 +175,10 @@ update msg model =
 
                 UpdateProgress progress ->
                     ( model
-                        |> updateCurrentItem (\item -> { item | progress = progress })
+                        |> updateCurrentItem
+                            (\item -> { item
+                                        | duration = progress.duration
+                                        , progress = progress.progress })
                     , cmds
                     )
 
@@ -212,14 +215,11 @@ update msg model =
                         Nothing ->
                             ( model, cmds )
                         Just item' ->
-                            let
-                                -- current = item'.progress.duration * percentage
-                                progress = item'.progress
-                                progress' = { progress | current = current }
-                                model' = model |>
-                                    updateCurrentItem (\item -> { item | progress = progress' })
-                            in
-                                (model' , [seek current] ++ cmds)
+                            ( updateCurrentItem
+                                (\item -> { item | progress = current })
+                                model
+                            , [seek current] ++ cmds
+                            )
 
                 ShowAddPanel ->
                     ( { model | showAddPanel = True }
@@ -229,6 +229,12 @@ update msg model =
 
                 HideAddPanel ->
                     ({ model | showAddPanel = False }, cmds)
+
+                ShowFeed url ->
+                    ({ model | showFeedUrl = Just url } , cmds)
+
+                HideFeed ->
+                    ({ model | showFeedUrl = Nothing }, cmds)
 
                 ShowConfirmDeleteFeed feed ->
                     ( updateModelFeed { feed | showConfirmDelete = True } model
@@ -278,23 +284,20 @@ update msg model =
                     let
                         model' = updateCurrentItem
                                     (\item ->
-                                        let
-                                            progress = item.progress
-                                            progress' = { progress | current = 0 }
-                                        in
-                                            { item
-                                                | progress = progress'
-                                                , playCount = item.playCount + 1
-                                            }
+                                        { item
+                                            | progress = 0
+                                            , playCount = item.playCount + 1
+                                        }
                                     )
                                     model
-                        nextItem = model.list
-                             |> List.concatMap (\feed -> feed.items)
-                            --  |> List.filter (\item -> item.show )
-                             |> dropWhile (\item -> (Maybe.withDefault "" item.url) /= url)
-                             |> List.take 2
-                             |> List.reverse
-                             |> List.head
+                        nextItem =
+                            itemList model
+                                |> fst
+                                |> dropWhile (\(feed, item) -> item.url /= Just url)
+                                |> List.take 2
+                                |> List.reverse
+                                |> List.map snd
+                                |> List.head
                     in
                         case nextItem of
                             Just item' ->
@@ -318,28 +321,6 @@ update msg model =
                 OpenNewLink url ->
                     (model , [ openNewLink url ] ++ cmds)
 
-                -- HideAllUnder item ->
-                --     let
-                --         list = List.map
-                --                 -- (\feed -> { feed | items = hideItemsUnder item feed.items })
-                --                 (\feed -> { feed | items = feed.items })
-                --                 model.list
-                --         isCurrentItem =  isCurrent item.url model
-                --         currentItemUrl =
-                --             if isCurrentItem then
-                --                 Nothing
-                --             else
-                --                 model.currentItemUrl
-                --         cmds' =
-                --             if isCurrentItem then
-                --                 [ stop "" ]
-                --             else
-                --                 []
-                --     in
-                --         ( { model | list = list, currentItemUrl = currentItemUrl }
-                --         , cmds' ++ cmds
-                --         )
-
                 TogglePlayerMute ->
                     let
                         muted = not model.playerMute
@@ -351,72 +332,150 @@ update msg model =
                     ({ model | playerVol = percentage}
                     , [setVol percentage] ++ cmds)
 
-                SetGroupByFeed flag ->
-                    ({ model | groupByFeed = flag }, cmds)
-
-
+                SetItemFilter filter ->
+                    ({ model | itemFilter = filter }
+                    , cmds
+                    )
     in
         model' ! (cmds' ++ [ saveModel model ] )
 
 
-
-
 view : Model -> Html Msg
 view model =
-    div [ class "app-wrap" ]
-        [ viewAddFeed model
-        , div
-            [ class "wrap"
-            , onClick HideAddPanel
-            ]
-            [ div
-                [ class "top-control-bar"]
-                [ addFeedButton
-                , button
-                    [ class "btn btn-text"
-                    , onClick (SetGroupByFeed (not model.groupByFeed))
-                    ]
-                    [ text <|
-                        if model.groupByFeed then
-                            "ungroup by feed"
-                        else
-                            "group by feed"
-                    ]
+    let
+        feed' = model.list
+            |> List.filter (\f -> Just f.url == model.showFeedUrl)
+            |> List.head
+    in
+        div [ class "app-wrap" ]
+            [ viewAddFeed model
+            , div
+                [ class "wrap"
+                , onClick HideAddPanel
                 ]
-            , if model.groupByFeed then
-                ul [ class "feed" ]
-                    (model.list
-                        -- |> List.sortWith
-                        --     (\feed1 feed2 ->
-                        --         let
-                        --             getTime = (\feed ->
-                        --                 (List.head feed.items
-                        --                     `Maybe.andThen`
-                        --                     (\f -> Just f.pubDate)
-                        --                 ) |> Maybe.withDefault -1
-                        --             )
-                        --         in
-                        --             compare (getTime feed2) (getTime feed1)
-                        --     )
-                        |> List.map (viewFeed model)
-                    )
-              else
-                ul [ class "item-list" ]
-                    (model.list
-                        |> List.concatMap (\feed ->
-                                List.map (\item -> (feed.title, item)) feed.items
-                            )
-                        -- |> List.filter (\(title, item) -> item.show )
-                        |> List.sortBy (\(title, item) -> item.pubDate)
-                        |> List.reverse
-                        |> List.map (\(title, item) ->
-                             viewItem model (Just title) item
-                          )
-                    )
+                [ div
+                    [ class "top-bar"]
+                    [ case feed' of
+                        Just feed ->
+                            viewFeedTitle model feed
 
-            , viewPlayer model
+                        Nothing ->
+                            div
+                                [ class "feed-header" ]
+                                [ addFeedButton
+                                , div
+                                    [ class "feed-title" ]
+                                    [ if List.length model.list == 0 then
+                                        span
+                                            [ class "feed-empty" ]
+                                            [ text "← Click to add feed" ]
+                                      else
+                                        text "All"
+                                    ]
+                                ]
+                    , div
+                        [ class "feed-filter" ]
+                        [ filterButton "All" All model.itemFilter
+                        , filterButton "Unlistened" Unlistened model.itemFilter
+                        , filterButton "Listening" Listening model.itemFilter
+                        ]
+                    ]
+                , case feed' of
+                    Just feed ->
+                        div
+                            [ class "item-list-wrap" ]
+                            [ ul [ class "item-list" ]
+                                (feed.items
+                                    |> List.filter (filterByItemFilter model.itemFilter)
+                                    |> List.map (viewItem model Nothing)
+                                )
+                            ]
+
+                    Nothing ->
+                        let
+                            (list, hasMoreItem) = itemList model
+                        in
+                            div
+                                [ class "item-list-wrap" ]
+                                [ if List.length list == 0 then
+                                    div
+                                        [ class "item-empty" ]
+                                        [ text "This list is empty." ]
+                                else
+                                    ul
+                                        [ class "item-list"]
+                                        ( List.map (\(feed, item) ->
+                                             viewItem model (Just feed) item
+                                          ) list
+                                        )
+                                , if hasMoreItem then
+                                    div
+                                        [ class "feed-show-more" ]
+                                        [ button
+                                            [ class "btn btn-text"
+                                            , onClick ShowMoreItem
+                                            ]
+                                            [ text "show more"]
+                                        ]
+                                  else
+                                      text ""
+                                ]
+                , viewPlayer model
+                ]
             ]
+
+
+filterButton : String -> ItemFilter -> ItemFilter -> Html Msg
+filterButton label filter modelItemFilter =
+    button
+        [ classList
+            [ ("btn btn-text" , True)
+            , ("is-active", modelItemFilter == filter)
+            ]
+        , onClick (SetItemFilter filter)
         ]
+        [ text label ]
+
+
+itemsByDate: ItemFilter -> List Feed -> List (Feed, Item)
+itemsByDate filter list =
+    list
+        |> List.concatMap (\feed ->
+                List.map (\item -> (feed, item)) feed.items
+            )
+        |> List.filter (\(feed, item) ->
+                filterByItemFilter filter item
+            )
+        |> List.sortBy (\(feed, item) -> item.pubDate)
+        |> List.reverse
+
+
+itemList: Model -> (List (Feed, Item), Bool)
+itemList model =
+    case model.showFeedUrl of
+        Just url' ->
+            ( model.list
+                |> List.filter (\f -> f.url == url' )
+                |> itemsByDate model.itemFilter
+            , False
+            )
+
+        Nothing ->
+            let
+                list = itemsByDate model.itemFilter model.list
+            in
+                ( List.take model.itemsToShow list
+                , List.length list > model.itemsToShow
+                )
+
+filterByItemFilter : ItemFilter -> Item -> Bool
+filterByItemFilter filter item =
+    case filter of
+        All -> True
+        Unlistened ->
+            item.progress == -1
+        Listening ->
+            item.progress > -1 && item.playCount == 0
 
 
 saveModel : Model -> Cmd Msg
@@ -429,7 +488,7 @@ saveModel model =
         , playerRate = model.playerRate
         , playerVol = model.playerVol
         , playerMute = model.playerMute
-        , groupByFeed = model.groupByFeed
+        , itemFilter = itemFilterToStr model.itemFilter
         }
 
 

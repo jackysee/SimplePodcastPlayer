@@ -8,6 +8,7 @@ import Models exposing (..)
 import Msgs exposing (..)
 import DateFormat exposing (formatDuration)
 import String
+import Time exposing (Time)
 
 range: Float -> Float -> Float -> Float -> (Float -> msg) -> Html msg
 range min max step value' msg =
@@ -36,12 +37,12 @@ range min max step value' msg =
             ]
 
 
-progressBar : Progress -> Html Msg
-progressBar p =
-    if p.duration == -1 then
+progressBar : Time -> Time -> Html Msg
+progressBar progress duration =
+    if duration == -1 then
         text ""
     else
-        range 0 p.duration 1 p.current SetProgress
+        range 0 duration 1 progress SetProgress
 
 
 setFloat: (Float -> msg) -> String -> msg
@@ -98,7 +99,7 @@ viewPlayer model =
                                     [ class "player-title" ]
                                     [ marquee item'.title (model.playerState == Playing)
                                     ]
-                                , progressBar item'.progress
+                                , progressBar item'.progress item'.duration
                                 ]
                             , div [ class "player-rate" ]
                                 [ button
@@ -128,12 +129,12 @@ viewPlayer model =
                             , div
                                 [ class "player-progress" ]
                                 [ text <| "-"
-                                    ++ formatDuration (item'.progress.duration - item'.progress.current)
+                                    ++ formatDuration (item'.duration - item'.progress)
                                 ]
                             , div
                                 [ class "player-close" ]
                                 [ button
-                                    [ class "btn"
+                                    [ class "btn btn-icon"
                                     , onClick ClosePlayer
                                     ]
                                     [ img [ src "assets/close.svg"] [] ]
