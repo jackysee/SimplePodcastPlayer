@@ -473,7 +473,7 @@ filterByItemFilter filter item =
     case filter of
         All -> True
         Unlistened ->
-            item.progress == -1
+            item.playCount == 0
         Listening ->
             item.progress > -1 && item.playCount == 0
 
