@@ -196,11 +196,14 @@ viewItem model feed item =
                     text ""
             , case item.url of
                 Just url ->
-                    button
-                        [ class "btn btn-icon btn-more"
-                        , onClickPosBottomRight (ShowFeedDropdown url)
-                        ]
-                        [ img [ src "assets/ellipsis-v.svg" ] []
+                    div 
+                        [ class "btn-more" ]
+                        [ button
+                            [ class "btn btn-icon btn-more"
+                            , onClickPosBottomRight (ShowFeedDropdown url)
+                            ]
+                            [ img [ src "assets/ellipsis-v.svg" ] []
+                            ]
                         , if isDropdownOpened model.itemDropdown url then
                             div
                                 [ class "dropdown-panel" ]
