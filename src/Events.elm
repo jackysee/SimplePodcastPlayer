@@ -2,6 +2,7 @@ module Events exposing (..)
 
 import Html
 import Html.Events exposing (on, onWithOptions, keyCode)
+import DecodePosition exposing (decodeBottomRight)
 import Json.Decode as Json
 
 import Msgs exposing (Msg(..))
@@ -19,6 +20,7 @@ onEnter msg =
             )
             keyCode
 
+
 onInternalClick : Msg -> Html.Attribute Msg
 onInternalClick msg =
     onWithOptions
@@ -27,3 +29,16 @@ onInternalClick msg =
         , preventDefault = True
         }
         (Json.succeed msg)
+
+
+onClickPosBottomRight : ((Float, Float) -> Msg) -> Html.Attribute Msg
+onClickPosBottomRight msg =
+    onWithOptions
+        "click"
+        { stopPropagation = True
+        , preventDefault = True
+        }
+        (Json.map
+            (\(x, y) -> msg (x, y))
+            decodeBottomRight
+        )

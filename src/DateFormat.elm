@@ -1,4 +1,4 @@
-module DateFormat exposing (format, formatDuration, parseDuration)
+module DateFormat exposing (format, formatDuration, formatDurationShort, parseDuration)
 
 import Date exposing (..)
 import Time exposing (Time)
@@ -23,6 +23,27 @@ formatDuration time =
             )
             ++ (String.padLeft 2 '0' (toString min)) ++ ":"
             ++ (String.padLeft 2 '0' (toString sec))
+
+
+formatDurationShort : Time -> String
+formatDurationShort time =
+    if time < 0 then
+        "--"
+    else if time < 60 then
+        toString time ++ "s"
+    else if time < 60*60 then
+        roundDp 1 (time / 60) ++ "m"
+    else
+        roundDp 1 (time / (60*60)) ++ "h"
+
+
+roundDp: Int -> Float -> String
+roundDp dp num =
+    let
+        factor = 10 ^ dp
+    in
+        toFloat (round (num * factor)) / factor
+            |> toString
 
 
 parseDuration : String -> Result String Time

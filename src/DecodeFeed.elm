@@ -30,6 +30,7 @@ decodeItem =
         |> optional "duration" decodeDuration -1
         |> hardcoded -1
         |> hardcoded 0
+        |> hardcoded -1
 
 decodeEnclosure : Json.Decoder (Maybe String)
 decodeEnclosure =

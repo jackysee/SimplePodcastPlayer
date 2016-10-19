@@ -48,6 +48,8 @@ init storeModel =
                 , playerMute = m.playerMute
                 , showFeedUrl = Nothing
                 , itemFilter = toItemFilter m.itemFilter
+                , itemDropdown = Nothing
+                , itemSelected = Nothing
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds
@@ -66,18 +68,10 @@ init storeModel =
             , playerMute = False
             , showFeedUrl = Nothing
             , itemFilter = All
+            , itemDropdown = Nothing
+            , itemSelected = Nothing
             }
                 ! [ updateCurrentTime ]
-
-
-toFeed : StoreFeed -> Feed
-toFeed storeFeed =
-    { url = storeFeed.url
-    , title = storeFeed.title
-    , items = storeFeed.items
-    , state = Normal
-    , showConfirmDelete = False
-    }
 
 
 updateCurrentTime : Cmd Msg
@@ -123,7 +117,7 @@ update msg model =
                         )
 
                 ShowMoreItem ->
-                    ( { model | itemsToShow = model.itemsToShow + 30 }
+                    ({ model | itemsToShow = model.itemsToShow + 30 }
                     , cmds
                     )
 
@@ -231,10 +225,18 @@ update msg model =
                     ({ model | showAddPanel = False }, cmds)
 
                 ShowFeed url ->
-                    ({ model | showFeedUrl = Just url } , cmds)
+                    ({ model
+                        | showFeedUrl = Just url
+                        , list = flushPlayCount model.list
+                     }
+                    , cmds)
 
                 HideFeed ->
-                    ({ model | showFeedUrl = Nothing }, cmds)
+                    ({ model
+                        | showFeedUrl = Nothing
+                        , list = flushPlayCount model.list
+                     }
+                    , cmds)
 
                 ShowConfirmDeleteFeed feed ->
                     ( updateModelFeed { feed | showConfirmDelete = True } model
@@ -268,7 +270,7 @@ update msg model =
                         ({ model
                             | list = list
                             , currentItemUrl = currentItemUrl
-                        }
+                         }
                         , cmds' ++ cmds
                         )
 
@@ -286,7 +288,7 @@ update msg model =
                                     (\item ->
                                         { item
                                             | progress = 0
-                                            , playCount = item.playCount + 1
+                                            , markPlayCount = item.playCount + 1
                                         }
                                     )
                                     model
@@ -329,13 +331,66 @@ update msg model =
                         , [setMute muted] ++ cmds)
 
                 SetVol percentage ->
-                    ({ model | playerVol = percentage}
+                    ({ model | playerVol = percentage }
                     , [setVol percentage] ++ cmds)
 
                 SetItemFilter filter ->
-                    ({ model | itemFilter = filter }
+                    ({ model
+                        | itemFilter = filter
+                        , list = flushPlayCount model.list
+                     }
                     , cmds
                     )
+
+                MarkPlayCount url playCount ->
+                    ( updateItem
+                        (\item -> { item | markPlayCount = playCount })
+                        (Just url)
+                        model
+                    , cmds
+                    )
+
+                ShowFeedDropdown url (x, y) ->
+                    ({ model
+                        | itemDropdown = Just { url = url , x = x , y = y}
+                     }
+                    , cmds
+                    )
+
+                SelectItem item ->
+                    let
+                        a = Debug.log "selectItem" item
+                    in
+                        ({ model
+                            | itemSelected = item.url
+                            , itemDropdown =
+                                case model.itemDropdown of
+                                    Just itemDropdown ->
+                                        if item.url /= Just itemDropdown.url then
+                                            Nothing
+                                        else
+                                            model.itemDropdown
+
+                                    Nothing ->
+                                        Nothing
+                         }
+                         , cmds
+                         )
+
+                UnselectItem item ->
+                    let
+                        a = Debug.log "UnselectItem" item
+                    in
+                        case model.itemDropdown of
+                            Just itemDropdown ->
+                                if item.url == Just itemDropdown.url then
+                                    (model, cmds)
+                                else
+                                    ({ model | itemDropdown = Nothing } , cmds)
+
+                            Nothing ->
+                                ({ model | itemDropdown = Nothing } , cmds)
+
     in
         model' ! (cmds' ++ [ saveModel model ] )
 
@@ -359,6 +414,7 @@ view model =
     in
         div [ class "app-wrap" ]
             [ viewAddFeed model
+            -- , viewItemDropDown model.itemDropdown
             , div
                 [ class "wrap"
                 , onClick HideAddPanel
@@ -376,6 +432,23 @@ view model =
                 , viewPlayer model
                 ]
             ]
+
+
+viewItemDropDown : Maybe ItemDropDown -> Html Msg
+viewItemDropDown itemDropdown =
+    case itemDropdown of
+        Just itemDropDown' ->
+            div
+                [ class "dropdown-panel"
+                , style
+                    [ ("top", toString itemDropDown'.y ++ "px")
+                    , ("left", toString itemDropDown'.x ++ "px")
+                    ]
+                ]
+                [ text "abc" ]
+
+        Nothing ->
+            text ""
 
 
 viewTitle : Model -> Maybe Feed -> Html Msg
@@ -442,10 +515,8 @@ viewItemList model feed' =
         Nothing ->
             let
                 (list, hasMoreItem) = itemList model
-            in
-                div
-                    [ class "item-list-wrap" ]
-                    [ if List.length list == 0 then
+                itemList' =
+                    if List.length list == 0 && List.length model.list > 0 then
                         div
                             [ class "item-empty" ]
                             [ text "This list is empty." ]
@@ -456,7 +527,8 @@ viewItemList model feed' =
                                  viewItem model (Just feed) item
                               ) list
                             )
-                    , if hasMoreItem then
+                showMore =
+                    if hasMoreItem then
                         div
                             [ class "feed-show-more" ]
                             [ button
@@ -467,6 +539,11 @@ viewItemList model feed' =
                             ]
                       else
                           text ""
+            in
+                div
+                    [ class "item-list-wrap" ]
+                    [ itemList'
+                    , showMore
                     ]
 
 
@@ -501,6 +578,7 @@ itemList model =
                 , List.length list > model.itemsToShow
                 )
 
+
 filterByItemFilter : ItemFilter -> Item -> Bool
 filterByItemFilter filter item =
     case filter of
@@ -511,26 +589,26 @@ filterByItemFilter filter item =
             item.progress > -1 && item.playCount == 0
 
 
+flushPlayCount : List Feed -> List Feed
+flushPlayCount list =
+    List.map (\feed ->
+        { feed
+            | items = List.map (\item ->
+                if item.markPlayCount /= -1 then
+                    { item
+                        | playCount = item.markPlayCount
+                        , markPlayCount = -1
+                    }
+                else
+                    item
+              ) feed.items
+        }
+    ) list
+
+
 saveModel : Model -> Cmd Msg
 saveModel model =
-    storeModel
-        { urlToAdd = model.urlToAdd
-        , list = List.map saveFeed model.list
-        , itemsToShow = model.itemsToShow
-        , currentItemUrl = model.currentItemUrl
-        , playerRate = model.playerRate
-        , playerVol = model.playerVol
-        , playerMute = model.playerMute
-        , itemFilter = itemFilterToStr model.itemFilter
-        }
-
-
-saveFeed : Feed -> StoreFeed
-saveFeed feed =
-    { url = feed.url
-    , title = feed.title
-    , items = feed.items
-    }
+    model |> toStoreModel |> storeModel
 
 
 subscriptions : Model -> Sub Msg

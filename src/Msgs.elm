@@ -35,3 +35,7 @@ type Msg
     | SetVol Float
     | TogglePlayerMute
     | SetItemFilter ItemFilter
+    | MarkPlayCount String Int
+    | ShowFeedDropdown String (Float, Float)
+    | SelectItem Item
+    | UnselectItem Item

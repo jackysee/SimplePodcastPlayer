@@ -1,4 +1,4 @@
-module DecodePosition exposing (decodeLeft, decodeLeftPercentage)
+module DecodePosition exposing (decodeLeft, decodeLeftPercentage, decodeBottomRight)
 
 import Json.Decode as Decode exposing ((:=), Decoder)
 
@@ -48,3 +48,28 @@ positionLeft x =
         (\x' ->
             offsetParent x' (positionLeft x')
         )
+
+positionTop: Float -> Decoder Float
+positionTop y =
+    Decode.object2
+        (\scrollTop offsetTop ->
+            y + offsetTop - scrollTop
+        )
+        ("scrollTop" := Decode.float)
+        ("offsetTop" := Decode.float)
+    `Decode.andThen`
+        (\y' ->
+            offsetParent y' (positionTop y')
+        )
+
+
+decodeBottomRight: Decoder (Float, Float)
+decodeBottomRight =
+    Decode.object4
+        (\posLeft posTop w h ->
+            (posLeft + w, posTop + h)
+        )
+        ( currentTarget (positionLeft 0) )
+        ( currentTarget (positionTop 0) )
+        ( currentTarget ("offsetWidth" := Decode.float) )
+        ( currentTarget ("offsetHeight" := Decode.float) )

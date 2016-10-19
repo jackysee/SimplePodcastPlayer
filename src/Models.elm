@@ -11,6 +11,7 @@ type alias Item =
     , duration : Time
     , progress : Time
     , playCount : Int
+    , markPlayCount : Int
     }
 
 
@@ -21,6 +22,7 @@ type alias Feed =
     , state : FeedState
     , showConfirmDelete : Bool
     }
+
 
 type alias Progress =
     { progress : Time
@@ -68,7 +70,17 @@ type alias Model =
     , playerMute : Bool
     , showFeedUrl : Maybe String
     , itemFilter: ItemFilter
+    , itemDropdown : Maybe ItemDropDown
+    , itemSelected : Maybe String
     }
+
+
+type alias ItemDropDown =
+    { url : String
+    , x : Float
+    , y : Float
+    }
+
 
 type alias StoreModel =
     -- { showAddPanel : Bool
@@ -116,11 +128,16 @@ getCurrentItem model =
 
 updateCurrentItem : (Item -> Item) -> Model -> Model
 updateCurrentItem updater model =
+    updateItem updater model.currentItemUrl model
+
+
+updateItem : (Item -> Item) -> Maybe String -> Model -> Model
+updateItem updater url model =
     { model | list =
         List.map (\feed ->
             { feed | items =
                 List.map (\item ->
-                    if isCurrent item.url model then
+                    if item.url == url && url /= Nothing then
                         updater item
                     else
                         item
@@ -146,3 +163,35 @@ itemFilterToStr filter =
         Unlistened -> "Unlistened"
         Listening -> "Listening"
         All -> "All"
+
+
+toFeed : StoreFeed -> Feed
+toFeed storeFeed =
+    { url = storeFeed.url
+    , title = storeFeed.title
+    , items = storeFeed.items
+    , state = Normal
+    , showConfirmDelete = False
+    }
+
+
+toStoreModel : Model -> StoreModel
+toStoreModel model =
+    { urlToAdd = model.urlToAdd
+    , list = List.map toStoreFeed model.list
+    , itemsToShow = model.itemsToShow
+    , currentItemUrl = model.currentItemUrl
+    , playerRate = model.playerRate
+    , playerVol = model.playerVol
+    , playerMute = model.playerMute
+    , itemFilter = itemFilterToStr model.itemFilter
+    }
+
+
+
+toStoreFeed : Feed -> StoreFeed
+toStoreFeed feed =
+    { url = feed.url
+    , title = feed.title
+    , items = feed.items
+    }

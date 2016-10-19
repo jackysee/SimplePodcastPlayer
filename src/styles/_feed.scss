@@ -139,11 +139,11 @@
     visibility: hidden;
 }
 
-.item:not(.is-current):not(.item-more):hover{
+.item.is-selected:not(.is-current):not(.item-more){
     background: #DDD;
 }
 
-.item:not(.is-current):hover .item-state{
+.item.is-selected:not(.is-current) .item-state{
     visibility: visible;
 }
 
@@ -172,7 +172,7 @@
     display: none;
 }
 
-.item:hover .item-control{
+.item.is-selected .item-control{
     display: flex
 }
 

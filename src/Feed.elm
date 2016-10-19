@@ -1,24 +1,20 @@
 module Feed exposing
     (loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , viewFeedTitle , viewItem
-    -- , showMore
-    -- , resetShowMore
-    -- , hideItemsUnder
-    )
+    , viewFeedTitle , viewItem )
 
 import Task
 import Http
 import String
 import Html exposing (Html, text, button, ul, li, div, span, img)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, onMouseOut)
 import Html.Attributes exposing (class, title, src, classList)
 
 import Models exposing (..)
 import Msgs exposing (..)
 import DecodeFeed exposing (decodeFeed)
 import ListUtil exposing (takeWhile, dropWhile)
-import DateFormat exposing (formatDuration, format)
-import Events exposing (onInternalClick)
+import DateFormat exposing (formatDuration, formatDurationShort, format)
+import Events exposing (onInternalClick, onClickPosBottomRight)
 
 yqlUrl: String -> String -- Task Http.Error Feed
 yqlUrl url =
@@ -166,8 +162,11 @@ viewItem model feed item =
             , ("is-error", item.url == Nothing)
             , ("is-unplayed", item.progress == -1)
             , ("is-played", item.playCount > 0)
+            , ("is-selected", maybeEqual model.itemSelected item.url)
             ]
         , toggleItem model item
+        , onMouseEnter (SelectItem item)
+        , onMouseLeave (UnselectItem item)
         ]
         [ renderItemState item model.currentItemUrl model.playerState
         , case feed of
@@ -195,12 +194,29 @@ viewItem model feed item =
                         [ img [ src "assets/external-link.svg"] [] ]
                 Nothing ->
                     text ""
+            , case item.url of
+                Just url ->
+                    button
+                        [ class "btn btn-icon btn-more"
+                        , onClickPosBottomRight (ShowFeedDropdown url)
+                        ]
+                        [ img [ src "assets/ellipsis-v.svg" ] []
+                        , if isDropdownOpened model.itemDropdown url then
+                            div
+                                [ class "dropdown-panel" ]
+                                [ text "abc" ]
+                          else
+                              text ""
+                        ]
+                Nothing ->
+                    text ""
             ]
         , div [ class "item-date" ]
             [ text <| format item.pubDate model.currentTime ]
         , div [ class "item-progress" ]
-            [ text <| formatDuration item.duration ]
+            [ text <| formatDurationShort item.duration ]
         ]
+
 
 toggleItem : Model -> Item -> Html.Attribute Msg
 toggleItem model item =
@@ -239,3 +255,13 @@ renderItemState item currentItemUrl playerState =
                     , title "no file found "
                     ]
                     [ text "!" ]
+
+
+isDropdownOpened : Maybe ItemDropDown -> String -> Bool
+isDropdownOpened itemDropdown url =
+    case itemDropdown of
+        Just itemDropdown' ->
+            itemDropdown'.url == url
+
+        Nothing ->
+            False
