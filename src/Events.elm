@@ -42,3 +42,20 @@ onClickPosBottomRight msg =
             (\(x, y) -> msg (x, y))
             decodeBottomRight
         )
+
+{-- TODO mouseleave fix
+onMouseLeave : Msg -> Html.Attribute Msg
+onMouseLeave msg =
+    on "mouseleave" <|
+        Json.map 
+            (\within ->
+                if within then
+                    msg
+                else
+                    NoOp
+            )
+            Json.oneOf
+                [ Json.at ["relatedTarget"] Json.bool
+                , Json.succeed False
+                ]
+--}
