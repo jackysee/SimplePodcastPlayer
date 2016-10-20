@@ -17,6 +17,7 @@ import Feed exposing
     , viewFeedTitle , viewItem )
 import AddFeed exposing (viewAddFeed, addFeedButton)
 import Player exposing (viewPlayer)
+import Shortcut exposing (keyMap, selectNext, selectPrev)
 
 
 main : Program (Maybe StoreModel)
@@ -391,6 +392,16 @@ update msg model =
                         }
                     in
                         (model', cmds)
+
+                SelectNext ->
+                    (selectNext model, cmds)
+
+                SelectPrev ->
+                    let
+                        (model', cmd) = selectPrev model
+                    in
+                        (model', [cmd] ++ cmds)
+                    -- (selectPrev model, cmds)
     in
         model' ! (cmds' ++ [ saveModel model ] )
 
@@ -451,7 +462,7 @@ viewTitle model feed' =
                             [ class "feed-empty" ]
                             [ text "← Click to add feed" ]
                       else
-                        text "All"
+                        text "All Podcasts"
                     ]
                 ]
 
@@ -494,6 +505,7 @@ viewItemList model feed' =
                     [ ul [ class "item-list" ]
                         ( list
                             |> List.map snd
+                            |> List.indexedMap (,)
                             |> List.map (viewItem model Nothing)
                         )
                     ]
@@ -508,9 +520,11 @@ viewItemList model feed' =
                         else
                             ul
                                 [ class "item-list"]
-                                ( List.map (\(feed, item) ->
-                                     viewItem model (Just feed) item
-                                  ) list
+                                ( list
+                                    |> List.indexedMap (,)
+                                    |> List.map (\(index, (feed, item)) ->
+                                         viewItem model (Just feed) (index, item)
+                                      )
                                 )
                     showMore =
                         if hasMoreItem then
@@ -530,48 +544,6 @@ viewItemList model feed' =
                         [ itemList'
                         , showMore
                         ]
-
-
-itemsByDate: ItemFilter -> List Feed -> List (Feed, Item)
-itemsByDate filter list =
-    list
-        |> List.concatMap (\feed ->
-                List.map (\item -> (feed, item)) feed.items
-            )
-        |> List.filter (\(feed, item) ->
-                filterByItemFilter filter item
-            )
-        |> List.sortBy (\(feed, item) -> item.pubDate)
-        |> List.reverse
-
-
-itemList: Model -> (List (Feed, Item), Bool)
-itemList model =
-    case model.showFeedUrl of
-        Just url' ->
-            ( model.list
-                |> List.filter (\f -> f.url == url' )
-                |> itemsByDate model.itemFilter
-            , False
-            )
-
-        Nothing ->
-            let
-                list = itemsByDate model.itemFilter model.list
-            in
-                ( List.take model.itemsToShow list
-                , List.length list > model.itemsToShow
-                )
-
-
-filterByItemFilter : ItemFilter -> Item -> Bool
-filterByItemFilter filter item =
-    case filter of
-        All -> True
-        Unlistened ->
-            item.playCount == 0
-        Listening ->
-            item.progress > -1 && item.playCount == 0
 
 
 flushPlayCount : List Feed -> List Feed
@@ -602,6 +574,7 @@ subscriptions model =
         [ updateProgress UpdateProgress
         , soundLoaded SoundLoaded
         , playEnd PlayEnd
+        , keyUp (keyMap model)
         ]
 
 
@@ -616,3 +589,4 @@ port playEnd: (String -> msg) -> Sub msg
 port setRate : Float -> Cmd msg
 port openNewLink : String -> Cmd msg
 port setVol : Float -> Cmd msg
+port keyUp: (String -> msg) -> Sub msg

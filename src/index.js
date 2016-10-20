@@ -3,6 +3,7 @@ require('./styles/main.scss')
 
 require('howler'); //Howl
 var Elm = require('./Main.elm');
+var keycode = require('keycode');
 
 var root  = document.getElementById('root');
 
@@ -127,6 +128,15 @@ app.ports.setVol.subscribe(function(vol) {
         sound.volume(vol);
     }
 });
+
+document.onkeyup = function(ev){
+    if(ev.target){
+        var tagName = ev.target.tagName;
+        if(tagName !== "input" && tagName !== "textarea"){
+            app.ports.keyUp.send(keycode(ev.keyCode));
+        }
+    }
+};
 
 // app.ports.setMute.subscribe(function(muted) {
 //     if(sound){

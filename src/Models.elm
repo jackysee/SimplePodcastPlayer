@@ -117,6 +117,14 @@ getCurrentItem model =
         |> List.head
 
 
+getSelectedItem : Model -> Maybe Item
+getSelectedItem model =
+    model.list
+        |> List.concatMap (\feed -> feed.items)
+        |> List.filter (\item -> item.url == model.itemSelected)
+        |> List.head
+
+
 updateCurrentItem : (Item -> Item) -> Model -> Model
 updateCurrentItem updater model =
     updateItem updater model.currentItemUrl model
@@ -185,3 +193,45 @@ toStoreFeed feed =
     , title = feed.title
     , items = feed.items
     }
+
+
+itemList: Model -> (List (Feed, Item), Bool)
+itemList model =
+    case model.showFeedUrl of
+        Just url' ->
+            ( model.list
+                |> List.filter (\f -> f.url == url' )
+                |> itemsByDate model.itemFilter
+            , False
+            )
+
+        Nothing ->
+            let
+                list = itemsByDate model.itemFilter model.list
+            in
+                ( List.take model.itemsToShow list
+                , List.length list > model.itemsToShow
+                )
+
+
+itemsByDate: ItemFilter -> List Feed -> List (Feed, Item)
+itemsByDate filter list =
+    list
+        |> List.concatMap (\feed ->
+                List.map (\item -> (feed, item)) feed.items
+            )
+        |> List.filter (\(feed, item) ->
+                filterByItemFilter filter item
+            )
+        |> List.sortBy (\(feed, item) -> item.pubDate)
+        |> List.reverse
+
+
+filterByItemFilter : ItemFilter -> Item -> Bool
+filterByItemFilter filter item =
+    case filter of
+        All -> True
+        Unlistened ->
+            item.playCount == 0
+        Listening ->
+            item.progress > -1 && item.playCount == 0

@@ -3,6 +3,7 @@ module Msgs exposing (..)
 import Models exposing (..)
 import Http
 import Time exposing (Time)
+-- import Keyboard exposing (KeyCode)
 
 type Msg
     = NoOp
@@ -39,3 +40,5 @@ type Msg
     | ShowFeedDropdown String
     | SelectItem Item
     | UnselectItem Item
+    | SelectNext
+    | SelectPrev

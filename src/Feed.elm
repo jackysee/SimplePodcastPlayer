@@ -7,7 +7,7 @@ import Http
 import String
 import Html exposing (Html, text, button, ul, li, div, span, img, a)
 import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, onMouseOut)
-import Html.Attributes exposing (class, title, src, classList)
+import Html.Attributes exposing (class, title, src, classList, id)
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -97,11 +97,14 @@ viewFeedTitle model feed =
         feedState =
             case feed.state of
                 Refreshing ->
-                    span [ class "feed-state" ]
+                    span
+                        [ class "feed-state" ]
                         [ img [src  "assets/loading-spin.svg" ] [] ]
                 RefreshError ->
                     span
-                        [ class "feed-state feed-state-error", title "Error in updating feed" ]
+                        [ class "feed-state feed-state-error"
+                        , title "Error in updating feed"
+                        ]
                         [ img [ src "assets/exclamation.svg" ] [] ]
                 _ ->
                     text ""
@@ -111,9 +114,9 @@ viewFeedTitle model feed =
                 _ ->
                     button
                         [ class "btn btn-icon feed-control feed-refresh"
-                        , onClick (UpdateFeeds [] feed) ]
+                        , onClick (UpdateFeeds [] feed)
+                        ]
                         [ img [ src "assets/refresh.svg" ] [] ]
-            -- span [ class "feed-state" ] [ text "*" ]
     in
         div [ class "feed-header" ]
             [ button
@@ -153,8 +156,8 @@ viewFeedTitle model feed =
             ]
 
 
-viewItem : Model -> Maybe Feed -> Item -> Html Msg
-viewItem model feed item =
+viewItem : Model -> Maybe Feed -> (Int, Item) -> Html Msg
+viewItem model feed (index, item) =
     let
         listened =
             if item.markPlayCount == -1 then
@@ -174,6 +177,7 @@ viewItem model feed item =
             , toggleItem model item
             , onMouseEnter (SelectItem item)
             , onMouseLeave (UnselectItem item)
+            , id ("item-" ++ toString index)
             ]
             [ renderItemState item model.currentItemUrl model.playerState
             , case feed of

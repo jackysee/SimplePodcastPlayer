@@ -7,7 +7,6 @@ import Json.Decode as Json
 
 import Msgs exposing (Msg(..))
 
-
 onEnter : Msg -> Html.Attribute Msg
 onEnter msg =
     on "keydown" <|

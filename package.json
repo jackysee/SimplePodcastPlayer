@@ -29,6 +29,7 @@
     "webpack-dev-server": "1.15.1"
   },
   "dependencies": {
-    "howler": "2.0.0"
+    "howler": "2.0.0",
+    "keycode": "^2.1.7"
   }
 }
