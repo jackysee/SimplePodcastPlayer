@@ -67,18 +67,10 @@ type alias Model =
     , currentItemUrl : Maybe String
     , playerRate : Float
     , playerVol : Float
-    , playerMute : Bool
     , showFeedUrl : Maybe String
     , itemFilter: ItemFilter
-    , itemDropdown : Maybe ItemDropDown
+    , itemDropdown : Maybe String
     , itemSelected : Maybe String
-    }
-
-
-type alias ItemDropDown =
-    { url : String
-    , x : Float
-    , y : Float
     }
 
 
@@ -93,7 +85,6 @@ type alias StoreModel =
     , playerRate : Float
     -- , playerState : PlayerState
     , playerVol : Float
-    , playerMute : Bool
     , itemFilter : String
     }
 
@@ -183,7 +174,6 @@ toStoreModel model =
     , currentItemUrl = model.currentItemUrl
     , playerRate = model.playerRate
     , playerVol = model.playerVol
-    , playerMute = model.playerMute
     , itemFilter = itemFilterToStr model.itemFilter
     }
 

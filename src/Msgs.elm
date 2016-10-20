@@ -33,9 +33,9 @@ type Msg
     | ToggleRate
     | OpenNewLink String
     | SetVol Float
-    | TogglePlayerMute
     | SetItemFilter ItemFilter
     | MarkPlayCount String Int
-    | ShowFeedDropdown String (Float, Float)
+    | MarkItemsBelowListened String
+    | ShowFeedDropdown String
     | SelectItem Item
     | UnselectItem Item

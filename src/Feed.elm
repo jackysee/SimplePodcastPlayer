@@ -1,11 +1,11 @@
 module Feed exposing
-    (loadFeed, updateFeed, updateModelFeed, updateFeedItems
+    ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
     , viewFeedTitle , viewItem )
 
 import Task
 import Http
 import String
-import Html exposing (Html, text, button, ul, li, div, span, img)
+import Html exposing (Html, text, button, ul, li, div, span, img, a)
 import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, onMouseOut)
 import Html.Attributes exposing (class, title, src, classList)
 
@@ -155,70 +155,47 @@ viewFeedTitle model feed =
 
 viewItem : Model -> Maybe Feed -> Item -> Html Msg
 viewItem model feed item =
-    li
-        [ classList
-            [ ("item", True)
-            , ("is-current", maybeEqual item.url model.currentItemUrl)
-            , ("is-error", item.url == Nothing)
-            , ("is-unplayed", item.progress == -1)
-            , ("is-played", item.playCount > 0)
-            , ("is-selected", maybeEqual model.itemSelected item.url)
+    let
+        listened =
+            if item.markPlayCount == -1 then
+                item.playCount > 0
+            else
+                item.markPlayCount > 0
+    in
+        li
+            [ classList
+                [ ("item", True)
+                , ("is-current", maybeEqual item.url model.currentItemUrl)
+                , ("is-error", item.url == Nothing)
+                , ("is-unplayed", item.progress == -1 && not listened)
+                , ("is-played", listened)
+                , ("is-selected", maybeEqual model.itemSelected item.url)
+                ]
+            , toggleItem model item
+            , onMouseEnter (SelectItem item)
+            , onMouseLeave (UnselectItem item)
             ]
-        , toggleItem model item
-        , onMouseEnter (SelectItem item)
-        , onMouseLeave (UnselectItem item)
-        ]
-        [ renderItemState item model.currentItemUrl model.playerState
-        , case feed of
-            Just feed' ->
-                div
-                    [ class "item-feed-title"
-                    , onInternalClick (ShowFeed feed'.url)
-                    ]
-                    [ text feed'.title ]
-            Nothing ->
-                text ""
-        , div [ class "item-desp" ]
-            [ div
-                [ class "item-title", title item.title ]
-                [ text item.title ]
-            ]
-        , div [ class "item-control" ]
-            [ case item.link of
-                Just link ->
-                    button
-                        [ class "btn btn-icon"
-                        , onInternalClick (OpenNewLink link)
-                        , title "open link"
+            [ renderItemState item model.currentItemUrl model.playerState
+            , case feed of
+                Just feed' ->
+                    div
+                        [ class "item-feed-title"
+                        , onInternalClick (ShowFeed feed'.url)
                         ]
-                        [ img [ src "assets/external-link.svg"] [] ]
+                        [ text feed'.title ]
                 Nothing ->
                     text ""
-            , case item.url of
-                Just url ->
-                    div 
-                        [ class "btn-more" ]
-                        [ button
-                            [ class "btn btn-icon btn-more"
-                            , onClickPosBottomRight (ShowFeedDropdown url)
-                            ]
-                            [ img [ src "assets/ellipsis-v.svg" ] []
-                            ]
-                        , if isDropdownOpened model.itemDropdown url then
-                            div
-                                [ class "dropdown-panel" ]
-                                [ text "abc" ]
-                          else
-                              text ""
-                        ]
-                Nothing ->
-                    text ""
+            , div [ class "item-desp" ]
+                [ div
+                    [ class "item-title", title item.title ]
+                    [ text item.title ]
+                ]
+            , viewItemControl listened model item
+            , div [ class "item-date" ]
+                [ text <| format item.pubDate model.currentTime ]
+            , div [ class "item-progress" ]
+                [ text <| formatDurationShort item.duration ]
             ]
-        , div [ class "item-date" ]
-            [ text <| format item.pubDate model.currentTime ]
-        , div [ class "item-progress" ]
-            [ text <| formatDurationShort item.duration ]
-        ]
 
 
 toggleItem : Model -> Item -> Html.Attribute Msg
@@ -260,11 +237,83 @@ renderItemState item currentItemUrl playerState =
                     [ text "!" ]
 
 
-isDropdownOpened : Maybe ItemDropDown -> String -> Bool
-isDropdownOpened itemDropdown url =
-    case itemDropdown of
-        Just itemDropdown' ->
-            itemDropdown'.url == url
+viewItemControl : Bool -> Model -> Item  -> Html Msg
+viewItemControl listened model item =
+    let
+        newLinkItem =
+            case item.link of
+                Just link ->
+                    [ div
+                        [ class "dropdown-item"
+                        , onInternalClick (OpenNewLink link)
+                        ]
+                        [  text "Open link" ]
+                    ]
 
-        Nothing ->
-            False
+                Nothing ->
+                    []
+
+        markItem =
+            case item.url of
+                Just url ->
+                    let
+                        markPlayCount = if listened then 0 else 1
+                    in
+                        [ div
+                            [ class "dropdown-item"
+                            , onInternalClick (MarkPlayCount url markPlayCount)
+                            ]
+                            [ if listened then
+                                  text "Mark as unlistened"
+                              else
+                                  text "Mark as listened"
+                            ]
+                        , div
+                            [ class "dropdown-item"
+                            , onInternalClick (MarkItemsBelowListened url)
+                            ]
+                            [ text "Mark all items below as listened"]
+                        ]
+
+                Nothing ->
+                    []
+
+        menusItems = newLinkItem ++ markItem
+    in
+        if List.length menusItems > 0 then
+            div
+                [ class "item-control" ]
+                [ div
+                    [ class "feed-more-btn" ]
+                    [ button
+                        [ class "btn btn-icon btn-more"
+                        , onInternalClick
+                            (ShowFeedDropdown
+                                ( [ item.url, item.link ]
+                                     |> Maybe.oneOf
+                                     |> Maybe.withDefault ""
+                                )
+                            )
+                        ]
+                        [ img [ src "assets/ellipsis-v.svg" ] []
+                        ]
+                    , if model.itemDropdown == item.url || model.itemDropdown == item.link then
+                          div
+                              [ class "dropdown-panel feed-more-panel" ]
+                              menusItems
+                      else
+                          text ""
+                    ]
+                ]
+        else
+            text ""
+
+
+-- getFileName : String -> String
+-- getFileName str =
+--     str
+--         |> String.toList
+--         |> List.reverse
+--         |> takeWhile (\c -> c /= '/' )
+--         |> List.reverse
+--         |> String.fromList

@@ -112,10 +112,8 @@ viewPlayer model =
                                 [ div
                                     [ class "player-buttons" ]
                                     [ button
-                                        [ class "btn player-btn"
-                                        , onClick TogglePlayerMute
-                                        ]
-                                        [ if model.playerMute then
+                                        [ class "btn player-btn" ]
+                                        [ if model.playerVol == 0 then
                                             img [ src "assets/volume-off.svg" ] []
                                           else
                                             img [ src "assets/volume-up.svg" ] []
@@ -123,8 +121,7 @@ viewPlayer model =
                                     ]
                                 , div
                                     [ class "player-vol-bar" ]
-                                    [ range 0 1 0.01 model.playerVol SetVol
-                                    ]
+                                    [ range 0 1 0.01 model.playerVol SetVol ]
                                 ]
                             , div
                                 [ class "player-progress" ]

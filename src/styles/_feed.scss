@@ -133,6 +133,10 @@
 
 .item.is-played{
     color: #CCC;
+
+    .btn-icon > img, .item-state > img{
+        opacity: 0.3;
+    }
 }
 
 .item:not(.is-current):not(.is-error) .item-state{
@@ -169,15 +173,17 @@
 }
 
 .item-control{
-    display: none;
+    // display: none;
+    visibility: hidden;
+    display: flex;
+    align-items: center;
 }
 
 .item.is-selected .item-control{
-    display: flex
+    visibility: visible;
 }
 
 .item-control .btn{
-    vertical-align: middle;
     margin-top: 0;
 }
 
@@ -217,4 +223,15 @@
 }
 .item-feed-title:hover{
     text-decoration: underline;
+}
+
+.feed-more-btn{
+    position: relative;
+    display: inline-block;
+    margin: 0;
+    height: 1.1rem;
+}
+
+.feed-more-panel{
+    white-space: nowrap;
 }

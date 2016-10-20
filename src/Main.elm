@@ -6,8 +6,9 @@ import Html.Events exposing (onClick, onCheck)
 import Html.Attributes exposing (class, src, style, classList, type', checked)
 import Task exposing (Task)
 import Time exposing (Time)
-import ListUtil exposing (dropWhile)
+import ListUtil exposing (dropWhile, takeWhile)
 import Dom
+import Dict
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -45,7 +46,6 @@ init storeModel =
                 , playerState = Stopped
                 , playerRate = m.playerRate
                 , playerVol = m.playerVol
-                , playerMute = m.playerMute
                 , showFeedUrl = Nothing
                 , itemFilter = toItemFilter m.itemFilter
                 , itemDropdown = Nothing
@@ -65,9 +65,8 @@ init storeModel =
             , playerState = Stopped
             , playerRate = 1
             , playerVol = toFloat 1
-            , playerMute = False
             , showFeedUrl = Nothing
-            , itemFilter = All
+            , itemFilter = Unlistened
             , itemDropdown = Nothing
             , itemSelected = Nothing
             }
@@ -323,16 +322,9 @@ update msg model =
                 OpenNewLink url ->
                     (model , [ openNewLink url ] ++ cmds)
 
-                TogglePlayerMute ->
-                    let
-                        muted = not model.playerMute
-                    in
-                        ({ model | playerMute = muted }
-                        , [setMute muted] ++ cmds)
-
                 SetVol percentage ->
                     ({ model | playerVol = percentage }
-                    , [setVol percentage] ++ cmds)
+                    , [ setVol percentage ] ++ cmds)
 
                 SetItemFilter filter ->
                     ({ model
@@ -342,55 +334,63 @@ update msg model =
                     , cmds
                     )
 
-                MarkPlayCount url playCount ->
-                    ( updateItem
-                        (\item -> { item | markPlayCount = playCount })
-                        (Just url)
-                        model
-                    , cmds
-                    )
-
-                ShowFeedDropdown url (x, y) ->
-                    ({ model
-                        | itemDropdown = Just { url = url , x = x , y = y}
-                     }
-                    , cmds
-                    )
+                ShowFeedDropdown url  ->
+                    ({ model | itemDropdown = Just url } , cmds )
 
                 SelectItem item ->
-                    let
-                        a = Debug.log "selectItem" item
-                    in
-                        ({ model
-                            | itemSelected = item.url
-                            , itemDropdown =
-                                case model.itemDropdown of
-                                    Just itemDropdown ->
-                                        if item.url /= Just itemDropdown.url then
-                                            Nothing
-                                        else
-                                            model.itemDropdown
-
-                                    Nothing ->
-                                        Nothing
-                         }
-                         , cmds
-                         )
+                    ({ model | itemSelected = item.url } , cmds )
 
                 UnselectItem item ->
+                    ({ model | itemDropdown = Nothing } , cmds)
+
+                MarkPlayCount url playCount ->
                     let
-                        a = Debug.log "UnselectItem" item
+                        model' = updateItem
+                            (\item -> { item | markPlayCount = playCount })
+                            (Just url)
+                            model
+                        model'' = { model' | itemDropdown = Nothing }
                     in
-                        case model.itemDropdown of
-                            Just itemDropdown ->
-                                if item.url == Just itemDropdown.url then
-                                    (model, cmds)
-                                else
-                                    ({ model | itemDropdown = Nothing } , cmds)
+                        (model'', cmds)
 
-                            Nothing ->
-                                ({ model | itemDropdown = Nothing } , cmds)
-
+                MarkItemsBelowListened url ->
+                    let
+                        toUpdate =
+                            Dict.fromList
+                                (itemList model
+                                    |> fst
+                                    |> List.filterMap (\(feed, item) -> item.url)
+                                    |> dropWhile (\url' -> url' /= url)
+                                    |> List.map (\url' -> (url', True))
+                                )
+                        model' =
+                            { model
+                                | itemDropdown = Nothing
+                                , list = List.map
+                                    (\feed ->
+                                        { feed | items = List.map
+                                            (\item ->
+                                                case item.url of
+                                                    Just url' ->
+                                                        if Dict.member url' toUpdate then
+                                                            { item | markPlayCount =
+                                                                if item.markPlayCount == -1 then
+                                                                    item.playCount + 1
+                                                                else
+                                                                    item.markPlayCount
+                                                            }
+                                                        else
+                                                            item
+                                                    Nothing ->
+                                                        item
+                                            )
+                                            feed.items
+                                        }
+                                    )
+                                    model.list
+                        }
+                    in
+                        (model', cmds)
     in
         model' ! (cmds' ++ [ saveModel model ] )
 
@@ -405,9 +405,9 @@ view model =
             if List.length model.list > 0 then
                 div
                     [ class "feed-filter" ]
-                    [ filterButton "All" All model.itemFilter
-                    , filterButton "Unlistened" Unlistened model.itemFilter
+                    [ filterButton "Unlistened" Unlistened model.itemFilter
                     , filterButton "Listening" Listening model.itemFilter
+                    , filterButton "All" All model.itemFilter
                     ]
             else
                 text ""
@@ -432,23 +432,6 @@ view model =
                 , viewPlayer model
                 ]
             ]
-
-
-viewItemDropDown : Maybe ItemDropDown -> Html Msg
-viewItemDropDown itemDropdown =
-    case itemDropdown of
-        Just itemDropDown' ->
-            div
-                [ class "dropdown-panel"
-                , style
-                    [ ("top", toString itemDropDown'.y ++ "px")
-                    , ("left", toString itemDropDown'.x ++ "px")
-                    ]
-                ]
-                [ text "abc" ]
-
-        Nothing ->
-            text ""
 
 
 viewTitle : Model -> Maybe Feed -> Html Msg
@@ -501,50 +484,52 @@ viewStatus model =
 
 viewItemList : Model -> Maybe Feed -> Html Msg
 viewItemList model feed' =
-    case feed' of
-        Just feed ->
-            div
-                [ class "item-list-wrap" ]
-                [ ul [ class "item-list" ]
-                    (feed.items
-                        |> List.filter (filterByItemFilter model.itemFilter)
-                        |> List.map (viewItem model Nothing)
-                    )
-                ]
-
-        Nothing ->
-            let
-                (list, hasMoreItem) = itemList model
-                itemList' =
-                    if List.length list == 0 && List.length model.list > 0 then
-                        div
-                            [ class "item-empty" ]
-                            [ text "This list is empty." ]
-                    else
-                        ul
-                            [ class "item-list"]
-                            ( List.map (\(feed, item) ->
-                                 viewItem model (Just feed) item
-                              ) list
-                            )
-                showMore =
-                    if hasMoreItem then
-                        div
-                            [ class "feed-show-more" ]
-                            [ button
-                                [ class "btn btn-text"
-                                , onClick ShowMoreItem
-                                ]
-                                [ text "show more"]
-                            ]
-                      else
-                          text ""
-            in
+    let
+        (list, hasMoreItem) = itemList model
+    in
+        case feed' of
+            Just feed ->
                 div
                     [ class "item-list-wrap" ]
-                    [ itemList'
-                    , showMore
+                    [ ul [ class "item-list" ]
+                        ( list
+                            |> List.map snd
+                            |> List.map (viewItem model Nothing)
+                        )
                     ]
+
+            Nothing ->
+                let
+                    itemList' =
+                        if List.length list == 0 && List.length model.list > 0 then
+                            div
+                                [ class "item-empty" ]
+                                [ text "This list is empty." ]
+                        else
+                            ul
+                                [ class "item-list"]
+                                ( List.map (\(feed, item) ->
+                                     viewItem model (Just feed) item
+                                  ) list
+                                )
+                    showMore =
+                        if hasMoreItem then
+                            div
+                                [ class "feed-show-more" ]
+                                [ button
+                                    [ class "btn btn-text"
+                                    , onClick ShowMoreItem
+                                    ]
+                                    [ text "show more"]
+                                ]
+                          else
+                              text ""
+                in
+                    div
+                        [ class "item-list-wrap" ]
+                        [ itemList'
+                        , showMore
+                        ]
 
 
 itemsByDate: ItemFilter -> List Feed -> List (Feed, Item)
@@ -631,4 +616,3 @@ port playEnd: (String -> msg) -> Sub msg
 port setRate : Float -> Cmd msg
 port openNewLink : String -> Cmd msg
 port setVol : Float -> Cmd msg
-port setMute : Bool -> Cmd msg

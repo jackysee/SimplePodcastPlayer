@@ -10,14 +10,16 @@
     margin-top: 0;
 }
 
-$player-height: 4.5rem;
+$player-height: 5rem;
+$player-top-padding : 0.5rem;
 
 .player-wrap.is-show{
     height: $player-height;
+    padding-top: $player-top-padding;
 }
 
 .player{
-    height: $player-height;
+    height: $player-height - $player-top-padding; 
     /*margin-top: 5px;*/
     margin:0 5px 0 5px;
     padding: 1rem;

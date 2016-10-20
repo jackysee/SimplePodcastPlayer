@@ -106,7 +106,7 @@ app.ports.seek.subscribe(function(value){
     if(sound){
         sound.seek(value);
         app.ports.updateProgress.send({
-            current: sound.seek(),
+            progress: sound.seek(),
             duration: sound.duration()
         });
     }
@@ -128,11 +128,11 @@ app.ports.setVol.subscribe(function(vol) {
     }
 });
 
-app.ports.setMute.subscribe(function(muted) {
-    if(sound){
-        sound.mute(muted);
-    }
-});
+// app.ports.setMute.subscribe(function(muted) {
+//     if(sound){
+//         sound.mute(muted);
+//     }
+// });
 
 // http://www.memehk.com/podcast.php?id=8
 // http://feeds.soundcloud.com/users/soundcloud:users:62921190/sounds.rss
