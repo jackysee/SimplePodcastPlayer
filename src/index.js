@@ -138,6 +138,13 @@ document.onkeyup = function(ev){
     }
 };
 
+app.ports.scrollToElement.subscribe(function(id){
+    var el = document.getElementById(id);
+    if(el){
+        el.scrollIntoView();
+    }
+});
+
 // app.ports.setMute.subscribe(function(muted) {
 //     if(sound){
 //         sound.mute(muted);

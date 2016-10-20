@@ -394,7 +394,10 @@ update msg model =
                         (model', cmds)
 
                 SelectNext ->
-                    (selectNext model, cmds)
+                    let
+                        (model', cmd) = selectNext model
+                    in
+                        (model', [cmd] ++ cmds)
 
                 SelectPrev ->
                     let

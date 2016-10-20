@@ -1,4 +1,4 @@
-module Shortcut exposing (keyMap, selectNext, selectPrev)
+port module Shortcut exposing (keyMap, selectNext, selectPrev)
 
 import Msgs exposing (..)
 import Models exposing (..)
@@ -38,7 +38,7 @@ keyMap model key =
                 NoOp
 
 
-selectNext : Model -> Model
+selectNext : Model -> (Model, Cmd Msg)
 selectNext model =
     let
         (list, more) = itemList model
@@ -46,8 +46,9 @@ selectNext model =
         case model.itemSelected of
             Just url ->
                 list
-                    |> dropWhile (\(feed, item) -> item.url /= Just url)
-                    |> List.map snd
+                    |> List.indexedMap (,)
+                    |> dropWhile (\(index, (feed, item)) -> item.url /= Just url)
+                    |> List.map (\(index, (feed, item)) -> (index, item))
                     |> List.take 2
                     |> List.reverse
                     |> List.head
@@ -55,7 +56,8 @@ selectNext model =
 
             Nothing ->
                 list
-                    |> List.map snd
+                    |> List.indexedMap (,)
+                    |> List.map (\(index, (feed, item)) -> (index, item))
                     |> List.head
                     |> selectItem model
 
@@ -69,28 +71,36 @@ selectPrev model =
             Just url ->
                 let
                     item = list
-                            |> takeWhile (\(feed, item) -> item.url /= Just url)
-                            |> List.map snd
+                            |> List.indexedMap (,)
+                            |> takeWhile (\(index, (feed, item)) -> item.url /= Just url)
+                            |> List.map (\(index, (feed, item)) -> (index, item)) 
                             |> List.reverse
                             |> List.head
                 in
-                    (selectItem model item, Cmd.none)
+                    selectItem model item
 
             Nothing ->
                 let
                     item = list
-                            |> List.map snd
+                            |> List.indexedMap (,)
+                            |> List.map (\(index, (feed, item)) -> (index, item))
                             |> List.reverse
                             |> List.head
                 in
-                    (selectItem model item, Cmd.none)
+                    selectItem model item
 
 
-selectItem:  Model -> Maybe Item -> Model
+selectItem:  Model -> Maybe (Int, Item) -> (Model, Cmd Msg)
 selectItem model item =
     case item of
-        Just item' ->
-            { model | itemSelected = item'.url }
+        Just (index, item') ->
+            ({ model | itemSelected = item'.url }, scrollToElement ("item-" ++ toString index))
 
         Nothing ->
-            model
+            (model, Cmd.none)
+
+
+port scrollToElement: String -> Cmd msg
+
+
+
