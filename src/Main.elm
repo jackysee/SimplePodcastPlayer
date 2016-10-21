@@ -491,7 +491,7 @@ viewTitle model feed' =
                       else
                           text ""
 
-                    , if not isRefreshing then 
+                    , if not isRefreshing && List.length model.list > 0 then 
                         button
                             [ class "btn btn-icon feed-control feed-refresh" 
                             , onClick UpdateAllFeed
