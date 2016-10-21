@@ -487,9 +487,9 @@ viewTitle model feed' =
                     , if isRefreshing then
                         span
                             [ class "feed-state" ]
-                            [ img [src  "assets/loading-spin.svg" ] [] ]
+                            [ img [ src  "assets/loading-spin.svg" ] [] ]
                       else
-                          text ""
+                        text ""
 
                     , if not isRefreshing && List.length model.list > 0 then 
                         button
