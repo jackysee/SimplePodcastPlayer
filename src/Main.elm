@@ -3,7 +3,7 @@ port module Main exposing (..)
 import Html exposing (div, text, input, Html, span, ul, li, button, img)
 import Html.App as App
 import Html.Events exposing (onClick)
-import Html.Attributes exposing (class, src, style, classList, type', checked)
+import Html.Attributes exposing (class, src, style, classList, type', checked, title)
 import Task exposing (Task)
 import Time exposing (Time)
 import ListUtil exposing (dropWhile, takeWhile)
@@ -179,6 +179,9 @@ update msg model =
                                         , progress = progress.progress })
                     , cmds
                     )
+
+                UpdateAllFeed ->
+                    ( model, [ updateFeeds model.list ] ++ cmds)
 
                 UpdateFeeds feeds feed ->
                     let
@@ -463,19 +466,41 @@ viewTitle model feed' =
             viewFeedTitle model feed
 
         Nothing ->
-            div
-                [ class "feed-header" ]
-                [ addFeedButton
-                , div
-                    [ class "feed-title" ]
-                    [ if List.length model.list == 0 then
+            let
+                isRefreshing = model.list 
+                    |> List.filter (\feed -> feed.state == Refreshing )
+                    |> List.length 
+                    |> (<) 0
+            in
+                div
+                    [ class "feed-header" ]
+                    [ addFeedButton
+                    , div
+                        [ class "feed-title" ]
+                        [ if List.length model.list == 0 then
+                            span
+                                [ class "feed-empty" ]
+                                [ text "← Click to add feed" ]
+                          else
+                            text "All Podcasts"
+                        ]
+                    , if isRefreshing then
                         span
-                            [ class "feed-empty" ]
-                            [ text "← Click to add feed" ]
+                            [ class "feed-state" ]
+                            [ img [src  "assets/loading-spin.svg" ] [] ]
                       else
-                        text "All Podcasts"
+                          text ""
+
+                    , if not isRefreshing then 
+                        button
+                            [ class "btn btn-icon feed-control feed-refresh" 
+                            , onClick UpdateAllFeed
+                            , title "Refresh all feeds"
+                            ]
+                            [ img [ src "assets/refresh.svg" ] [] ]
+                      else
+                          text ""
                     ]
-                ]
 
 
 filterButton : String -> ItemFilter -> ItemFilter -> Html Msg

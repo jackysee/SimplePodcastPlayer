@@ -20,6 +20,7 @@ type Msg
     | Pause Item
     | Stop Item
     | UpdateProgress Progress
+    | UpdateAllFeed
     | UpdateFeeds (List Feed) Feed
     | UpdateFeedFail (List Feed) Feed Http.Error
     | UpdateFeedSucceed (List Feed) Feed
