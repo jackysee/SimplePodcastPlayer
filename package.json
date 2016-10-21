@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "howler": "2.0.0",
-    "keycode": "^2.1.7"
+    "keycode": "^2.1.7",
+    "scrollparent": "^1.0.2"
   }
 }

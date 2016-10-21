@@ -4,13 +4,12 @@ require('./styles/main.scss')
 require('howler'); //Howl
 var Elm = require('./Main.elm');
 var keycode = require('keycode');
+var scrollIntoViewIfNeeded = require('./scrollIntoViewIfNeeded');
 
 var root  = document.getElementById('root');
 
-// var app = Elm.Main.embed(root, 'https://feeds.feedburner.com/JackysBlog');
 var app = Elm.Main.embed(root,
     JSON.parse(localStorage.getItem("model"))
-    // 'http://podcast.talkonly.net/feed'
 );
 
 
@@ -133,7 +132,7 @@ document.onkeyup = function(ev){
     if(ev.target){
         var tagName = ev.target.tagName;
         if(tagName !== "input" && tagName !== "textarea"){
-            app.ports.keyUp.send(keycode(ev.keyCode));
+            app.ports.keyUp.send(keycode(ev.keyCode) || "");
         }
     }
 };
@@ -141,20 +140,11 @@ document.onkeyup = function(ev){
 app.ports.scrollToElement.subscribe(function(id){
     var el = document.getElementById(id);
     if(el){
-        el.scrollIntoView();
+        scrollIntoViewIfNeeded(el);
     }
 });
 
-// app.ports.setMute.subscribe(function(muted) {
-//     if(sound){
-//         sound.mute(muted);
-//     }
-// });
-
 // http://www.memehk.com/podcast.php?id=8
 // http://feeds.soundcloud.com/users/soundcloud:users:62921190/sounds.rss
-
-// app.ports.loadFeed.subscribe(function(url){
-//   load(url);
-// });
-//
+// http://podcast.talkonly.net/feed
+// https://feeds.feedburner.com/JackysBlog

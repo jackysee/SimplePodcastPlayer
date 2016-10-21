@@ -175,12 +175,16 @@
 
 .item-control{
     // display: none;
-    visibility: hidden;
+    //visibility: hidden;
     display: flex;
     align-items: center;
 }
 
-.item.is-selected .item-control{
+.item .btn-more{
+    visibility: hidden;
+}
+
+.item.is-selected .btn-more{
     visibility: visible;
 }
 

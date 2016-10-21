@@ -2,7 +2,7 @@ port module Main exposing (..)
 
 import Html exposing (div, text, input, Html, span, ul, li, button, img)
 import Html.App as App
-import Html.Events exposing (onClick, onCheck)
+import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, src, style, classList, type', checked)
 import Task exposing (Task)
 import Time exposing (Time)
@@ -18,6 +18,7 @@ import Feed exposing
 import AddFeed exposing (viewAddFeed, addFeedButton)
 import Player exposing (viewPlayer)
 import Shortcut exposing (keyMap, selectNext, selectPrev)
+import Events exposing (onScroll)
 
 
 main : Program (Maybe StoreModel)
@@ -99,7 +100,10 @@ update msg model =
         (model', cmds') =
             case msg of
                 NoOp ->
-                    (model, [])
+                    let 
+                        a = Debug.log "Noop" "Noop"
+                    in
+                        (model, [])
 
                 SetUrl value ->
                     ({ model
@@ -335,14 +339,18 @@ update msg model =
                     , cmds
                     )
 
-                ShowFeedDropdown url  ->
+                ShowItemDropdown url  ->
                     ({ model | itemDropdown = Just url } , cmds )
+
+                HideItemDropdown ->
+                    ({ model | itemDropdown = Nothing } , cmds )
 
                 SelectItem item ->
                     ({ model | itemSelected = item.url } , cmds )
 
                 UnselectItem item ->
-                    ({ model | itemDropdown = Nothing } , cmds)
+                    -- ({ model | itemDropdown = Nothing } , cmds)
+                    (model, cmds)
 
                 MarkPlayCount url playCount ->
                     let
@@ -504,7 +512,9 @@ viewItemList model feed' =
         case feed' of
             Just feed ->
                 div
-                    [ class "item-list-wrap" ]
+                    [ class "item-list-wrap" 
+                    , onScroll HideItemDropdown
+                    ]
                     [ ul [ class "item-list" ]
                         ( list
                             |> List.map snd
@@ -543,7 +553,9 @@ viewItemList model feed' =
                               text ""
                 in
                     div
-                        [ class "item-list-wrap" ]
+                        [ class "item-list-wrap" 
+                        , onScroll HideItemDropdown
+                        ]
                         [ itemList'
                         , showMore
                         ]

@@ -6,7 +6,7 @@ import Task
 import Http
 import String
 import Html exposing (Html, text, button, ul, li, div, span, img, a)
-import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, onMouseOut)
+import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Html.Attributes exposing (class, title, src, classList, id)
 
 import Models exposing (..)
@@ -292,7 +292,7 @@ viewItemControl listened model item =
                     [ button
                         [ class "btn btn-icon btn-more"
                         , onInternalClick
-                            (ShowFeedDropdown
+                            (ShowItemDropdown
                                 ( [ item.url, item.link ]
                                      |> Maybe.oneOf
                                      |> Maybe.withDefault ""
@@ -313,11 +313,3 @@ viewItemControl listened model item =
             text ""
 
 
--- getFileName : String -> String
--- getFileName str =
---     str
---         |> String.toList
---         |> List.reverse
---         |> takeWhile (\c -> c /= '/' )
---         |> List.reverse
---         |> String.fromList

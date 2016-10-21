@@ -37,7 +37,8 @@ type Msg
     | SetItemFilter ItemFilter
     | MarkPlayCount String Int
     | MarkItemsBelowListened String
-    | ShowFeedDropdown String
+    | ShowItemDropdown String
+    | HideItemDropdown
     | SelectItem Item
     | UnselectItem Item
     | SelectNext

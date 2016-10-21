@@ -41,3 +41,7 @@ onClickPosBottomRight msg =
             (\(x, y) -> msg (x, y))
             decodeBottomRight
         )
+
+onScroll: Msg -> Html.Attribute Msg
+onScroll msg =
+    on "scroll" (Json.succeed msg)
