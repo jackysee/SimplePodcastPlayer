@@ -8,6 +8,7 @@ import String
 import Html exposing (Html, text, button, ul, li, div, span, img, a)
 import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Html.Attributes exposing (class, title, src, classList, id)
+import Dict
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -61,19 +62,20 @@ updateFeedItems model newFeed =
         case feed of
             Just feed' ->
                 let
-                    head = List.head feed'.items
-                    -- a = Debug.log "newFeed.items" newFeed.items
+                    urls = feed'.items
+                        |> List.filterMap (\item -> item.url)
+                        |> List.map (\url -> (url, True))
+                        |> Dict.fromList
                     newItems =
-                        case head of
-                            Nothing ->
-                                []
-
-                            Just head' ->
-                                newFeed.items
-                                    |> takeWhile
-                                        (\item ->
-                                            item.url /= head'.url && item.url /= Nothing
-                                        )
+                        newFeed.items
+                            |> List.filter 
+                                (\item -> 
+                                    case item.url of 
+                                        Just url ->
+                                            not (Dict.member url urls)
+                                        Nothing ->
+                                            True
+                                )
                 in
                     updateModelFeed
                         { feed'
