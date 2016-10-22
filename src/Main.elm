@@ -58,7 +58,7 @@ init storeModel =
                       ]
         Nothing ->
             { showAddPanel = False
-            , urlToAdd = "" --Maybe.withDefault "" storeModel.url
+            , urlToAdd = "" 
             , list = []
             , loadFeedState = Empty
             , currentTime = 0
@@ -100,10 +100,7 @@ update msg model =
         (model', cmds') =
             case msg of
                 NoOp ->
-                    let 
-                        a = Debug.log "Noop" "Noop"
-                    in
-                        (model, [])
+                    (model, [])
 
                 SetUrl value ->
                     ({ model
@@ -132,6 +129,7 @@ update msg model =
                                 ++ [ { feed | items = feed.items } ]
                         , loadFeedState = Empty
                         , urlToAdd = ""
+                        , showAddPanel = False
                     }
                     , cmds)
 
@@ -277,6 +275,7 @@ update msg model =
                         ({ model
                             | list = list
                             , currentItemUrl = currentItemUrl
+                            , showFeedUrl = Nothing
                          }
                         , cmds' ++ cmds
                         )
@@ -439,10 +438,10 @@ view model =
     in
         div [ class "app-wrap" ]
             [ viewAddFeed model
-            -- , viewItemDropDown model.itemDropdown
             , div
                 [ class "wrap"
                 , onClick HideAddPanel
+                , onClick HideItemDropdown
                 ]
                 [ div
                     [ class "top-bar-wrap" ]

@@ -26,7 +26,7 @@ viewAddFeed model =
             [ id "add-feed"
             , class "add-feed"
             , onInput SetUrl
-            , onEnter AddFeed
+            , onEnter AddFeed 
             , value model.urlToAdd
             , placeholder "Add Feed"
             ]

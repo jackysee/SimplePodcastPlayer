@@ -3,6 +3,7 @@ port module Shortcut exposing (keyMap, selectNext, selectPrev)
 import Msgs exposing (..)
 import Models exposing (..)
 import ListUtil exposing (dropWhile, takeWhile)
+-- import Maybe.Extra exposing (join)
 
 keyMap: Model -> String -> Msg
 keyMap model key =
@@ -15,21 +16,37 @@ keyMap model key =
             "k" ->
                 SelectPrev
 
+            "o" ->
+                case getSelectedItem model of
+                    Just item ->
+                        case item.link of
+                            Just link' ->
+                                OpenNewLink link'
+
+                            Nothing ->
+                                NoOp
+
+                    Nothing ->
+                        NoOp
+
             "space" ->
                 case getSelectedItem model of
                     Just item ->
-                        case model.playerState of
-                            Playing ->
-                                Pause item
+                        if item.url /= model.currentItemUrl then
+                            Play item
+                        else
+                            case model.playerState of
+                                Playing ->
+                                    Pause item
 
-                            Paused ->
-                                Play item
+                                Paused ->
+                                    Play item
 
-                            Stopped ->
-                                Play item
+                                Stopped ->
+                                    Play item
 
-                            _ ->
-                                NoOp
+                                _ ->
+                                    NoOp
 
                     Nothing ->
                         NoOp

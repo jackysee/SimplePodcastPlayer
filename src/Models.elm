@@ -75,15 +75,11 @@ type alias Model =
 
 
 type alias StoreModel =
-    -- { showAddPanel : Bool
     { urlToAdd : String
-    -- , loadFeedState : LoadFeedState
     , list : List StoreFeed
-    -- , currentTime : Time
     , itemsToShow : Int
     , currentItemUrl : Maybe String
     , playerRate : Float
-    -- , playerState : PlayerState
     , playerVol : Float
     , itemFilter : String
     }
@@ -92,7 +88,6 @@ type alias StoreFeed =
     { url : String
     , title : String
     , items : List Item
-    -- , state : UpdateFeedState
     }
 
 

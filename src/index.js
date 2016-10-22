@@ -130,9 +130,13 @@ app.ports.setVol.subscribe(function(vol) {
 
 document.onkeyup = function(ev){
     if(ev.target){
-        var tagName = ev.target.tagName;
+        var tagName = ev.target.tagName.toLowerCase();
         if(tagName !== "input" && tagName !== "textarea"){
-            app.ports.keyUp.send(keycode(ev.keyCode) || "");
+            var key = keycode(ev) || "";
+            if(key === 'space'){
+                ev.preventDefault();
+            }
+            app.ports.keyUp.send(key);
         }
     }
 };
@@ -143,6 +147,8 @@ app.ports.scrollToElement.subscribe(function(id){
         scrollIntoViewIfNeeded(el);
     }
 });
+
+
 
 // http://www.memehk.com/podcast.php?id=8
 // http://feeds.soundcloud.com/users/soundcloud:users:62921190/sounds.rss

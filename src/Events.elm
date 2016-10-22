@@ -1,7 +1,7 @@
 module Events exposing (..)
 
 import Html
-import Html.Events exposing (on, onWithOptions, keyCode)
+import Html.Events exposing (on, onWithOptions, keyCode, targetValue)
 import DecodePosition exposing (decodeBottomRight)
 import Json.Decode as Json
 
@@ -13,7 +13,7 @@ onEnter msg =
         Json.map
             (\code ->
                 if code == 13 then
-                    msg
+                    msg 
                 else
                     NoOp
             )
@@ -42,6 +42,9 @@ onClickPosBottomRight msg =
             decodeBottomRight
         )
 
+
 onScroll: Msg -> Html.Attribute Msg
 onScroll msg =
     on "scroll" (Json.succeed msg)
+
+

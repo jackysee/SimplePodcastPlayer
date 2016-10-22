@@ -62,6 +62,7 @@ updateFeedItems model newFeed =
             Just feed' ->
                 let
                     head = List.head feed'.items
+                    -- a = Debug.log "newFeed.items" newFeed.items
                     newItems =
                         case head of
                             Nothing ->
@@ -71,7 +72,7 @@ updateFeedItems model newFeed =
                                 newFeed.items
                                     |> takeWhile
                                         (\item ->
-                                            not <| maybeEqual item.url head'.url
+                                            item.url /= head'.url && item.url /= Nothing
                                         )
                 in
                     updateModelFeed
