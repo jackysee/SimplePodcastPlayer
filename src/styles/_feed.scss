@@ -253,3 +253,19 @@
 .feed-more-panel{
     white-space: nowrap;
 }
+
+.feed-confirm-delete{
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+
+    > * {
+        margin-top: 0;
+    }
+}
+.confirm-delete-btn.confirm-delete-btn{
+    color: red;
+    margin-left: 0;
+}
+
+

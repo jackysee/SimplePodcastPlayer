@@ -130,33 +130,42 @@ viewFeedTitle model feed =
             , span [ class "feed-title" ] [ text feed.title ]
             , feedState
             , refreshBtn
-            , button
+            , viewConfirmDelete feed
+            ]
+
+
+viewConfirmDelete: Feed -> Html Msg
+viewConfirmDelete feed =
+    div
+        [ class "feed-confirm-delete" ]
+        [ if feed.showConfirmDelete then
+            div
+                [ class "feed-control" ]
+                [ div
+                    [ class "confirm-delete feed-control" ]
+                    --[ span [] [ text "Delete?" ]
+                    [ button
+                        [ class "btn btn-text"
+                        , onClick (HideConfirmDeleteFeed feed)
+                        ]
+                        [ text "Cancel" ]
+                    , span [] [ text "/" ]
+                    , button
+                        [ class "btn btn-text confirm-delete-btn "
+                        , onClick (ConfirmDeleteFeed feed)
+                        ]
+                        [ text "Delete"]
+                    ]
+                ]
+          else
+            button
                 [ classList
                     [ ("btn btn-icon feed-control feed-trash", True) ]
                 , onClick (ShowConfirmDeleteFeed feed)
                 ]
                 [ img [ src "assets/trash.svg"] [] ]
-            , if feed.showConfirmDelete then
-                div
-                    [ class "feed-control" ]
-                    [ div
-                        [ class "confirm-delete feed-control" ]
-                        [ span [] [ text "Delete?" ]
-                        , button
-                            [ class "btn btn-text"
-                            , onClick (ConfirmDeleteFeed feed)
-                            ]
-                            [ text "Yes "]
-                        , button
-                            [ class "btn btn-text"
-                            , onClick (HideConfirmDeleteFeed feed)
-                            ]
-                            [ text "No" ]
-                        ]
-                    ]
-              else
-                  text ""
-            ]
+        ]
+
 
 
 viewItem : Model -> Maybe Feed -> (Int, Item) -> Html Msg
