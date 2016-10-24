@@ -13,7 +13,7 @@ import Dict
 import Models exposing (..)
 import Msgs exposing (..)
 import DecodeFeed exposing (decodeFeed)
-import ListUtil exposing (takeWhile, dropWhile)
+-- import ListUtil exposing (takeWhile, dropWhile)
 import DateFormat exposing (formatDuration, formatDurationShort, format)
 import Events exposing (onInternalClick, onClickPosBottomRight)
 
@@ -63,19 +63,12 @@ updateFeedItems model newFeed =
             Just feed' ->
                 let
                     urls = feed'.items
-                        |> List.filterMap (\item -> item.url)
-                        |> List.map (\url -> (url, True))
+                        |> List.map (\item -> (item.url, True))
                         |> Dict.fromList
                     newItems =
                         newFeed.items
-                            |> List.filter 
-                                (\item -> 
-                                    case item.url of 
-                                        Just url ->
-                                            not (Dict.member url urls)
-                                        Nothing ->
-                                            True
-                                )
+                            |> List.filter
+                                (\item -> not (Dict.member item.url urls))
                 in
                     updateModelFeed
                         { feed'
@@ -96,7 +89,7 @@ maybeEqual a b =
 viewFeedTitle : Model -> Feed -> Html Msg
 viewFeedTitle model feed =
     let
-        items = feed.items -- List.filter (\item -> item.show) feed.items
+        items = feed.items
         feedState =
             case feed.state of
                 Refreshing ->
@@ -180,11 +173,11 @@ viewItem model feed (index, item) =
         li
             [ classList
                 [ ("item", True)
-                , ("is-current", maybeEqual item.url model.currentItemUrl)
-                , ("is-error", item.url == Nothing)
+                , ("is-current", Just item.url == model.currentItemUrl)
+                -- , ("is-error", item.url == Nothing)
                 , ("is-unplayed", item.progress == -1 && not listened)
                 , ("is-played", listened)
-                , ("is-selected", maybeEqual model.itemSelected item.url)
+                , ("is-selected", model.itemSelected == Just item.url)
                 ]
             , toggleItem model item
             , onMouseEnter (SelectItem item)
@@ -216,7 +209,7 @@ viewItem model feed (index, item) =
 
 toggleItem : Model -> Item -> Html.Attribute Msg
 toggleItem model item =
-    if maybeEqual item.url model.currentItemUrl then
+    if Just item.url == model.currentItemUrl then
         if model.playerState == Playing then
             onClick (Pause item)
         else
@@ -227,7 +220,7 @@ toggleItem model item =
 
 renderItemState: Item -> Maybe String -> PlayerState -> Html Msg
 renderItemState item currentItemUrl playerState =
-    if maybeEqual item.url currentItemUrl then
+    if Just item.url == currentItemUrl then
         div
             [ class "item-state" ]
             [ if playerState == SoundLoading then
@@ -238,19 +231,11 @@ renderItemState item currentItemUrl playerState =
                 img [ src "assets/equalizer-stop.svg" ] []
             ]
     else
-        case item.url of
-            Just url' ->
-                div
-                    [ class "item-state" ]
-                    [ img [ src "assets/play.svg" ] []
-                    ]
+        div
+            [ class "item-state" ]
+            [ img [ src "assets/play.svg" ] []
+            ]
 
-            Nothing ->
-                 div
-                    [ class "item-state item-not-found"
-                    , title "no file found "
-                    ]
-                    [ text "!" ]
 
 
 viewItemControl : Bool -> Model -> Item  -> Html Msg
@@ -270,29 +255,25 @@ viewItemControl listened model item =
                     []
 
         markItem =
-            case item.url of
-                Just url ->
-                    let
-                        markPlayCount = if listened then 0 else 1
-                    in
-                        [ div
-                            [ class "dropdown-item"
-                            , onInternalClick (MarkPlayCount url markPlayCount)
-                            ]
-                            [ if listened then
-                                  text "Mark as unlistened"
-                              else
-                                  text "Mark as listened"
-                            ]
-                        , div
-                            [ class "dropdown-item"
-                            , onInternalClick (MarkItemsBelowListened url)
-                            ]
-                            [ text "Mark all items below as listened"]
-                        ]
+            let
+                markPlayCount = if listened then 0 else 1
+            in
+                [ div
+                    [ class "dropdown-item"
+                    , onInternalClick (MarkPlayCount item.url markPlayCount)
+                    ]
+                    [ if listened then
+                          text "Mark as unlistened"
+                      else
+                          text "Mark as listened"
+                    ]
+                , div
+                    [ class "dropdown-item"
+                    , onInternalClick (MarkItemsBelowListened item.url)
+                    ]
+                    [ text "Mark item and items below as listened"]
+                ]
 
-                Nothing ->
-                    []
 
         menusItems = newLinkItem ++ markItem
     in
@@ -305,7 +286,7 @@ viewItemControl listened model item =
                         [ class "btn btn-icon btn-more"
                         , onInternalClick
                             (ShowItemDropdown
-                                ( [ item.url, item.link ]
+                                ( [ Just item.url, item.link ]
                                      |> Maybe.oneOf
                                      |> Maybe.withDefault ""
                                 )
@@ -313,7 +294,7 @@ viewItemControl listened model item =
                         ]
                         [ img [ src "assets/ellipsis-v.svg" ] []
                         ]
-                    , if model.itemDropdown == item.url || model.itemDropdown == item.link then
+                    , if model.itemDropdown == Just item.url || maybeEqual model.itemDropdown item.link then
                           div
                               [ class "dropdown-panel feed-more-panel" ]
                               menusItems
@@ -323,5 +304,3 @@ viewItemControl listened model item =
                 ]
         else
             text ""
-
-

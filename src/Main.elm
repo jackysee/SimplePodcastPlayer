@@ -58,7 +58,7 @@ init storeModel =
                       ]
         Nothing ->
             { showAddPanel = False
-            , urlToAdd = "" 
+            , urlToAdd = ""
             , list = []
             , loadFeedState = Empty
             , currentTime = 0
@@ -143,22 +143,17 @@ update msg model =
                     ({ model | currentTime = time }, [])
 
                 Play item ->
-                    case item.url of
-                        Nothing ->
-                            (model, cmds)
-
-                        Just url ->
-                            ({ model
-                                | currentItemUrl = Just url
-                                , playerState = SoundLoading
-                            }
-                            , [ play
-                                { url = url
-                                , seek = item.progress
-                                , rate = model.playerRate
-                                , vol = model.playerVol
-                                }
-                              ] ++ cmds)
+                    ({ model
+                        | currentItemUrl = Just item.url
+                        , playerState = SoundLoading
+                    }
+                    , [ play
+                        { url = item.url
+                        , seek = item.progress
+                        , rate = model.playerRate
+                        , vol = model.playerVol
+                        }
+                      ] ++ cmds)
 
                 SoundLoaded loaded ->
                     ({ model | playerState = Playing } , cmds)
@@ -227,7 +222,10 @@ update msg model =
                     )
 
                 HideAddPanel ->
-                    ({ model | showAddPanel = False }, cmds)
+                    ({ model | showAddPanel = False }
+                    , [ Task.perform (\_ -> NoOp) (\_ -> NoOp) (Dom.blur "add-feed") ]
+                        ++ cmds
+                    )
 
                 ShowFeed url ->
                     ({ model
@@ -301,7 +299,7 @@ update msg model =
                         nextItem =
                             itemList model
                                 |> fst
-                                |> dropWhile (\(feed, item) -> item.url /= Just url)
+                                |> dropWhile (\(feed, item) -> item.url /= url)
                                 |> List.take 2
                                 |> List.reverse
                                 |> List.map snd
@@ -348,10 +346,9 @@ update msg model =
                     ({ model | itemDropdown = Nothing } , cmds )
 
                 SelectItem item ->
-                    ({ model | itemSelected = item.url } , cmds )
+                    ({ model | itemSelected = Just item.url } , cmds )
 
                 UnselectItem item ->
-                    -- ({ model | itemDropdown = Nothing } , cmds)
                     (model, cmds)
 
                 MarkPlayCount url playCount ->
@@ -370,9 +367,8 @@ update msg model =
                             Dict.fromList
                                 (itemList model
                                     |> fst
-                                    |> List.filterMap (\(feed, item) -> item.url)
-                                    |> dropWhile (\url' -> url' /= url)
-                                    |> List.map (\url' -> (url', True))
+                                    |> dropWhile (\(feed, item) -> item.url /= url)
+                                    |> List.map (\(feed, item) -> (item.url, True))
                                 )
                         model' =
                             { model
@@ -381,19 +377,15 @@ update msg model =
                                     (\feed ->
                                         { feed | items = List.map
                                             (\item ->
-                                                case item.url of
-                                                    Just url' ->
-                                                        if Dict.member url' toUpdate then
-                                                            { item | markPlayCount =
-                                                                if item.markPlayCount == -1 then
-                                                                    item.playCount + 1
-                                                                else
-                                                                    item.markPlayCount
-                                                            }
+                                                if Dict.member item.url toUpdate then
+                                                    { item | markPlayCount =
+                                                        if item.markPlayCount == -1 then
+                                                            item.playCount + 1
                                                         else
-                                                            item
-                                                    Nothing ->
-                                                        item
+                                                            item.markPlayCount
+                                                    }
+                                                else
+                                                    item
                                             )
                                             feed.items
                                         }
@@ -466,9 +458,9 @@ viewTitle model feed' =
 
         Nothing ->
             let
-                isRefreshing = model.list 
+                isRefreshing = model.list
                     |> List.filter (\feed -> feed.state == Refreshing )
-                    |> List.length 
+                    |> List.length
                     |> (<) 0
             in
                 div
@@ -490,9 +482,9 @@ viewTitle model feed' =
                       else
                         text ""
 
-                    , if not isRefreshing && List.length model.list > 0 then 
+                    , if not isRefreshing && List.length model.list > 0 then
                         button
-                            [ class "btn btn-icon feed-control feed-refresh" 
+                            [ class "btn btn-icon feed-control feed-refresh"
                             , onClick UpdateAllFeed
                             , title "Refresh all feeds"
                             ]
@@ -536,7 +528,7 @@ viewItemList model feed' =
         case feed' of
             Just feed ->
                 div
-                    [ class "item-list-wrap" 
+                    [ class "item-list-wrap"
                     , onScroll HideItemDropdown
                     ]
                     [ ul [ class "item-list" ]
@@ -577,7 +569,7 @@ viewItemList model feed' =
                               text ""
                 in
                     div
-                        [ class "item-list-wrap" 
+                        [ class "item-list-wrap"
                         , onScroll HideItemDropdown
                         ]
                         [ itemList'

@@ -7,7 +7,7 @@ type alias Item =
     { title : String
     , pubDate : Time
     , link : Maybe String
-    , url: Maybe String
+    , url: String
     , duration : Time
     , progress : Time
     , playCount : Int
@@ -75,11 +75,15 @@ type alias Model =
 
 
 type alias StoreModel =
+    -- { showAddPanel : Bool
     { urlToAdd : String
+    -- , loadFeedState : LoadFeedState
     , list : List StoreFeed
+    -- , currentTime : Time
     , itemsToShow : Int
     , currentItemUrl : Maybe String
     , playerRate : Float
+    -- , playerState : PlayerState
     , playerVol : Float
     , itemFilter : String
     }
@@ -88,6 +92,7 @@ type alias StoreFeed =
     { url : String
     , title : String
     , items : List Item
+    -- , state : UpdateFeedState
     }
 
 
@@ -99,9 +104,9 @@ type alias PlayLoad =
     }
 
 
-isCurrent : Maybe String -> Model -> Bool
+isCurrent : String -> Model -> Bool
 isCurrent itemUrl model =
-    (Maybe.map2 (==) itemUrl model.currentItemUrl) == Just True
+    Just itemUrl == model.currentItemUrl
 
 
 getCurrentItem : Model -> Maybe Item
@@ -116,7 +121,7 @@ getSelectedItem : Model -> Maybe Item
 getSelectedItem model =
     model.list
         |> List.concatMap (\feed -> feed.items)
-        |> List.filter (\item -> item.url == model.itemSelected)
+        |> List.filter (\item -> Just item.url == model.itemSelected)
         |> List.head
 
 
@@ -131,7 +136,7 @@ updateItem updater url model =
         List.map (\feed ->
             { feed | items =
                 List.map (\item ->
-                    if item.url == url && url /= Nothing then
+                    if Just item.url == url && url /= Nothing then
                         updater item
                     else
                         item

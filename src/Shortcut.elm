@@ -13,6 +13,7 @@ keyMap model key =
         case key of
             "j" ->
                 SelectNext
+
             "k" ->
                 SelectPrev
 
@@ -32,7 +33,7 @@ keyMap model key =
             "space" ->
                 case getSelectedItem model of
                     Just item ->
-                        if item.url /= model.currentItemUrl then
+                        if Just item.url /= model.currentItemUrl then
                             Play item
                         else
                             case model.playerState of
@@ -51,6 +52,12 @@ keyMap model key =
                     Nothing ->
                         NoOp
 
+            "n" ->
+                ShowAddPanel
+
+            "esc" ->
+                HideAddPanel
+
             _ ->
                 NoOp
 
@@ -64,7 +71,7 @@ selectNext model =
             Just url ->
                 list
                     |> List.indexedMap (,)
-                    |> dropWhile (\(index, (feed, item)) -> item.url /= Just url)
+                    |> dropWhile (\(index, (feed, item)) -> item.url /= url)
                     |> List.map (\(index, (feed, item)) -> (index, item))
                     |> List.take 2
                     |> List.reverse
@@ -89,8 +96,8 @@ selectPrev model =
                 let
                     item = list
                             |> List.indexedMap (,)
-                            |> takeWhile (\(index, (feed, item)) -> item.url /= Just url)
-                            |> List.map (\(index, (feed, item)) -> (index, item)) 
+                            |> takeWhile (\(index, (feed, item)) -> item.url /= url)
+                            |> List.map (\(index, (feed, item)) -> (index, item))
                             |> List.reverse
                             |> List.head
                 in
@@ -111,13 +118,10 @@ selectItem:  Model -> Maybe (Int, Item) -> (Model, Cmd Msg)
 selectItem model item =
     case item of
         Just (index, item') ->
-            ({ model | itemSelected = item'.url }, scrollToElement ("item-" ++ toString index))
+            ({ model | itemSelected = Just item'.url }, scrollToElement ("item-" ++ toString index))
 
         Nothing ->
             (model, Cmd.none)
 
 
 port scrollToElement: String -> Cmd msg
-
-
-

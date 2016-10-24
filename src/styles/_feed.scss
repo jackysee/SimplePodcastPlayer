@@ -125,10 +125,12 @@
 }
 
 .item.is-error{
-    color: rgba(255, 0, 0, 0.4);
+    color: #EEE;
+    font-weight: normal;
+    cursor: default;
 }
 
-.item.is-unplayed .item-title{
+.item.is-unplayed:not(.is-error) .item-title{
     font-weight: bold;
 }
 

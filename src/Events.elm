@@ -4,20 +4,25 @@ import Html
 import Html.Events exposing (on, onWithOptions, keyCode, targetValue)
 import DecodePosition exposing (decodeBottomRight)
 import Json.Decode as Json
+import Dict
 
 import Msgs exposing (Msg(..))
 
-onEnter : Msg -> Html.Attribute Msg
-onEnter msg =
-    on "keydown" <|
-        Json.map
-            (\code ->
-                if code == 13 then
-                    msg 
-                else
-                    NoOp
-            )
-            keyCode
+onKeydown : List (Int, Msg) -> Html.Attribute Msg
+onKeydown msgs =
+    let
+        codeMap = Dict.fromList msgs
+    in
+        on "keydown" <|
+            Json.map
+                (\code ->
+                    case Dict.get code codeMap of
+                        Just msg ->
+                            msg
+                        Nothing ->
+                            NoOp
+                )
+                keyCode
 
 
 onInternalClick : Msg -> Html.Attribute Msg
@@ -46,5 +51,3 @@ onClickPosBottomRight msg =
 onScroll: Msg -> Html.Attribute Msg
 onScroll msg =
     on "scroll" (Json.succeed msg)
-
-

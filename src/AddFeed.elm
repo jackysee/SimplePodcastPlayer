@@ -1,12 +1,12 @@
 module AddFeed exposing (viewAddFeed, addFeedButton)
 
-import Html exposing (Html, div, button, img, span, input, text)
+import Html exposing (Html, div, button, img, span, input, text, ul, li)
 import Html.Attributes exposing (classList, class, src, id, class, value, placeholder)
 import Html.Events exposing (onClick, onInput, on, keyCode, onWithOptions)
 
 import Models exposing (..)
 import Msgs exposing (..)
-import Events exposing (onEnter, onInternalClick)
+import Events exposing (onInternalClick, onKeydown)
 
 
 viewAddFeed : Model -> Html Msg
@@ -17,21 +17,37 @@ viewAddFeed model =
             , ("is-show", model.showAddPanel)
             ]
         ]
-        [ button
-            [ class "btn btn-icon add-close"
-            , onClick HideAddPanel
+        [ div
+            [ class "add-input" ]
+            [ button
+                [ class "btn btn-icon add-close"
+                , onClick HideAddPanel
+                ]
+                [ img [ src "assets/close.svg"] [] ]
+            , input
+                [ id "add-feed"
+                , class "add-feed"
+                , onKeydown
+                    [ (13, AddFeed)
+                    , (27, HideAddPanel)
+                    ]
+                , onInput SetUrl
+                , value model.urlToAdd
+                , placeholder "Add Feed"
+                ]
+                []
+            , viewLoadFeedState model.loadFeedState
             ]
-            [ img [ src "assets/close.svg"] [] ]
-        , input
-            [ id "add-feed"
-            , class "add-feed"
-            , onInput SetUrl
-            , onEnter AddFeed 
-            , value model.urlToAdd
-            , placeholder "Add Feed"
-            ]
-            []
-        , viewLoadFeedState model.loadFeedState
+        , if model.showAddPanel then
+            ul
+                [ class "subscriptions" ] <|
+                    List.map (\feed ->
+                        li
+                            [ class "subscription-item" ]
+                            [ text feed.title ]
+                    ) model.list
+          else
+              text ""
         ]
 
 

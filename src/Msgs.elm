@@ -10,7 +10,7 @@ type Msg
     | ShowAddPanel
     | HideAddPanel
     | SetUrl String
-    | AddFeed 
+    | AddFeed
     | FetchFeedSucceed Feed
     | FetchFeedFail Http.Error
     | UpdateCurrentTime Time
