@@ -5,148 +5,148 @@ require('howler'); //Howl
 var Elm = require('./Main.elm');
 var keycode = require('keycode');
 var scrollIntoViewIfNeeded = require('./scrollIntoViewIfNeeded');
+var store = require('./store');
 
 var root  = document.getElementById('root');
+store.get(function(_model){
+    var app = Elm.Main.embed(root, _model || null);
+    var sound;
 
-var app = Elm.Main.embed(root,
-    JSON.parse(localStorage.getItem("model"))
-);
-
-
-var sound;
-
-function playUrl(playLoad){
-    console.log('playLoad', playLoad);
-    if(sound){
-        sound.unload();
-    }
-    sound = new Howl({
-        src:[playLoad.url],
-        html5: true,
-        onplay: function() {
-            requestAnimationFrame(updateProgress);
-        },
-        onload: function(){
-            app.ports.soundLoaded.send(true);
-        },
-        onend: function(){
-            console.log( 'end, state = ', sound ? sound.state() : 'no sound' );
-            if(sound && sound.state() == "loading"){
-                console.log( 'end called when loading' );
-                return;
-            }
-            if(sound){
-                console.log('playnext');
-                app.ports.playEnd.send(sound._src);
-                sound.unload();
-                sound = undefined;
-            }
+    function playUrl(playLoad){
+        console.log('playLoad', playLoad);
+        if(sound){
+            sound.unload();
         }
-    });
-    if(playLoad.seek !== -1){
-        sound.seek(playLoad.seek);
-    }
-    if(playLoad.rate){
-        sound.rate(playLoad.rate);
-    }
-    if(playLoad.vol){
-        sound.volume(playLoad.vol);
-    }
-    if(playLoad.muted){
-        sound.mute(true);
-    }
-
-    console.log("play file", playLoad.url, sound);
-    sound.play();
-}
-
-app.ports.play.subscribe(playUrl);
-
-var updateProgressTimer;
-function updateProgress(){
-    if(!sound){
-        return;
-    }
-    app.ports.updateProgress.send({
-        progress: sound.seek(),
-        duration: sound.duration()
-    });
-
-    if(sound.playing()){
-        updateProgressTimer = setTimeout(updateProgress, 1000);
-    }
-}
-
-
-app.ports.stop.subscribe(function() {
-    if(sound){
-        clearTimeout(updateProgressTimer);
-        app.ports.updateProgress.send({
-            current: sound.seek(),
-            duration: sound.duration()
+        sound = new Howl({
+            src:[playLoad.url],
+            html5: true,
+            onplay: function() {
+                requestAnimationFrame(updateProgress);
+            },
+            onload: function(){
+                app.ports.soundLoaded.send(true);
+            },
+            onend: function(){
+                console.log( 'end, state = ', sound ? sound.state() : 'no sound' );
+                if(sound && sound.state() == "loading"){
+                    console.log( 'end called when loading' );
+                    return;
+                }
+                if(sound){
+                    console.log('playnext');
+                    app.ports.playEnd.send(sound._src);
+                    sound.unload();
+                    sound = undefined;
+                }
+            }
         });
-        sound.unload();
-        sound = undefined;
+        if(playLoad.seek !== -1){
+            sound.seek(playLoad.seek);
+        }
+        if(playLoad.rate){
+            sound.rate(playLoad.rate);
+        }
+        if(playLoad.vol){
+            sound.volume(playLoad.vol);
+        }
+        if(playLoad.muted){
+            sound.mute(true);
+        }
+
+        console.log("play file", playLoad.url, sound);
+        sound.play();
     }
-});
 
-app.ports.pause.subscribe(function() {
-    if(sound){
-        sound.pause();
-        clearTimeout(updateProgressTimer);
-    }
-});
+    app.ports.play.subscribe(playUrl);
 
-app.ports.storeModel.subscribe(function(storeModel){
-    localStorage.setItem("model", JSON.stringify(storeModel));
-});
-
-
-app.ports.seek.subscribe(function(value){
-    if(sound){
-        sound.seek(value);
+    var updateProgressTimer;
+    function updateProgress(){
+        if(!sound){
+            return;
+        }
         app.ports.updateProgress.send({
             progress: sound.seek(),
             duration: sound.duration()
         });
-    }
-});
 
-app.ports.setRate.subscribe(function(rate) {
-    if(sound){
-        sound.rate(rate);
-    }
-});
-
-app.ports.openNewLink.subscribe(function(url){
-    window.open(url, '_blank');
-});
-
-app.ports.setVol.subscribe(function(vol) {
-    if(sound){
-        sound.volume(vol);
-    }
-});
-
-document.onkeyup = function(ev){
-    if(ev.target){
-        var tagName = ev.target.tagName.toLowerCase();
-        if(tagName !== "input" && tagName !== "textarea"){
-            var key = keycode(ev) || "";
-            if(key === 'space'){
-                ev.preventDefault();
-            }
-            app.ports.keyUp.send(key);
+        if(sound.playing()){
+            updateProgressTimer = setTimeout(updateProgress, 1000);
         }
     }
-};
 
-app.ports.scrollToElement.subscribe(function(id){
-    var el = document.getElementById(id);
-    if(el){
-        scrollIntoViewIfNeeded(el);
-    }
+
+    app.ports.stop.subscribe(function() {
+        if(sound){
+            clearTimeout(updateProgressTimer);
+            app.ports.updateProgress.send({
+                current: sound.seek(),
+                duration: sound.duration()
+            });
+            sound.unload();
+            sound = undefined;
+        }
+    });
+
+    app.ports.pause.subscribe(function() {
+        if(sound){
+            sound.pause();
+            clearTimeout(updateProgressTimer);
+        }
+    });
+
+    app.ports.storeModel.subscribe(function(storeModel){
+        // localStorage.setItem("model", JSON.stringify(storeModel));
+        store.put(storeModel);
+    });
+
+
+    app.ports.seek.subscribe(function(value){
+        if(sound){
+            sound.seek(value);
+            app.ports.updateProgress.send({
+                progress: sound.seek(),
+                duration: sound.duration()
+            });
+        }
+    });
+
+    app.ports.setRate.subscribe(function(rate) {
+        if(sound){
+            sound.rate(rate);
+        }
+    });
+
+    app.ports.openNewLink.subscribe(function(url){
+        window.open(url, '_blank');
+    });
+
+    app.ports.setVol.subscribe(function(vol) {
+        if(sound){
+            sound.volume(vol);
+        }
+    });
+
+    document.onkeyup = function(ev){
+        if(ev.target){
+            var tagName = ev.target.tagName.toLowerCase();
+            if(tagName !== "input" && tagName !== "textarea"){
+                var key = keycode(ev) || "";
+                if(key === 'space'){
+                    ev.preventDefault();
+                }
+                app.ports.keyUp.send(key);
+            }
+        }
+    };
+
+    app.ports.scrollToElement.subscribe(function(id){
+        var el = document.getElementById(id);
+        if(el){
+            scrollIntoViewIfNeeded(el);
+        }
+    });
 });
+
 
 
 
