@@ -44,3 +44,4 @@ type Msg
     | UnselectItem Item
     | SelectNext
     | SelectPrev
+    | ToggleAbout Bool

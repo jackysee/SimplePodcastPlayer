@@ -19,6 +19,7 @@ import AddFeed exposing (viewAddFeed, addFeedButton)
 import Player exposing (viewPlayer)
 import Shortcut exposing (keyMap, selectNext, selectPrev)
 import Events exposing (onScroll)
+import About exposing (viewAbout, viewAboutButton)
 
 
 main : Program (Maybe StoreModel)
@@ -52,6 +53,7 @@ init storeModel =
                 , itemFilter = toItemFilter m.itemFilter
                 , itemDropdown = Nothing
                 , itemSelected = Nothing
+                , showAbout = False
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds
@@ -71,6 +73,7 @@ init storeModel =
             , itemFilter = Unlistened
             , itemDropdown = Nothing
             , itemSelected = Nothing
+            , showAbout = False
             }
                 ! [ updateCurrentTime ]
 
@@ -131,7 +134,8 @@ update msg model =
                         , urlToAdd = ""
                         , showAddPanel = False
                     }
-                    , cmds)
+                    , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
+                    )
 
                 FetchFeedFail error ->
                     let
@@ -217,20 +221,19 @@ update msg model =
 
                 ShowAddPanel ->
                     ( { model | showAddPanel = True }
-                    , [ Task.perform (\_ -> NoOp) (\_ -> NoOp) (Dom.focus "add-feed") ]
-                        ++ cmds
+                    , [ noOpTask (Dom.focus "add-feed") ] ++ cmds
                     )
 
                 HideAddPanel ->
                     ({ model | showAddPanel = False }
-                    , [ Task.perform (\_ -> NoOp) (\_ -> NoOp) (Dom.blur "add-feed") ]
-                        ++ cmds
+                    , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
                     )
 
                 ShowFeed url ->
                     ({ model
                         | showFeedUrl = Just url
                         , list = flushPlayCount model.list
+                        , showAddPanel = False
                      }
                     , cmds)
 
@@ -365,7 +368,7 @@ update msg model =
                     let
                         toUpdate =
                             Dict.fromList
-                                (itemList model
+                                (itemListAll False model
                                     |> fst
                                     |> dropWhile (\(feed, item) -> item.url /= url)
                                     |> List.map (\(feed, item) -> (item.url, True))
@@ -406,7 +409,9 @@ update msg model =
                         (model', cmd) = selectPrev model
                     in
                         (model', [cmd] ++ cmds)
-                    -- (selectPrev model, cmds)
+
+                ToggleAbout show ->
+                    ({ model | showAbout = show }, cmds)
     in
         model' ! (cmds' ++ [ saveModel model ] )
 
@@ -430,10 +435,12 @@ view model =
     in
         div [ class "app-wrap" ]
             [ viewAddFeed model
+            , viewAbout model
             , div
                 [ class "wrap"
                 , onClick HideAddPanel
                 , onClick HideItemDropdown
+                , onClick (ToggleAbout False)
                 ]
                 [ div
                     [ class "top-bar-wrap" ]
@@ -441,7 +448,7 @@ view model =
                         [ class "top-bar"]
                         [ viewTitle model feed'
                         , filterBar
-                        , viewStatus model
+                        , topLeftBar model
                         ]
                     ]
                 , viewItemList model feed'
@@ -476,9 +483,11 @@ viewTitle model feed' =
                             text "All Podcasts"
                         ]
                     , if isRefreshing then
-                        span
+                        div
                             [ class "feed-state" ]
-                            [ img [ src  "assets/loading-spin.svg" ] [] ]
+                            [ img [ src "assets/loading-spin.svg" ] []
+                            , viewStatus model
+                            ]
                       else
                         text ""
 
@@ -506,6 +515,13 @@ filterButton label filter modelItemFilter =
         [ text label ]
 
 
+topLeftBar : Model -> Html Msg
+topLeftBar model =
+    div
+        [ class "top-left-bar" ]
+        [ viewAboutButton ]
+
+
 viewStatus : Model -> Html Msg
 viewStatus model =
     let
@@ -516,7 +532,7 @@ viewStatus model =
             |> Maybe.withDefault ""
     in
         div
-            [ class "app-status" ]
+            [ class "feed-status" ]
             [ text txt ]
 
 
@@ -592,6 +608,11 @@ flushPlayCount list =
               ) feed.items
         }
     ) list
+
+
+noOpTask : Task x a -> Cmd Msg
+noOpTask task =
+    Task.perform (\_ -> NoOp) (\_ -> NoOp) task
 
 
 saveModel : Model -> Cmd Msg

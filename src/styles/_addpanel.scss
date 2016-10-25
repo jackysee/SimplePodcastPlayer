@@ -38,15 +38,34 @@
 .add-feed-state{
     margin-top: 0;
     height: 1rem;
+    color: #666;
 }
 
-.app-status{
+
+.subscriptions{
+    margin-top: 1rem;
+    list-style: none;
+    padding: 0;
+}
+
+.subscription-title{
+    color: #444;
+}
+
+.subscription-item{
     margin: 0;
-    position: absolute;
-    top: 0;
-    right: 0;
-    // top: 1.5rem;
-    // right: 1rem;
-    color: #CCC;
-    font-size: 0.5rem;
+    padding: 0.3rem 0;
+    display: flex;
+    align-items: center;
+}
+.subscription-item > *{
+    margin-right: 0.5rem;
+}
+
+.add-feed-title{
+    cursor: pointer;
+}
+
+.add-feed-title:hover{
+    text-decoration: underline;
 }

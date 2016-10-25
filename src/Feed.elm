@@ -1,6 +1,6 @@
 module Feed exposing
     ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , viewFeedTitle , viewItem )
+    , viewFeedTitle , viewItem, viewConfirmDelete )
 
 import Task
 import Http
@@ -93,13 +93,17 @@ viewFeedTitle model feed =
         feedState =
             case feed.state of
                 Refreshing ->
-                    span
+                    div
                         [ class "feed-state" ]
-                        [ img [src  "assets/loading-spin.svg" ] [] ]
+                        [ img [ src  "assets/loading-spin.svg" ] []
+                        , span
+                            [ class "feed-status" ]
+                            [ text <| feed.title ++ " is refreshing..." ]
+                        ]
                 RefreshError ->
                     span
                         [ class "feed-state feed-state-error"
-                        , title "Error in updating feed"
+                        , title "Error in updating feed. Please try later"
                         ]
                         [ img [ src "assets/exclamation.svg" ] [] ]
                 _ ->
@@ -123,7 +127,10 @@ viewFeedTitle model feed =
             , span [ class "feed-title" ] [ text feed.title ]
             , feedState
             , refreshBtn
-            , viewConfirmDelete feed
+            , if feed.state /= Refreshing then
+                  viewConfirmDelete feed
+              else
+                  text ""
             ]
 
 

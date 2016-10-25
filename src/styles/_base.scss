@@ -53,3 +53,32 @@ body {
     margin-left: -0.5rem;
     margin-right: 0.5rem;
 }
+
+
+.top-left-bar{
+    position: absolute;
+    top: 0rem;
+    right: 1rem;
+}
+
+$about-width: 60vw;
+.app-about{
+    position: absolute;
+    width: $about-width;
+    border: 1px solid #ccc;
+    left: calc((100vw - #{$about-width}) / 2);
+    background: white;
+    padding: 1.5rem;
+    z-index: 1;
+    box-shadow: 0 0 2px #ccc;
+}
+
+.app-about-close{
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+}
+
+.app-about-content{
+    font-size: 0.8rem;
+}

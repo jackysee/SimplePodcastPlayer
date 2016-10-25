@@ -7,6 +7,7 @@ import Html.Events exposing (onClick, onInput, on, keyCode, onWithOptions)
 import Models exposing (..)
 import Msgs exposing (..)
 import Events exposing (onInternalClick, onKeydown)
+import Feed exposing (viewConfirmDelete)
 
 
 viewAddFeed : Model -> Html Msg
@@ -39,13 +40,27 @@ viewAddFeed model =
             , viewLoadFeedState model.loadFeedState
             ]
         , if model.showAddPanel then
-            ul
-                [ class "subscriptions" ] <|
-                    List.map (\feed ->
-                        li
-                            [ class "subscription-item" ]
-                            [ text feed.title ]
-                    ) model.list
+            div
+                []
+                [ div
+                    [ class "subscription-title" ]
+                    [ text "Subscribed feeds: "]
+                , ul
+                    [ class "subscriptions" ] <|
+                        List.map (\feed ->
+                            li
+                                [ class "subscription-item" ]
+                                [ div
+                                    [ class "add-feed-title"
+                                    , onInternalClick (ShowFeed feed.url)
+                                    ]
+                                    [ text feed.title ]
+                                , viewConfirmDelete feed
+                                ]
+
+                        ) model.list
+
+                ]
           else
               text ""
         ]

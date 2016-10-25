@@ -7,6 +7,7 @@ import Models exposing (..)
 import Date exposing (Date)
 import Time exposing (Time)
 import DateFormat exposing (parseDuration)
+import Regex
 
 
 decodeFeed : String -> Json.Decoder Feed
@@ -42,6 +43,22 @@ decodeItem =
 
 decodeEnclosure : Json.Decoder String
 decodeEnclosure =
+    ( Json.object2
+        (,)
+        decodeEnclosureUrl
+        decodeEnclosureType
+    )
+    `Json.andThen`
+    (\(url, type_) ->
+        if Regex.contains (Regex.regex "^audio/") type_ then
+            Json.succeed url
+        else
+            Json.fail "not audio type"
+    )
+
+
+decodeEnclosureUrl : Json.Decoder String
+decodeEnclosureUrl =
     Json.oneOf
         [ (Json.at ["enclosure", "url"] Json.string)
         , ("enclosure" := Json.list ("url" := Json.string))
@@ -52,6 +69,22 @@ decodeEnclosure =
                         Json.succeed first
                     Nothing ->
                         Json.fail  "cannot get enclosure"
+             )
+        ]
+
+
+decodeEnclosureType: Json.Decoder String
+decodeEnclosureType =
+    Json.oneOf
+        [ (Json.at ["enclosure", "type"] Json.string)
+        , ("enclosure" := Json.list ("type" := Json.string))
+            `Json.andThen`
+            (\list ->
+                case List.head list of
+                    Just first ->
+                        Json.succeed first
+                    Nothing ->
+                        Json.fail  "cannot get mimetype"
              )
         ]
 

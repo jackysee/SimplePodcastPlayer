@@ -154,3 +154,4 @@ store.get(function(_model){
 // http://feeds.soundcloud.com/users/soundcloud:users:62921190/sounds.rss
 // http://podcast.talkonly.net/feed
 // https://feeds.feedburner.com/JackysBlog
+// http://cast.rocks/hosting/6039/feeds/8YSE5.xml

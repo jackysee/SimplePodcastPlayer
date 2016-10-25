@@ -71,6 +71,7 @@ type alias Model =
     , itemFilter: ItemFilter
     , itemDropdown : Maybe String
     , itemSelected : Maybe String
+    , showAbout : Bool
     }
 
 
@@ -196,7 +197,12 @@ toStoreFeed feed =
 
 
 itemList: Model -> (List (Feed, Item), Bool)
-itemList model =
+itemList =
+    itemListAll True
+
+
+itemListAll : Bool -> Model -> (List (Feed, Item), Bool)
+itemListAll limit model =
     case model.showFeedUrl of
         Just url' ->
             ( model.list
@@ -209,9 +215,12 @@ itemList model =
             let
                 list = itemsByDate model.itemFilter model.list
             in
-                ( List.take model.itemsToShow list
-                , List.length list > model.itemsToShow
-                )
+                if limit then
+                    ( List.take model.itemsToShow list
+                    , List.length list > model.itemsToShow
+                    )
+                else
+                    ( list, False )
 
 
 itemsByDate: ItemFilter -> List Feed -> List (Feed, Item)

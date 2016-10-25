@@ -49,6 +49,7 @@
 .feed-state{
     height: 1rem;
     margin-left: 5px;
+    display: flex;
 }
 
 .feed-state-error{
@@ -56,17 +57,22 @@
 }
 
 
-.feed-control{
-    display: none;
-}
+// .feed-control{
+//     display: none;
+// }
+//
+// .feed-header:hover .feed-control{
+//     display: inline-block;;
+// }
 
 .feed-control.is-show{
     display: inline-block;
 }
 
-.feed-header:hover .feed-control{
-    display: inline-block;;
+.feed-confirm-delete{
+    margin: 0;
 }
+
 
 .confirm-delete{
     font-size: 0.8rem;
@@ -227,7 +233,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: pointer;
 }
+
+
 
 .item-feed-title:hover{
     text-decoration: underline;
@@ -251,7 +260,6 @@
 }
 
 
-
 .feed-more-panel{
     white-space: nowrap;
 }
@@ -270,4 +278,9 @@
     margin-left: 0;
 }
 
-
+.feed-status{
+    margin: 0;
+    margin-left: 0.5rem;
+    color: #CCC;
+    font-size: 0.8rem;
+}
