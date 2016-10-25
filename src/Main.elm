@@ -338,6 +338,7 @@ update msg model =
                     ({ model
                         | itemFilter = filter
                         , list = flushPlayCount model.list
+                        , itemsToShow = 30
                      }
                     , cmds
                     )

@@ -43,8 +43,7 @@
 
 
 .subscriptions{
-    margin-top: 1rem;
-    list-style: none;
+    margin-top: 0;
     padding: 0;
 }
 
@@ -55,17 +54,17 @@
 .subscription-item{
     margin: 0;
     padding: 0.3rem 0;
-    display: flex;
-    align-items: center;
+    display: inline-block;
 }
-.subscription-item > *{
+.subscription-item:not(:last-child):after{
+    content: ',';
+    display: inline;
+}
+.subscription-item{
     margin-right: 0.5rem;
 }
 
 .add-feed-title{
     cursor: pointer;
-}
-
-.add-feed-title:hover{
     text-decoration: underline;
 }
