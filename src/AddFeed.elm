@@ -87,5 +87,5 @@ addFeedButton =
         [ class "btn add-btn btn-icon top-bar-outset-btn"
         , onInternalClick ShowAddPanel
         ]
-        [ img [ src "assets/plus-circle.svg" ] []
-            ]
+        [ img [ src "assets/subscription.svg" ] []
+        ]
