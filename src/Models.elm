@@ -52,7 +52,7 @@ type PlayerState
 
 type ItemFilter
     = All
-    | Listening
+    | Queued
     | Unlistened
 
 
@@ -72,6 +72,7 @@ type alias Model =
     , itemDropdown : Maybe String
     , itemSelected : Maybe String
     , showAbout : Bool
+    , playList: List String
     }
 
 
@@ -87,6 +88,7 @@ type alias StoreModel =
     -- , playerState : PlayerState
     , playerVol : Float
     , itemFilter : String
+    , playList: List String
     }
 
 type alias StoreFeed =
@@ -153,7 +155,7 @@ toItemFilter : String -> ItemFilter
 toItemFilter str =
     case str of
         "Unlistened" -> Unlistened
-        "Listening" -> Listening
+        "Queued" -> Queued
         _ -> All
 
 
@@ -161,7 +163,7 @@ itemFilterToStr : ItemFilter -> String
 itemFilterToStr filter =
     case filter of
         Unlistened -> "Unlistened"
-        Listening -> "Listening"
+        Queued -> "Queued"
         All -> "All"
 
 
@@ -184,6 +186,7 @@ toStoreModel model =
     , playerRate = model.playerRate
     , playerVol = model.playerVol
     , itemFilter = itemFilterToStr model.itemFilter
+    , playList = model.playList
     }
 
 
@@ -207,40 +210,66 @@ itemListAll limit model =
         Just url' ->
             ( model.list
                 |> List.filter (\f -> f.url == url' )
-                |> itemsByDate model.itemFilter
+                |> itemsByDate model
             , False
             )
 
         Nothing ->
-            let
-                list = itemsByDate model.itemFilter model.list
-            in
-                if limit then
-                    ( List.take model.itemsToShow list
-                    , List.length list > model.itemsToShow
-                    )
-                else
-                    ( list, False )
+            if model.itemFilter == Queued then
+                let
+                    items = model.list
+                        |> List.concatMap (\feed -> 
+                           List.map (\item -> (feed, item)) feed.items
+                        )
+                    playListItem =  model.playList
+                        |> List.filterMap (\url -> findItemByUrl url items)
+                in
+                    ( playListItem, False )
+            else
+                let
+                    list = itemsByDate model model.list
+                in
+                    if limit then
+                        ( List.take model.itemsToShow list
+                        , List.length list > model.itemsToShow
+                        )
+                    else
+                        ( list, False )
 
 
-itemsByDate: ItemFilter -> List Feed -> List (Feed, Item)
-itemsByDate filter list =
+findItemByUrl: String -> List (Feed, Item) -> Maybe (Feed, Item)
+findItemByUrl url list =
+    case list of
+        [] -> 
+            Nothing
+
+        (feed, item)::xs ->
+            if item.url == url then
+                Just (feed, item)
+            else
+                findItemByUrl url xs
+
+
+itemsByDate: Model -> List Feed -> List (Feed, Item)
+itemsByDate model list =
     list
         |> List.concatMap (\feed ->
                 List.map (\item -> (feed, item)) feed.items
             )
         |> List.filter (\(feed, item) ->
-                filterByItemFilter filter item
+                filterByItemFilter model item
             )
         |> List.sortBy (\(feed, item) -> item.pubDate)
         |> List.reverse
 
 
-filterByItemFilter : ItemFilter -> Item -> Bool
-filterByItemFilter filter item =
-    case filter of
+filterByItemFilter : Model -> Item -> Bool
+filterByItemFilter model item =
+    case model.itemFilter of
         All -> True
         Unlistened ->
             item.playCount == 0
-        Listening ->
-            item.progress > -1 && item.playCount == 0
+        Queued ->
+            List.member item.url model.playList
+            -- item.progress > -1 && item.playCount == 0
+            

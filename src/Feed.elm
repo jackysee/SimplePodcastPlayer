@@ -265,7 +265,19 @@ viewItemControl listened model item =
             let
                 markPlayCount = if listened then 0 else 1
             in
-                [ div
+                [ if List.member item.url model.playList then
+                    div 
+                        [ class "dropdown-item"
+                        , onInternalClick (Dequeue item.url)
+                        ]
+                        [ text "Dequeue" ] 
+                  else
+                    div 
+                        [ class "dropdown-item"
+                        , onInternalClick (Enqueue item.url)
+                        ]
+                        [ text "Enqueue" ] 
+                , div
                     [ class "dropdown-item"
                     , onInternalClick (MarkPlayCount item.url markPlayCount)
                     ]
@@ -279,7 +291,9 @@ viewItemControl listened model item =
                     , onInternalClick (MarkItemsBelowListened item.url)
                     ]
                     [ text "Mark item and items below as listened"]
+
                 ]
+
 
 
         menusItems = newLinkItem ++ markItem

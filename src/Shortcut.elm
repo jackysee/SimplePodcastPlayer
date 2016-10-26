@@ -14,7 +14,13 @@ keyMap model key =
             "j" ->
                 SelectNext
 
+            "down" ->
+                SelectNext
+
             "k" ->
+                SelectPrev
+            
+            "up" ->
                 SelectPrev
 
             "o" ->

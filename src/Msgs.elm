@@ -45,3 +45,8 @@ type Msg
     | SelectNext
     | SelectPrev
     | ToggleAbout Bool
+    | Enqueue String
+    | Dequeue String
+    --| MoveQueuedItemUp String
+    --| MoveQueuedItemDown String
+    | AppClickClear

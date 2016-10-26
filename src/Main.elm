@@ -54,6 +54,7 @@ init storeModel =
                 , itemDropdown = Nothing
                 , itemSelected = Nothing
                 , showAbout = False
+                , playList = m.playList
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds
@@ -74,6 +75,7 @@ init storeModel =
             , itemDropdown = Nothing
             , itemSelected = Nothing
             , showAbout = False
+            , playList = []
             }
                 ! [ updateCurrentTime ]
 
@@ -100,321 +102,352 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
         cmds = [ updateCurrentTime ]
-        (model', cmds') =
-            case msg of
-                NoOp ->
-                    (model, [])
-
-                SetUrl value ->
-                    ({ model
-                        | urlToAdd = value
-                        , loadFeedState = Empty
-                    }
-                    , cmds)
-
-                AddFeed ->
-                    if List.any (\feed -> feed.url == model.urlToAdd) model.list then
-                        ({ model | loadFeedState = AlreadyExist }, cmds)
-                    else
-                        ({ model | loadFeedState = Loading }
-                        , [ loadFeed model.urlToAdd ] ++ cmds
-                        )
-
-                ShowMoreItem ->
-                    ({ model | itemsToShow = model.itemsToShow + 30 }
-                    , cmds
-                    )
-
-                FetchFeedSucceed feed ->
-                    ({ model
-                        | list =
-                            model.list
-                                ++ [ { feed | items = feed.items } ]
-                        , loadFeedState = Empty
-                        , urlToAdd = ""
-                        , showAddPanel = False
-                    }
-                    , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
-                    )
-
-                FetchFeedFail error ->
-                    let
-                        e = Debug.log "error" error
-                    in
-                        ({ model | loadFeedState = Error }, cmds)
-
-                UpdateCurrentTime time ->
-                    ({ model | currentTime = time }, [])
-
-                Play item ->
-                    ({ model
-                        | currentItemUrl = Just item.url
-                        , playerState = SoundLoading
-                    }
-                    , [ play
-                        { url = item.url
-                        , seek = item.progress
-                        , rate = model.playerRate
-                        , vol = model.playerVol
-                        }
-                      ] ++ cmds)
-
-                SoundLoaded loaded ->
-                    ({ model | playerState = Playing } , cmds)
-
-                Pause item ->
-                    ({ model | playerState = Paused } , [ pause  "" ] ++ cmds)
-
-                Stop item ->
-                    ({ model | playerState = Stopped } , [ stop "" ] ++ cmds)
-
-                UpdateProgress progress ->
-                    ( model
-                        |> updateCurrentItem
-                            (\item -> { item
-                                        | duration = progress.duration
-                                        , progress = progress.progress })
-                    , cmds
-                    )
-
-                UpdateAllFeed ->
-                    ( model, [ updateFeeds model.list ] ++ cmds)
-
-                UpdateFeeds feeds feed ->
-                    let
-                        model' = updateModelFeed { feed | state = Refreshing } model
-                    in
-                        (model', [ updateFeed feed feeds ] ++ cmds)
-
-                UpdateFeedFail feeds feed error ->
-                    let
-                        e = Debug.log "error" error
-                        cmds' =
-                            if List.length feeds > 0 then
-                                [ updateFeeds feeds ]
-                            else
-                                []
-                    in
-                        (updateModelFeed { feed | state = RefreshError } model
-                        , cmds' ++ cmds)
-
-                UpdateFeedSucceed feeds feed ->
-                    let
-                        cmds' =
-                            if List.length feeds > 0 then
-                                [ updateFeeds feeds ]
-                            else
-                                []
-                    in
-                        (updateFeedItems model feed, cmds' ++ cmds)
-
-                SetProgress current ->
-                    case getCurrentItem model of
-                        Nothing ->
-                            ( model, cmds )
-                        Just item' ->
-                            ( updateCurrentItem
-                                (\item -> { item | progress = current })
-                                model
-                            , [seek current] ++ cmds
-                            )
-
-                ShowAddPanel ->
-                    ( { model | showAddPanel = True }
-                    , [ noOpTask (Dom.focus "add-feed") ] ++ cmds
-                    )
-
-                HideAddPanel ->
-                    ({ model | showAddPanel = False }
-                    , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
-                    )
-
-                ShowFeed url ->
-                    ({ model
-                        | showFeedUrl = Just url
-                        , list = flushPlayCount model.list
-                        , showAddPanel = False
-                     }
-                    , cmds)
-
-                HideFeed ->
-                    ({ model
-                        | showFeedUrl = Nothing
-                        , list = flushPlayCount model.list
-                     }
-                    , cmds)
-
-                ShowConfirmDeleteFeed feed ->
-                    ( updateModelFeed { feed | showConfirmDelete = True } model
-                    , cmds
-                    )
-
-                HideConfirmDeleteFeed feed ->
-                    ( updateModelFeed { feed | showConfirmDelete = False } model
-                    , cmds
-                    )
-
-                ConfirmDeleteFeed feed ->
-                    let
-                        list = List.filter (\f -> f.url /= feed.url ) model.list
-                        currentItemDeleted = list
-                            |> List.concatMap (\feed -> feed.items)
-                            |> List.filter (\item -> isCurrent item.url model)
-                            |> List.length
-                            |> (==) 0
-                        currentItemUrl =
-                            if currentItemDeleted then
-                                Nothing
-                            else
-                                model.currentItemUrl
-                        cmds' =
-                            if currentItemDeleted then
-                                [ stop "" ]
-                            else
-                                []
-                    in
-                        ({ model
-                            | list = list
-                            , currentItemUrl = currentItemUrl
-                            , showFeedUrl = Nothing
-                         }
-                        , cmds' ++ cmds
-                        )
-
-                ClosePlayer ->
-                    ( { model
-                        | playerState = Paused
-                        , currentItemUrl = Nothing
-                      }
-                    , [ pause  "" ] ++ cmds
-                    )
-
-                PlayEnd url ->
-                    let
-                        model' = updateCurrentItem
-                                    (\item ->
-                                        { item
-                                            | progress = 0
-                                            , markPlayCount = item.playCount + 1
-                                        }
-                                    )
-                                    model
-                        nextItem =
-                            itemList model
-                                |> fst
-                                |> dropWhile (\(feed, item) -> item.url /= url)
-                                |> List.take 2
-                                |> List.reverse
-                                |> List.map snd
-                                |> List.head
-                    in
-                        case nextItem of
-                            Just item' ->
-                                let
-                                    (model'', cmd') = update (Play item') model'
-                                in
-                                    (model'', [cmd'] ++ cmds)
-
-                            Nothing ->
-                                ({ model' | currentItemUrl = Nothing }, cmds)
-
-                ToggleRate ->
-                    let
-                        rate = [1, 1.2, 1.5, 2.0]
-                            |> dropWhile (\r -> r <= model.playerRate)
-                            |> List.head
-                            |> Maybe.withDefault 1
-                    in
-                        ({ model | playerRate = rate }, [ setRate rate ] ++ cmds)
-
-                OpenNewLink url ->
-                    (model , [ openNewLink url ] ++ cmds)
-
-                SetVol percentage ->
-                    ({ model | playerVol = percentage }
-                    , [ setVol percentage ] ++ cmds)
-
-                SetItemFilter filter ->
-                    ({ model
-                        | itemFilter = filter
-                        , list = flushPlayCount model.list
-                        , itemsToShow = 30
-                     }
-                    , cmds
-                    )
-
-                ShowItemDropdown url  ->
-                    ({ model | itemDropdown = Just url } , cmds )
-
-                HideItemDropdown ->
-                    ({ model | itemDropdown = Nothing } , cmds )
-
-                SelectItem item ->
-                    ({ model | itemSelected = Just item.url } , cmds )
-
-                UnselectItem item ->
-                    (model, cmds)
-
-                MarkPlayCount url playCount ->
-                    let
-                        model' = updateItem
-                            (\item -> { item | markPlayCount = playCount })
-                            (Just url)
-                            model
-                        model'' = { model' | itemDropdown = Nothing }
-                    in
-                        (model'', cmds)
-
-                MarkItemsBelowListened url ->
-                    let
-                        toUpdate =
-                            Dict.fromList
-                                (itemListAll False model
-                                    |> fst
-                                    |> dropWhile (\(feed, item) -> item.url /= url)
-                                    |> List.map (\(feed, item) -> (item.url, True))
-                                )
-                        model' =
-                            { model
-                                | itemDropdown = Nothing
-                                , list = List.map
-                                    (\feed ->
-                                        { feed | items = List.map
-                                            (\item ->
-                                                if Dict.member item.url toUpdate then
-                                                    { item | markPlayCount =
-                                                        if item.markPlayCount == -1 then
-                                                            item.playCount + 1
-                                                        else
-                                                            item.markPlayCount
-                                                    }
-                                                else
-                                                    item
-                                            )
-                                            feed.items
-                                        }
-                                    )
-                                    model.list
-                        }
-                    in
-                        (model', cmds)
-
-                SelectNext ->
-                    let
-                        (model', cmd) = selectNext model
-                    in
-                        (model', [cmd] ++ cmds)
-
-                SelectPrev ->
-                    let
-                        (model', cmd) = selectPrev model
-                    in
-                        (model', [cmd] ++ cmds)
-
-                ToggleAbout show ->
-                    ({ model | showAbout = show }, cmds)
+        (model', cmds') = updateModel msg model cmds
     in
         model' ! (cmds' ++ [ saveModel model ] )
+
+
+updateModel : Msg -> Model -> List (Cmd Msg) -> (Model, List (Cmd Msg))
+updateModel msg model cmds =
+    case msg of
+        NoOp ->
+            (model, [])
+
+        SetUrl value ->
+            ({ model
+                | urlToAdd = value
+                , loadFeedState = Empty
+            }
+            , cmds)
+
+        AddFeed ->
+            if List.any (\feed -> feed.url == model.urlToAdd) model.list then
+                ({ model | loadFeedState = AlreadyExist }, cmds)
+            else
+                ({ model | loadFeedState = Loading }
+                , [ loadFeed model.urlToAdd ] ++ cmds
+                )
+
+        ShowMoreItem ->
+            ({ model | itemsToShow = model.itemsToShow + 30 }
+            , cmds
+            )
+
+        FetchFeedSucceed feed ->
+            ({ model
+                | list =
+                    model.list
+                        ++ [ { feed | items = feed.items } ]
+                , loadFeedState = Empty
+                , urlToAdd = ""
+                , showAddPanel = False
+            }
+            , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
+            )
+
+        FetchFeedFail error ->
+            let
+                e = Debug.log "error" error
+            in
+                ({ model | loadFeedState = Error }, cmds)
+
+        UpdateCurrentTime time ->
+            ({ model | currentTime = time }, [])
+
+        Play item ->
+            ({ model
+                | currentItemUrl = Just item.url
+                , playerState = SoundLoading
+            }
+            , [ play
+                { url = item.url
+                , seek = item.progress
+                , rate = model.playerRate
+                , vol = model.playerVol
+                }
+              ] ++ cmds)
+
+        SoundLoaded loaded ->
+            ({ model | playerState = Playing } , cmds)
+
+        Pause item ->
+            ({ model | playerState = Paused } , [ pause  "" ] ++ cmds)
+
+        Stop item ->
+            ({ model | playerState = Stopped } , [ stop "" ] ++ cmds)
+
+        UpdateProgress progress ->
+            ( model
+                |> updateCurrentItem
+                    (\item -> { item
+                                | duration = progress.duration
+                                , progress = progress.progress })
+            , cmds
+            )
+
+        UpdateAllFeed ->
+            ( model, [ updateFeeds model.list ] ++ cmds)
+
+        UpdateFeeds feeds feed ->
+            let
+                model' = updateModelFeed { feed | state = Refreshing } model
+            in
+                (model', [ updateFeed feed feeds ] ++ cmds)
+
+        UpdateFeedFail feeds feed error ->
+            let
+                e = Debug.log "error" error
+                cmds' =
+                    if List.length feeds > 0 then
+                        [ updateFeeds feeds ]
+                    else
+                        []
+            in
+                (updateModelFeed { feed | state = RefreshError } model
+                , cmds' ++ cmds)
+
+        UpdateFeedSucceed feeds feed ->
+            let
+                cmds' =
+                    if List.length feeds > 0 then
+                        [ updateFeeds feeds ]
+                    else
+                        []
+            in
+                (updateFeedItems model feed, cmds' ++ cmds)
+
+        SetProgress current ->
+            case getCurrentItem model of
+                Nothing ->
+                    ( model, cmds )
+                Just item' ->
+                    ( updateCurrentItem
+                        (\item -> { item | progress = current })
+                        model
+                    , [seek current] ++ cmds
+                    )
+
+        ShowAddPanel ->
+            ( { model | showAddPanel = True }
+            , [ noOpTask (Dom.focus "add-feed") ] ++ cmds
+            )
+
+        HideAddPanel ->
+            ({ model | showAddPanel = False }
+            , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
+            )
+
+        ShowFeed url ->
+            ({ model
+                | showFeedUrl = Just url
+                , list = flushPlayCount model.list
+                , showAddPanel = False
+             }
+            , cmds)
+
+        HideFeed ->
+            ({ model
+                | showFeedUrl = Nothing
+                , list = flushPlayCount model.list
+             }
+            , cmds)
+
+        ShowConfirmDeleteFeed feed ->
+            ( updateModelFeed { feed | showConfirmDelete = True } model
+            , cmds
+            )
+
+        HideConfirmDeleteFeed feed ->
+            ( updateModelFeed { feed | showConfirmDelete = False } model
+            , cmds
+            )
+
+        ConfirmDeleteFeed feed ->
+            let
+                list = List.filter (\f -> f.url /= feed.url ) model.list
+                currentItemDeleted = list
+                    |> List.concatMap (\feed -> feed.items)
+                    |> List.filter (\item -> isCurrent item.url model)
+                    |> List.length
+                    |> (==) 0
+                currentItemUrl =
+                    if currentItemDeleted then
+                        Nothing
+                    else
+                        model.currentItemUrl
+                cmds' =
+                    if currentItemDeleted then
+                        [ stop "" ]
+                    else
+                        []
+            in
+                ({ model
+                    | list = list
+                    , currentItemUrl = currentItemUrl
+                    , showFeedUrl = Nothing
+                 }
+                , cmds' ++ cmds
+                )
+
+        ClosePlayer ->
+            ( { model
+                | playerState = Paused
+                , currentItemUrl = Nothing
+              }
+            , [ pause  "" ] ++ cmds
+            )
+
+        PlayEnd url ->
+            let
+                model' = updateCurrentItem
+                            (\item ->
+                                { item
+                                    | progress = 0
+                                    , markPlayCount = item.playCount + 1
+                                }
+                            )
+                            model
+                nextItem =
+                    itemList model
+                        |> fst
+                        |> dropWhile (\(feed, item) -> item.url /= url)
+                        |> List.take 2
+                        |> List.reverse
+                        |> List.map snd
+                        |> List.head
+            in
+                case nextItem of
+                    Just item' ->
+                        updateModel (Play item') model cmds
+
+                    Nothing ->
+                        ({ model' | currentItemUrl = Nothing }, cmds)
+
+        ToggleRate ->
+            let
+                rate = [1, 1.2, 1.5, 2.0]
+                    |> dropWhile (\r -> r <= model.playerRate)
+                    |> List.head
+                    |> Maybe.withDefault 1
+            in
+                ({ model | playerRate = rate }, [ setRate rate ] ++ cmds)
+
+        OpenNewLink url ->
+            (model , [ openNewLink url ] ++ cmds)
+
+        SetVol percentage ->
+            ({ model | playerVol = percentage }
+            , [ setVol percentage ] ++ cmds)
+
+        SetItemFilter filter ->
+            ({ model
+                | itemFilter = filter
+                , list = flushPlayCount model.list
+                , itemsToShow = 30
+             }
+            , cmds
+            )
+
+        ShowItemDropdown url  ->
+            ({ model | itemDropdown = Just url } , cmds )
+
+        HideItemDropdown ->
+            ({ model | itemDropdown = Nothing } , cmds )
+
+        SelectItem item ->
+            ({ model | itemSelected = Just item.url } , cmds )
+
+        UnselectItem item ->
+            (model, cmds)
+
+        MarkPlayCount url playCount ->
+            let
+                model' = updateItem
+                    (\item -> { item | markPlayCount = playCount })
+                    (Just url)
+                    model
+                model'' = { model' | itemDropdown = Nothing }
+            in
+                (model'', cmds)
+
+        MarkItemsBelowListened url ->
+            let
+                toUpdate =
+                    Dict.fromList
+                        (itemListAll False model
+                            |> fst
+                            |> dropWhile (\(feed, item) -> item.url /= url)
+                            |> List.map (\(feed, item) -> (item.url, True))
+                        )
+                model' =
+                    { model
+                        | itemDropdown = Nothing
+                        , list = List.map
+                            (\feed ->
+                                { feed | items = List.map
+                                    (\item ->
+                                        if Dict.member item.url toUpdate then
+                                            { item | markPlayCount =
+                                                if item.markPlayCount == -1 then
+                                                    item.playCount + 1
+                                                else
+                                                    item.markPlayCount
+                                            }
+                                        else
+                                            item
+                                    )
+                                    feed.items
+                                }
+                            )
+                            model.list
+                }
+            in
+                (model', cmds)
+
+        SelectNext ->
+            let
+                (model', cmd) = selectNext model
+            in
+                (model', [cmd] ++ cmds)
+
+        SelectPrev ->
+            let
+                (model', cmd) = selectPrev model
+            in
+                (model', [cmd] ++ cmds)
+
+        ToggleAbout show ->
+            ({ model | showAbout = show }, cmds)
+
+        Enqueue url ->
+            ({ model 
+                | playList = 
+                    if List.member url model.playList then
+                        model.playList
+                    else
+                        model.playList ++ [url]
+                , itemDropdown = Nothing
+             }
+            , cmds)
+
+        Dequeue url ->
+            ({ model 
+                | playList = List.filter (\url_ -> url /= url_) model.playList
+                , itemDropdown = Nothing
+             }
+            , cmds)
+
+        AppClickClear ->
+            List.foldl
+                (\msg (model, cmds) ->
+                    updateModel msg model cmds
+                )
+                (model, cmds)
+                [ HideAddPanel
+                , HideItemDropdown
+                , ToggleAbout False
+                ]
+
 
 
 view : Model -> Html Msg
@@ -428,7 +461,7 @@ view model =
                 div
                     [ class "feed-filter" ]
                     [ filterButton "Unlistened" Unlistened model.itemFilter
-                    , filterButton "Listening" Listening model.itemFilter
+                    , filterButton "Queued" Queued model.itemFilter
                     , filterButton "All" All model.itemFilter
                     ]
             else
@@ -439,9 +472,7 @@ view model =
             , viewAbout model
             , div
                 [ class "wrap"
-                , onClick HideAddPanel
-                , onClick HideItemDropdown
-                , onClick (ToggleAbout False)
+                , onClick AppClickClear
                 ]
                 [ div
                     [ class "top-bar-wrap" ]
