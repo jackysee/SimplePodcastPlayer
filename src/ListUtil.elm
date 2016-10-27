@@ -20,3 +20,28 @@ dropWhile predicate list =
                 dropWhile predicate xs
             else
                 list
+
+
+swapDown : a -> List a -> List a
+swapDown n list =
+    case list of
+        x::y::xs ->
+            if x == n then
+                y::x::xs
+            else
+                [x] ++ swapDown n (y::xs)
+
+        _ ->
+            list
+
+swapUp : a -> List a -> List a
+swapUp n list =
+    case list of
+        x::y::xs ->
+            if y == n then
+                y::x::xs
+            else
+                [x] ++ swapUp n (y::xs)
+
+        _ ->
+            list

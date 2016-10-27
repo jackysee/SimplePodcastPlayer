@@ -9,6 +9,7 @@ keyMap: Model -> String -> Msg
 keyMap model key =
     let
         a = Debug.log "key" key
+        selectedItem = getSelectedItem model
     in
         case key of
             "j" ->
@@ -19,12 +20,12 @@ keyMap model key =
 
             "k" ->
                 SelectPrev
-            
+
             "up" ->
                 SelectPrev
 
             "o" ->
-                case getSelectedItem model of
+                case selectedItem of
                     Just item ->
                         case item.link of
                             Just link' ->
@@ -37,7 +38,7 @@ keyMap model key =
                         NoOp
 
             "space" ->
-                case getSelectedItem model of
+                case selectedItem of
                     Just item ->
                         if Just item.url /= model.currentItemUrl then
                             Play item
@@ -64,6 +65,44 @@ keyMap model key =
             "esc" ->
                 HideAddPanel
 
+            "u" ->
+                if model.itemFilter == Queued then
+                    case selectedItem of
+                        Just item ->
+                            MoveQueuedItemUp item.url
+
+                        Nothing  ->
+                            NoOp
+                else
+                    NoOp
+
+            "d" ->
+                if model.itemFilter == Queued then
+                    case selectedItem of
+                        Just item ->
+                            MoveQueuedItemDown item.url
+
+                        _ ->
+                            NoOp
+                else
+                    NoOp
+
+            "e" ->
+                case selectedItem of
+                    Just item ->
+                        Enqueue item.url
+                    _ ->
+                        NoOp
+
+            {--
+            "d" ->
+                case selectedItem of
+                    Just item ->
+                        Dequeue item.url
+                    _ ->
+                        NoOp
+            --}
+
             _ ->
                 NoOp
 
@@ -77,11 +116,8 @@ selectNext model =
             Just url ->
                 list
                     |> List.indexedMap (,)
-                    |> dropWhile (\(index, (feed, item)) -> item.url /= url)
-                    |> List.map (\(index, (feed, item)) -> (index, item))
-                    |> List.take 2
-                    |> List.reverse
-                    |> List.head
+                    |> getNext (\(index, (feed, item)) -> item.url == url)
+                    |> Maybe.map (\(index, (feed, item)) -> (index, item))
                     |> selectItem model
 
             Nothing ->
@@ -92,6 +128,19 @@ selectNext model =
                     |> selectItem model
 
 
+getNext: (a -> Bool) -> List a -> Maybe a
+getNext predicate list =
+    case list of
+        x::y::xs ->
+            if predicate x then
+                Just y
+            else
+                getNext predicate (y::xs)
+
+        _ ->
+            Nothing
+
+
 selectPrev: Model -> (Model, Cmd Msg)
 selectPrev model =
     let
@@ -99,26 +148,21 @@ selectPrev model =
     in
         case model.itemSelected of
             Just url ->
-                let
-                    item = list
-                            |> List.indexedMap (,)
-                            |> takeWhile (\(index, (feed, item)) -> item.url /= url)
-                            |> List.map (\(index, (feed, item)) -> (index, item))
-                            |> List.reverse
-                            |> List.head
-                in
-                    selectItem model item
+                list
+                    |> List.indexedMap (,)
+                    |> List.reverse
+                    |> getNext (\(index, (feed, item)) -> item.url == url)
+                    |> Maybe.map (\(index, (feed, item)) -> (index, item))
+                    |> selectItem model
 
             Nothing ->
-                let
-                    item = list
-                            |> List.indexedMap (,)
-                            |> List.map (\(index, (feed, item)) -> (index, item))
-                            |> List.reverse
-                            |> List.head
-                in
-                    selectItem model item
-
+                list
+                    |> List.indexedMap (,)
+                    |> List.map (\(index, (feed, item)) -> (index, item))
+                    |> List.reverse
+                    |> List.head
+                    |> selectItem model
+            
 
 selectItem:  Model -> Maybe (Int, Item) -> (Model, Cmd Msg)
 selectItem model item =

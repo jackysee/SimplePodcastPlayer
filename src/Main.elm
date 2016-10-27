@@ -6,7 +6,7 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, src, style, classList, type', checked, title)
 import Task exposing (Task)
 import Time exposing (Time)
-import ListUtil exposing (dropWhile, takeWhile)
+import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp)
 import Dom
 import Dict
 
@@ -111,7 +111,10 @@ updateModel : Msg -> Model -> List (Cmd Msg) -> (Model, List (Cmd Msg))
 updateModel msg model cmds =
     case msg of
         NoOp ->
-            (model, [])
+            (model, cmds)
+
+        UpdateCurrentTime time ->
+            ({ model | currentTime = time }, cmds)
 
         SetUrl value ->
             ({ model
@@ -151,8 +154,6 @@ updateModel msg model cmds =
             in
                 ({ model | loadFeedState = Error }, cmds)
 
-        UpdateCurrentTime time ->
-            ({ model | currentTime = time }, [])
 
         Play item ->
             ({ model
@@ -437,6 +438,14 @@ updateModel msg model cmds =
              }
             , cmds)
 
+        MoveQueuedItemUp url ->
+            ({ model | playList = swapUp url model.playList }
+            , cmds)
+
+        MoveQueuedItemDown url ->
+            ({ model | playList = swapDown url model.playList }
+            , cmds)
+
         AppClickClear ->
             List.foldl
                 (\msg (model, cmds) ->
@@ -454,6 +463,7 @@ view : Model -> Html Msg
 view model =
     let
         feed' = model.list
+
             |> List.filter (\f -> Just f.url == model.showFeedUrl)
             |> List.head
         filterBar =

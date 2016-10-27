@@ -1,6 +1,7 @@
 module Models exposing (..)
 
 import Time exposing (Time)
+import Dict
 
 
 type alias Item =
@@ -219,10 +220,11 @@ itemListAll limit model =
                 let
                     items = model.list
                         |> List.concatMap (\feed -> 
-                           List.map (\item -> (feed, item)) feed.items
+                           List.map (\item -> (item.url, (feed, item))) feed.items
                         )
+                        |> Dict.fromList
                     playListItem =  model.playList
-                        |> List.filterMap (\url -> findItemByUrl url items)
+                        |> List.filterMap (\url -> Dict.get url items)
                 in
                     ( playListItem, False )
             else
@@ -235,19 +237,6 @@ itemListAll limit model =
                         )
                     else
                         ( list, False )
-
-
-findItemByUrl: String -> List (Feed, Item) -> Maybe (Feed, Item)
-findItemByUrl url list =
-    case list of
-        [] -> 
-            Nothing
-
-        (feed, item)::xs ->
-            if item.url == url then
-                Just (feed, item)
-            else
-                findItemByUrl url xs
 
 
 itemsByDate: Model -> List Feed -> List (Feed, Item)

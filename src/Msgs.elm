@@ -47,6 +47,6 @@ type Msg
     | ToggleAbout Bool
     | Enqueue String
     | Dequeue String
-    --| MoveQueuedItemUp String
-    --| MoveQueuedItemDown String
+    | MoveQueuedItemUp String
+    | MoveQueuedItemDown String
     | AppClickClear

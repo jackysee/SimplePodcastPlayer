@@ -185,6 +185,7 @@ viewItem model feed (index, item) =
                 , ("is-unplayed", item.progress == -1 && not listened)
                 , ("is-played", listened)
                 , ("is-selected", model.itemSelected == Just item.url)
+                , ("is-enqueued", List.member item.url model.playList)
                 ]
             , toggleItem model item
             , onMouseEnter (SelectItem item)
@@ -192,6 +193,7 @@ viewItem model feed (index, item) =
             , id ("item-" ++ toString index)
             ]
             [ renderItemState item model.currentItemUrl model.playerState
+            , renderReorder item model.itemFilter
             , case feed of
                 Just feed' ->
                     div
@@ -243,6 +245,25 @@ renderItemState item currentItemUrl playerState =
             [ img [ src "assets/play.svg" ] []
             ]
 
+
+renderReorder: Item -> ItemFilter -> Html Msg
+renderReorder item filter =
+    if filter == Queued then
+        div
+            [ class "item-reorder" ]
+            [ button 
+                [ class "btn btn-icon" 
+                , onInternalClick (MoveQueuedItemUp item.url)
+                ]
+                [ img [ src "assets/arrow-up.svg" ] [] ]
+            , button 
+                [ class "btn btn-icon" 
+                , onInternalClick (MoveQueuedItemDown item.url)
+                ]
+                [ img [ src "assets/arrow-down.svg" ] [] ]
+            ]
+    else
+        text ""
 
 
 viewItemControl : Bool -> Model -> Item  -> Html Msg
