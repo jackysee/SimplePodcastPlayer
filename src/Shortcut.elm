@@ -111,8 +111,10 @@ selectNext : Model -> (Model, Cmd Msg)
 selectNext model =
     let
         (list, more) = itemList model
+        listHasUrl = List.any (\(feed, item) -> Just item.url == model.itemSelected) list
+        url_ = if listHasUrl then model.itemSelected else Nothing
     in
-        case model.itemSelected of
+        case url_ of
             Just url ->
                 list
                     |> List.indexedMap (,)
@@ -145,8 +147,10 @@ selectPrev: Model -> (Model, Cmd Msg)
 selectPrev model =
     let
         (list, more) = itemList model
+        listHasUrl = List.any (\(feed, item) -> Just item.url == model.itemSelected) list
+        url_ = if listHasUrl then model.itemSelected else Nothing
     in
-        case model.itemSelected of
+        case url_ of
             Just url ->
                 list
                     |> List.indexedMap (,)
