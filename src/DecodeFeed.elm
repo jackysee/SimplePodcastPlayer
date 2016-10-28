@@ -18,8 +18,9 @@ decodeFeed url =
         |> requiredAt ["query", "results", "rss", "channel", "item"]
             (Json.list decodeItem
                 `Json.andThen`
-                    (\list -> Json.succeed <|
-                        List.filterMap (\item -> item) list
+                    (\list -> list
+                        |> List.filterMap identity
+                        |> Json.succeed
                     )
             )
         |> hardcoded Normal
@@ -43,50 +44,37 @@ decodeItem =
 
 decodeEnclosure : Json.Decoder String
 decodeEnclosure =
-    ( Json.object2
-        (,)
-        decodeEnclosureUrl
-        decodeEnclosureType
-    )
+    Json.oneOf
+        [ "enclosure" := decodeSingleEnclosureUrl
+        , "enclosure" := decodeEnclosureListUrl
+        ]
+
+
+decodeSingleEnclosureUrl : Json.Decoder String
+decodeSingleEnclosureUrl =
+    Json.object2 (\url _ -> url)
+        ("url" := Json.string)
+        ("type" := Json.string
+            `Json.andThen`
+             (\type_ ->
+                if Regex.contains (Regex.regex "^audio/") type_ then
+                    Json.succeed type_
+                else
+                    Json.fail "not audio type"
+            )
+        )
+
+decodeEnclosureListUrl : Json.Decoder String
+decodeEnclosureListUrl =
+    (Json.list (Json.maybe decodeSingleEnclosureUrl))
     `Json.andThen`
-    (\(url, type_) ->
-        if Regex.contains (Regex.regex "^audio/") type_ then
-            Json.succeed url
-        else
-            Json.fail "not audio type"
-    )
-
-
-decodeEnclosureUrl : Json.Decoder String
-decodeEnclosureUrl =
-    Json.oneOf
-        [ (Json.at ["enclosure", "url"] Json.string)
-        , ("enclosure" := Json.list ("url" := Json.string))
-            `Json.andThen`
-            (\list ->
-                case List.head list of
-                    Just first ->
-                        Json.succeed first
-                    Nothing ->
-                        Json.fail  "cannot get enclosure"
-             )
-        ]
-
-
-decodeEnclosureType: Json.Decoder String
-decodeEnclosureType =
-    Json.oneOf
-        [ (Json.at ["enclosure", "type"] Json.string)
-        , ("enclosure" := Json.list ("type" := Json.string))
-            `Json.andThen`
-            (\list ->
-                case List.head list of
-                    Just first ->
-                        Json.succeed first
-                    Nothing ->
-                        Json.fail  "cannot get mimetype"
-             )
-        ]
+        (\list ->
+            list
+                |> List.filterMap identity
+                |> List.head
+                |> Maybe.map Json.succeed
+                |> Maybe.withDefault (Json.fail "no audio found")
+        )
 
 
 jsonDate : Json.Decoder Time

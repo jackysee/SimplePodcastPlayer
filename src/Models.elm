@@ -57,9 +57,15 @@ type ItemFilter
     | Unlistened
 
 
+type FloatPanel
+    = AddPanel
+    | About
+    | ItemDropdown String
+    | Hidden
+
+
 type alias Model =
-    { showAddPanel : Bool
-    , urlToAdd : String
+    { urlToAdd : String
     , loadFeedState : LoadFeedState
     , playerState : PlayerState
     , list : List Feed
@@ -70,23 +76,19 @@ type alias Model =
     , playerVol : Float
     , showFeedUrl : Maybe String
     , itemFilter: ItemFilter
-    , itemDropdown : Maybe String
     , itemSelected : Maybe String
-    , showAbout : Bool
     , playList: List String
+    , shortcutGoTo: Bool
+    , floatPanel : FloatPanel
     }
 
 
 type alias StoreModel =
-    -- { showAddPanel : Bool
     { urlToAdd : String
-    -- , loadFeedState : LoadFeedState
     , list : List StoreFeed
-    -- , currentTime : Time
     , itemsToShow : Int
     , currentItemUrl : Maybe String
     , playerRate : Float
-    -- , playerState : PlayerState
     , playerVol : Float
     , itemFilter : String
     , playList: List String
@@ -219,7 +221,7 @@ itemListAll limit model =
             if model.itemFilter == Queued then
                 let
                     items = model.list
-                        |> List.concatMap (\feed -> 
+                        |> List.concatMap (\feed ->
                            List.map (\item -> (item.url, (feed, item))) feed.items
                         )
                         |> Dict.fromList
@@ -261,4 +263,22 @@ filterByItemFilter model item =
         Queued ->
             List.member item.url model.playList
             -- item.progress > -1 && item.playCount == 0
-            
+
+defaultModel : Model
+defaultModel =
+    { urlToAdd = ""
+    , list = []
+    , loadFeedState = Empty
+    , currentTime = 0
+    , itemsToShow = 30
+    , currentItemUrl = Nothing
+    , playerState = Stopped
+    , playerRate = 1
+    , playerVol = toFloat 1
+    , showFeedUrl = Nothing
+    , itemFilter = Unlistened
+    , itemSelected = Nothing
+    , playList = []
+    , shortcutGoTo = False
+    , floatPanel = Hidden
+    }

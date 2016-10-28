@@ -64,8 +64,8 @@ parseDuration str =
         sum list
 
 
-format : Time -> Time -> String
-format time currentTime =
+format : Time -> Time -> Bool -> String
+format time currentTime showYear =
     let
         currentYear =
             Date.fromTime currentTime |> Date.year
@@ -77,14 +77,11 @@ format time currentTime =
             Date.year date
     in
         String.join "" <|
-            [ Date.day date
-                |> toString
-                -- |> String.padLeft 2 '0'
-            , Date.month date
-                |> printMonth
+            [ Date.day date |> toString
+            , Date.month date |> printMonth
             ]
-                ++ if dateYear /= currentYear then
-                    [ toString currentYear |> String.dropLeft 2 ]
+                ++ if showYear then
+                    [ toString currentYear ]
                    else
                     []
 

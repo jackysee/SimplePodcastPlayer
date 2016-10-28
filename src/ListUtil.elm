@@ -45,3 +45,16 @@ swapUp n list =
 
         _ ->
             list
+
+
+getNext: (a -> Bool) -> List a -> Maybe a
+getNext predicate list =
+    case list of
+        x::y::xs ->
+            if predicate x then
+                Just y
+            else
+                getNext predicate (y::xs)
+
+        _ ->
+            Nothing

@@ -2,109 +2,137 @@ port module Shortcut exposing (keyMap, selectNext, selectPrev)
 
 import Msgs exposing (..)
 import Models exposing (..)
-import ListUtil exposing (dropWhile, takeWhile)
--- import Maybe.Extra exposing (join)
+import Feed exposing (markListenedMsg)
+import ListUtil exposing (getNext)
 
 keyMap: Model -> String -> Msg
 keyMap model key =
     let
         a = Debug.log "key" key
         selectedItem = getSelectedItem model
-    in
-        case key of
-            "j" ->
-                SelectNext
+        gotoMsgs =
+            if model.shortcutGoTo then
+                case key of
+                    "u" ->
+                        [ SetItemFilter Unlistened
+                        , ToggleShortcutGoto False
+                        ]
+                    "q" ->
+                        [ SetItemFilter Queued
+                        , ToggleShortcutGoto False
+                        ]
+                    _ ->
+                        [ ToggleShortcutGoto False ]
+            else
+                []
 
-            "down" ->
-                SelectNext
+        msgs =
+            if List.length gotoMsgs == 0 then
+                case key of
+                "j" ->
+                    [ SelectNext ]
 
-            "k" ->
-                SelectPrev
+                "down" ->
+                    [ SelectNext ]
 
-            "up" ->
-                SelectPrev
+                "k" ->
+                    [ SelectPrev ]
 
-            "o" ->
-                case selectedItem of
-                    Just item ->
-                        case item.link of
-                            Just link' ->
-                                OpenNewLink link'
+                "up" ->
+                    [ SelectPrev ]
 
-                            Nothing ->
-                                NoOp
-
-                    Nothing ->
-                        NoOp
-
-            "space" ->
-                case selectedItem of
-                    Just item ->
-                        if Just item.url /= model.currentItemUrl then
-                            Play item
-                        else
-                            case model.playerState of
-                                Playing ->
-                                    Pause item
-
-                                Paused ->
-                                    Play item
-
-                                Stopped ->
-                                    Play item
-
-                                _ ->
-                                    NoOp
-
-                    Nothing ->
-                        NoOp
-
-            "n" ->
-                ShowAddPanel
-
-            "esc" ->
-                HideAddPanel
-
-            "u" ->
-                if model.itemFilter == Queued then
+                "o" ->
                     case selectedItem of
                         Just item ->
-                            MoveQueuedItemUp item.url
+                            case item.link of
+                                Just link' ->
+                                    [ OpenNewLink link' ]
 
-                        Nothing  ->
-                            NoOp
-                else
-                    NoOp
+                                Nothing ->
+                                    [ NoOp ]
 
-            "d" ->
-                if model.itemFilter == Queued then
+                        Nothing ->
+                            [ NoOp ]
+
+                "space" ->
                     case selectedItem of
                         Just item ->
-                            MoveQueuedItemDown item.url
+                            if Just item.url /= model.currentItemUrl then
+                                [ Play item ]
+                            else
+                                case model.playerState of
+                                    Playing ->
+                                        [ Pause item ]
 
+                                    Paused ->
+                                        [ Play item ]
+
+                                    Stopped ->
+                                        [ Play item ]
+
+                                    _ ->
+                                        [ NoOp ]
+
+                        Nothing ->
+                            [ NoOp ]
+
+                "n" ->
+                    [ ShowAddPanel ]
+
+                "esc" ->
+                    [ HideAddPanel ]
+
+                "u" ->
+                    if model.itemFilter == Queued then
+                        case selectedItem of
+                            Just item ->
+                                [ MoveQueuedItemUp item.url ]
+
+                            Nothing  ->
+                                [ NoOp ]
+                    else
+                        [ NoOp ]
+
+                "d" ->
+                    if model.itemFilter == Queued then
+                        case selectedItem of
+                            Just item ->
+                                [ MoveQueuedItemDown item.url ]
+
+                            _ ->
+                                [ NoOp ]
+                    else
+                        [ NoOp ]
+
+                "q" ->
+                    case selectedItem of
+                        Just item ->
+                            if List.member item.url model.playList then
+                                [ Dequeue item.url ]
+                            else
+                                [ Enqueue item.url ]
                         _ ->
-                            NoOp
-                else
-                    NoOp
+                            [ NoOp ]
 
-            "e" ->
-                case selectedItem of
-                    Just item ->
-                        Enqueue item.url
-                    _ ->
-                        NoOp
+                "g" ->
+                    if model.shortcutGoTo then
+                        [ ToggleShortcutGoto False ]
+                    else
+                        [ ToggleShortcutGoto True ]
 
-            {--
-            "d" ->
-                case selectedItem of
-                    Just item ->
-                        Dequeue item.url
-                    _ ->
-                        NoOp
-            --}
+                "m" ->
+                    case selectedItem of
+                        Just item ->
+                            [ markListenedMsg item ]
+                        _ ->
+                            [ NoOp ]
 
-            _ ->
-                NoOp
+                _ ->
+                    [ NoOp ]
+            else
+                []
+    in
+        MsgBatch <| gotoMsgs ++ msgs
 
 
 selectNext : Model -> (Model, Cmd Msg)
@@ -130,19 +158,6 @@ selectNext model =
                     |> selectItem model
 
 
-getNext: (a -> Bool) -> List a -> Maybe a
-getNext predicate list =
-    case list of
-        x::y::xs ->
-            if predicate x then
-                Just y
-            else
-                getNext predicate (y::xs)
-
-        _ ->
-            Nothing
-
-
 selectPrev: Model -> (Model, Cmd Msg)
 selectPrev model =
     let
@@ -166,7 +181,7 @@ selectPrev model =
                     |> List.reverse
                     |> List.head
                     |> selectItem model
-            
+
 
 selectItem:  Model -> Maybe (Int, Item) -> (Model, Cmd Msg)
 selectItem model item =

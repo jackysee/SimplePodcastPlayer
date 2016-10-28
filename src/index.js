@@ -29,7 +29,6 @@ store.get(function(_model){
             onend: function(){
                 console.log( 'end, state = ', sound ? sound.state() : 'no sound' );
                 if(sound && sound.state() == "loading"){
-                    console.log( 'end called when loading' );
                     return;
                 }
                 if(sound){
@@ -53,7 +52,7 @@ store.get(function(_model){
             sound.mute(true);
         }
 
-        console.log("play file", playLoad.url, sound);
+        console.log("play file", playLoad.url);
         sound.play();
     }
 
@@ -79,7 +78,7 @@ store.get(function(_model){
         if(sound){
             clearTimeout(updateProgressTimer);
             app.ports.updateProgress.send({
-                current: sound.seek(),
+                progress: sound.seek(),
                 duration: sound.duration()
             });
             sound.unload();
@@ -133,6 +132,9 @@ store.get(function(_model){
                 var key = keycode(ev) || "";
                 if(key === 'space'){
                     ev.preventDefault();
+                }
+                if(ev.ctrlKey){
+                    key = "ctrl-"+key;
                 }
                 app.ports.keyUp.send(key);
             }

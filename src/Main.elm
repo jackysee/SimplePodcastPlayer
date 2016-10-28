@@ -6,7 +6,7 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, src, style, classList, type', checked, title)
 import Task exposing (Task)
 import Time exposing (Time)
-import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp)
+import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp, getNext)
 import Dom
 import Dict
 
@@ -14,12 +14,13 @@ import Models exposing (..)
 import Msgs exposing (..)
 import Feed exposing
     ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , viewFeedTitle , viewItem )
+    , viewFeedTitle, viewItem )
 import AddFeed exposing (viewAddFeed, addFeedButton)
 import Player exposing (viewPlayer)
 import Shortcut exposing (keyMap, selectNext, selectPrev)
 import Events exposing (onScroll)
 import About exposing (viewAbout, viewAboutButton)
+import FloatPlanel exposing (hideItemDropdown, initAddPanel)
 
 
 main : Program (Maybe StoreModel)
@@ -39,45 +40,21 @@ init storeModel =
             let
                 feeds = List.map toFeed m.list
             in
-                { showAddPanel = List.length feeds  == 0
-                , urlToAdd = m.urlToAdd
-                , list = feeds
-                , loadFeedState = Empty
-                , currentTime = 0
-                , itemsToShow = 30 -- m.itemsToShow
-                , currentItemUrl = m.currentItemUrl
-                , playerState = Stopped
-                , playerRate = m.playerRate
-                , playerVol = m.playerVol
-                , showFeedUrl = Nothing
-                , itemFilter = toItemFilter m.itemFilter
-                , itemDropdown = Nothing
-                , itemSelected = Nothing
-                , showAbout = False
-                , playList = m.playList
+                { defaultModel
+                    | floatPanel = initAddPanel feeds
+                    , urlToAdd = m.urlToAdd
+                    , list = feeds
+                    , currentItemUrl = m.currentItemUrl
+                    , playerRate = m.playerRate
+                    , playerVol = m.playerVol
+                    , itemFilter = toItemFilter m.itemFilter
+                    , playList = m.playList
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds
                       ]
         Nothing ->
-            { showAddPanel = False
-            , urlToAdd = ""
-            , list = []
-            , loadFeedState = Empty
-            , currentTime = 0
-            , itemsToShow = 30
-            , currentItemUrl = Nothing
-            , playerState = Stopped
-            , playerRate = 1
-            , playerVol = toFloat 1
-            , showFeedUrl = Nothing
-            , itemFilter = Unlistened
-            , itemDropdown = Nothing
-            , itemSelected = Nothing
-            , showAbout = False
-            , playList = []
-            }
-                ! [ updateCurrentTime ]
+            defaultModel ! [ updateCurrentTime ]
 
 
 updateCurrentTime : Cmd Msg
@@ -101,20 +78,30 @@ updateFeeds feeds =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        cmds = [ updateCurrentTime ]
-        (model', cmds') = updateModel msg model cmds
+        (model_, cmds) = updateModel msg model []
     in
-        model' ! (cmds' ++ [ saveModel model ] )
+        case msg of
+            NoOp ->
+                model_ ! []
+
+            UpdateCurrentTime time ->
+                model_ ! []
+
+            _ ->
+                model_ ! ([ updateCurrentTime ]
+                    ++ cmds
+                    ++ [ saveModel model ]
+                )
 
 
 updateModel : Msg -> Model -> List (Cmd Msg) -> (Model, List (Cmd Msg))
 updateModel msg model cmds =
     case msg of
         NoOp ->
-            (model, cmds)
+            (model, [])
 
         UpdateCurrentTime time ->
-            ({ model | currentTime = time }, cmds)
+            ({ model | currentTime = time }, [])
 
         SetUrl value ->
             ({ model
@@ -143,7 +130,7 @@ updateModel msg model cmds =
                         ++ [ { feed | items = feed.items } ]
                 , loadFeedState = Empty
                 , urlToAdd = ""
-                , showAddPanel = False
+                , floatPanel = Hidden
             }
             , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
             )
@@ -180,9 +167,10 @@ updateModel msg model cmds =
         UpdateProgress progress ->
             ( model
                 |> updateCurrentItem
-                    (\item -> { item
-                                | duration = progress.duration
-                                , progress = progress.progress })
+                    (\item ->
+                        { item
+                            | duration = progress.duration
+                            , progress = progress.progress })
             , cmds
             )
 
@@ -229,12 +217,12 @@ updateModel msg model cmds =
                     )
 
         ShowAddPanel ->
-            ( { model | showAddPanel = True }
+            ( { model | floatPanel = AddPanel }
             , [ noOpTask (Dom.focus "add-feed") ] ++ cmds
             )
 
         HideAddPanel ->
-            ({ model | showAddPanel = False }
+            ({ model | floatPanel = Hidden }
             , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
             )
 
@@ -242,7 +230,7 @@ updateModel msg model cmds =
             ({ model
                 | showFeedUrl = Just url
                 , list = flushPlayCount model.list
-                , showAddPanel = False
+                , floatPanel = Hidden
              }
             , cmds)
 
@@ -266,11 +254,7 @@ updateModel msg model cmds =
         ConfirmDeleteFeed feed ->
             let
                 list = List.filter (\f -> f.url /= feed.url ) model.list
-                currentItemDeleted = list
-                    |> List.concatMap (\feed -> feed.items)
-                    |> List.filter (\item -> isCurrent item.url model)
-                    |> List.length
-                    |> (==) 0
+                currentItemDeleted = List.any (\item -> isCurrent item.url model) feed.items
                 currentItemUrl =
                     if currentItemDeleted then
                         Nothing
@@ -311,11 +295,8 @@ updateModel msg model cmds =
                 nextItem =
                     itemList model
                         |> fst
-                        |> dropWhile (\(feed, item) -> item.url /= url)
-                        |> List.take 2
-                        |> List.reverse
-                        |> List.map snd
-                        |> List.head
+                        |> getNext (\(feed, item) -> item.url == url)
+                        |> Maybe.map snd
             in
                 case nextItem of
                     Just item' ->
@@ -350,10 +331,11 @@ updateModel msg model cmds =
             )
 
         ShowItemDropdown url  ->
-            ({ model | itemDropdown = Just url } , cmds )
+            ({ model | floatPanel = ItemDropdown url } , cmds )
 
         HideItemDropdown ->
-            ({ model | itemDropdown = Nothing } , cmds )
+            ({ model | floatPanel = hideItemDropdown model.floatPanel }
+            , cmds )
 
         SelectItem item ->
             ({ model | itemSelected = Just item.url } , cmds )
@@ -363,13 +345,15 @@ updateModel msg model cmds =
 
         MarkPlayCount url playCount ->
             let
-                model' = updateItem
-                    (\item -> { item | markPlayCount = playCount })
-                    (Just url)
-                    model
-                model'' = { model' | itemDropdown = Nothing }
+                model' = model
+                    |> updateItem
+                        (\item -> { item | markPlayCount = playCount })
+                        (Just url)
+                    |> (\model_ ->
+                        { model_ | floatPanel = hideItemDropdown model_.floatPanel }
+                       )
             in
-                (model'', cmds)
+                (model' , cmds)
 
         MarkItemsBelowListened url ->
             let
@@ -382,7 +366,7 @@ updateModel msg model cmds =
                         )
                 model' =
                     { model
-                        | itemDropdown = Nothing
+                        | floatPanel = hideItemDropdown model.floatPanel
                         , list = List.map
                             (\feed ->
                                 { feed | items = List.map
@@ -417,24 +401,21 @@ updateModel msg model cmds =
             in
                 (model', [cmd] ++ cmds)
 
-        ToggleAbout show ->
-            ({ model | showAbout = show }, cmds)
-
         Enqueue url ->
-            ({ model 
-                | playList = 
+            ({ model
+                | playList =
                     if List.member url model.playList then
                         model.playList
                     else
                         model.playList ++ [url]
-                , itemDropdown = Nothing
+                , floatPanel = hideItemDropdown model.floatPanel
              }
             , cmds)
 
         Dequeue url ->
-            ({ model 
+            ({ model
                 | playList = List.filter (\url_ -> url /= url_) model.playList
-                , itemDropdown = Nothing
+                , floatPanel = hideItemDropdown model.floatPanel
              }
             , cmds)
 
@@ -446,24 +427,25 @@ updateModel msg model cmds =
             ({ model | playList = swapDown url model.playList }
             , cmds)
 
-        AppClickClear ->
+        ToggleShortcutGoto flag ->
+            ({ model | shortcutGoTo = flag }, cmds)
+
+        SetFloatPanel panel ->
+            ({ model | floatPanel = panel }, cmds)
+
+        MsgBatch list ->
             List.foldl
                 (\msg (model, cmds) ->
                     updateModel msg model cmds
                 )
                 (model, cmds)
-                [ HideAddPanel
-                , HideItemDropdown
-                , ToggleAbout False
-                ]
-
+                list
 
 
 view : Model -> Html Msg
 view model =
     let
         feed' = model.list
-
             |> List.filter (\f -> Just f.url == model.showFeedUrl)
             |> List.head
         filterBar =
@@ -482,7 +464,7 @@ view model =
             , viewAbout model
             , div
                 [ class "wrap"
-                , onClick AppClickClear
+                , onClick (SetFloatPanel Hidden)
                 ]
                 [ div
                     [ class "top-bar-wrap" ]
@@ -659,7 +641,9 @@ noOpTask task =
 
 saveModel : Model -> Cmd Msg
 saveModel model =
-    model |> toStoreModel |> storeModel
+    model
+        |> toStoreModel
+        |> storeModel
 
 
 subscriptions : Model -> Sub Msg

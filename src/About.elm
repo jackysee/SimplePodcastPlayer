@@ -14,7 +14,7 @@ content = """
 
 Created by [@jackysee](http://github.com/jackysee/SimplePodcastPlayer) using
 [Elm](http://elm-lang.org). The RSS service is provided by [YQL](http://developer.yahoo.com/yql/console/).
-    
+
 Icons provided by [font-awesome](http://fontawesome.io) and:
 * "Subscription" Created by Michal Beno from [the Noun Project](http://thenounproject.com)
 * "Information" Created by Gonzalo Bravo from [the Noun Project](http://thenounproject.com)
@@ -22,12 +22,12 @@ Icons provided by [font-awesome](http://fontawesome.io) and:
 
 viewAbout : Model -> Html Msg
 viewAbout model =
-    if model.showAbout then
+    if model.floatPanel == About then
         div
             [ class "app-about" ]
             [ button
                 [ class "btn btn-icon app-about-close"
-                , onClick (ToggleAbout False)
+                , onClick (SetFloatPanel Hidden)
                 ]
                 [ img [ src "assets/close.svg" ] []
                 ]
@@ -43,7 +43,7 @@ viewAboutButton : Html Msg
 viewAboutButton =
     button
         [ class "btn btn-icon"
-        , onInternalClick (ToggleAbout True)
+        , onInternalClick (SetFloatPanel About)
         ]
         [ img [ src "assets/info-circle.svg" ] []
         ]

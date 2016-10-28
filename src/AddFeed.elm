@@ -14,7 +14,7 @@ viewAddFeed model =
     div
         [ classList
             [ ("add-panel", True)
-            , ("is-show", model.showAddPanel)
+            , ("is-show", model.floatPanel == AddPanel)
             ]
         ]
         [ div
@@ -38,7 +38,7 @@ viewAddFeed model =
                 []
             , viewLoadFeedState model.loadFeedState
             ]
-        , if model.showAddPanel then
+        , if model.floatPanel == AddPanel then
             div
                 []
                 [ div

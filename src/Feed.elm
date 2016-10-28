@@ -1,23 +1,22 @@
 module Feed exposing
     ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , viewFeedTitle , viewItem, viewConfirmDelete )
+    , viewFeedTitle , viewItem, viewConfirmDelete, markListenedMsg )
 
 import Task
 import Http
 import String
 import Html exposing (Html, text, button, ul, li, div, span, img, a)
 import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
-import Html.Attributes exposing (class, title, src, classList, id)
+import Html.Attributes exposing (class, title, src, classList, id, href, target)
 import Dict
 
 import Models exposing (..)
 import Msgs exposing (..)
 import DecodeFeed exposing (decodeFeed)
--- import ListUtil exposing (takeWhile, dropWhile)
 import DateFormat exposing (formatDuration, formatDurationShort, format)
 import Events exposing (onInternalClick, onClickPosBottomRight)
 
-yqlUrl: String -> String -- Task Http.Error Feed
+yqlUrl: String -> String 
 yqlUrl url =
     String.join ""
         [ "//query.yahooapis.com/v1/public/yql?q="
@@ -189,11 +188,10 @@ viewItem model feed (index, item) =
                 ]
             , toggleItem model item
             , onMouseEnter (SelectItem item)
-            , onMouseLeave (UnselectItem item)
+            -- , onMouseLeave (UnselectItem item)
             , id ("item-" ++ toString index)
             ]
             [ renderItemState item model.currentItemUrl model.playerState
-            , renderReorder item model.itemFilter
             , case feed of
                 Just feed' ->
                     div
@@ -208,9 +206,14 @@ viewItem model feed (index, item) =
                     [ class "item-title", title item.title ]
                     [ text item.title ]
                 ]
+            , viewItemQueued model item
+            , renderReorder item model.itemFilter
             , viewItemControl listened model item
-            , div [ class "item-date" ]
-                [ text <| format item.pubDate model.currentTime ]
+            , div
+                [ class "item-date"
+                , title <| format item.pubDate model.currentTime True
+                ]
+                [ text <| format item.pubDate model.currentTime False ]
             , div [ class "item-progress" ]
                 [ text <| formatDurationShort item.duration ]
             ]
@@ -251,17 +254,27 @@ renderReorder item filter =
     if filter == Queued then
         div
             [ class "item-reorder" ]
-            [ button 
-                [ class "btn btn-icon" 
+            [ button
+                [ class "btn btn-icon"
                 , onInternalClick (MoveQueuedItemUp item.url)
                 ]
                 [ img [ src "assets/arrow-up.svg" ] [] ]
-            , button 
-                [ class "btn btn-icon" 
+            , button
+                [ class "btn btn-icon"
                 , onInternalClick (MoveQueuedItemDown item.url)
                 ]
                 [ img [ src "assets/arrow-down.svg" ] [] ]
             ]
+    else
+        text ""
+
+
+viewItemQueued: Model -> Item -> Html Msg
+viewItemQueued model item =
+    if List.member item.url model.playList && model.itemFilter /= Queued then
+        div
+            [ class "item-queued" ]
+            [ text "queued" ]
     else
         text ""
 
@@ -283,39 +296,46 @@ viewItemControl listened model item =
                     []
 
         markItem =
-            let
-                markPlayCount = if listened then 0 else 1
-            in
-                [ if List.member item.url model.playList then
-                    div 
-                        [ class "dropdown-item"
-                        , onInternalClick (Dequeue item.url)
-                        ]
-                        [ text "Dequeue" ] 
-                  else
-                    div 
-                        [ class "dropdown-item"
-                        , onInternalClick (Enqueue item.url)
-                        ]
-                        [ text "Enqueue" ] 
-                , div
-                    [ class "dropdown-item"
-                    , onInternalClick (MarkPlayCount item.url markPlayCount)
+            [ div
+                [ class "dropdown-item "
+                , onInternalClick NoOp
+                ]
+                [ a
+                    [ href item.url
+                    , target "_blank"
+                    , title "right click save as"
                     ]
-                    [ if listened then
-                          text "Mark as unlistened"
-                      else
-                          text "Mark as listened"
-                    ]
-                , div
-                    [ class "dropdown-item"
-                    , onInternalClick (MarkItemsBelowListened item.url)
-                    ]
-                    [ text "Mark item and items below as listened"]
+                    [ text "Download file" ]
 
                 ]
+            , if List.member item.url model.playList then
+                div
+                    [ class "dropdown-item"
+                    , onInternalClick (Dequeue item.url)
+                    ]
+                    [ text "Dequeue" ]
+              else
+                div
+                    [ class "dropdown-item"
+                    , onInternalClick (Enqueue item.url)
+                    ]
+                    [ text "Enqueue" ]
+            , div
+                [ class "dropdown-item"
+                , onInternalClick (markListenedMsg item)
+                ]
+                [ if listened then
+                      text "Mark as unlistened"
+                  else
+                      text "Mark as listened"
+                ]
+            , div
+                [ class "dropdown-item"
+                , onInternalClick (MarkItemsBelowListened item.url)
+                ]
+                [ text "Mark item and items below as listened"]
 
-
+            ]
 
         menusItems = newLinkItem ++ markItem
     in
@@ -336,13 +356,31 @@ viewItemControl listened model item =
                         ]
                         [ img [ src "assets/ellipsis-v.svg" ] []
                         ]
-                    , if model.itemDropdown == Just item.url || maybeEqual model.itemDropdown item.link then
-                          div
-                              [ class "dropdown-panel feed-more-panel" ]
-                              menusItems
-                      else
-                          text ""
+                    , case model.floatPanel of
+                        ItemDropdown url ->
+                            if url == item.url || Just url == item.link then
+                                div
+                                    [ class "dropdown-panel feed-more-panel" ]
+                                    menusItems
+                            else
+                                text ""
+
+                        _ ->
+                            text ""
                     ]
                 ]
         else
             text ""
+
+
+markListenedMsg : Item -> Msg
+markListenedMsg item =
+    let
+        listened =
+            if item.markPlayCount == -1 then
+                item.playCount > 0
+            else
+                item.markPlayCount > 0
+        markPlayCount = if listened then 0 else 1
+    in
+        MarkPlayCount item.url markPlayCount

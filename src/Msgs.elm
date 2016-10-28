@@ -44,9 +44,10 @@ type Msg
     | UnselectItem Item
     | SelectNext
     | SelectPrev
-    | ToggleAbout Bool
     | Enqueue String
     | Dequeue String
     | MoveQueuedItemUp String
     | MoveQueuedItemDown String
-    | AppClickClear
+    | ToggleShortcutGoto Bool
+    | SetFloatPanel FloatPanel
+    | MsgBatch (List Msg)
