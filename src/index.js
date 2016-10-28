@@ -130,9 +130,9 @@ store.get(function(_model){
             var tagName = ev.target.tagName.toLowerCase();
             if(tagName !== "input" && tagName !== "textarea"){
                 var key = keycode(ev) || "";
-                if(key === 'space'){
-                    ev.preventDefault();
-                }
+                // if(key === 'space'){
+                //     ev.preventDefault();
+                // }
                 if(ev.ctrlKey){
                     key = "ctrl-"+key;
                 }
@@ -157,3 +157,5 @@ store.get(function(_model){
 // http://podcast.talkonly.net/feed
 // https://feeds.feedburner.com/JackysBlog
 // http://cast.rocks/hosting/6039/feeds/8YSE5.xml
+// https://changelog.com/podcast/feed
+// http://shoptalkshow.com/feed/podcast/

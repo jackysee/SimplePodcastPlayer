@@ -54,7 +54,7 @@ keyMap model key =
                         Nothing ->
                             [ NoOp ]
 
-                "space" ->
+                "p" ->
                     case selectedItem of
                         Just item ->
                             if Just item.url /= model.currentItemUrl then
@@ -135,27 +135,34 @@ keyMap model key =
         MsgBatch <| gotoMsgs ++ msgs
 
 
-selectNext : Model -> (Model, Cmd Msg)
+selectNext : Model -> Maybe (Model, Cmd Msg)
 selectNext model =
     let
         (list, more) = itemList model
         listHasUrl = List.any (\(feed, item) -> Just item.url == model.itemSelected) list
-        url_ = if listHasUrl then model.itemSelected else Nothing
-    in
-        case url_ of
-            Just url ->
-                list
-                    |> List.indexedMap (,)
-                    |> getNext (\(index, (feed, item)) -> item.url == url)
-                    |> Maybe.map (\(index, (feed, item)) -> (index, item))
-                    |> selectItem model
+        url_ = 
+            if listHasUrl then 
+                model.itemSelected 
+            else 
+                Nothing
+        next =
+            case url_ of
+                Just url ->
+                    list
+                        |> List.indexedMap (,)
+                        |> getNext (\(index, (feed, item)) -> item.url == url)
+                        |> Maybe.map (\(index, (feed, item)) -> (index, item))
 
-            Nothing ->
-                list
-                    |> List.indexedMap (,)
-                    |> List.map (\(index, (feed, item)) -> (index, item))
-                    |> List.head
-                    |> selectItem model
+                Nothing ->
+                    list
+                        |> List.indexedMap (,)
+                        |> List.map (\(index, (feed, item)) -> (index, item))
+                        |> List.head
+    in
+        if next == Nothing && more then
+            Nothing
+        else
+            Just (selectItem model next)
 
 
 selectPrev: Model -> (Model, Cmd Msg)

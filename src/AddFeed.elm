@@ -38,12 +38,12 @@ viewAddFeed model =
                 []
             , viewLoadFeedState model.loadFeedState
             ]
-        , if model.floatPanel == AddPanel then
+        , if model.floatPanel == AddPanel && List.length model.list > 0 then
             div
-                []
+                [ class "subscriptions-wrap" ]
                 [ div
                     [ class "subscription-title" ]
-                    [ text "Subscribed feeds: " ]
+                    [ text "Subscribed: " ]
                 , div
                     [ class "subscriptions" ] <|
                     List.map (\feed ->

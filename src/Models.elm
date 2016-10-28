@@ -2,6 +2,7 @@ module Models exposing (..)
 
 import Time exposing (Time)
 import Dict
+import ListUtil exposing (findFirst)
 
 
 type alias Item =
@@ -270,7 +271,14 @@ filterByItemFilter model item =
             item.playCount == 0
         Queued ->
             List.member item.url model.playList
-            -- item.progress > -1 && item.playCount == 0
+
+
+getItemByUrl : Model -> String -> Maybe Item            
+getItemByUrl model url =
+    model.list
+        |> List.concatMap (\feed -> feed.items)
+        |> findFirst (\item -> item.url == url)
+
 
 defaultModel : Model
 defaultModel =

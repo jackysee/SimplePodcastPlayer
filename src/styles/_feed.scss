@@ -103,7 +103,13 @@
     flex: 1;
     overflow: auto;
     margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
     margin-top: 0;
+
+    &.has-sort{
+        margin-top: -1rem;
+    }
 }
 
 .item-empty{
@@ -112,7 +118,23 @@
     color: #CCC;
 }
 
+.item-sort{
+    margin: 0;
+    text-align: right;
+    padding-right: 4rem;
+    font-size: 0.8rem;
+    color: #aaa;
+
+    span {
+        cursor: pointer;
+    }
+}
+
+
 .item-list{
+    flex: 1;
+    margin: 0;
+    overflow: auto;
     list-style: none;
     padding: 0;
     padding-bottom: 1rem;
@@ -187,20 +209,12 @@
     align-items: center;
 }
 
-// .item .btn-more{
-//     visibility: hidden;
-// }
-//
-// .item.is-selected .btn-more{
-//     visibility: visible;
-// }
-
 .item-control .btn{
     margin-top: 0;
 }
 
 .item-progress{
-    min-width: 2.5rem;
+    min-width: 3rem;
     text-align: right;
 }
 
@@ -296,4 +310,10 @@
     background: #eee;
     display: inline-block;
     padding: 0.1rem 0.2rem;
+}
+
+.item-queued-info{
+    margin-left: 1.5rem;
+    padding: 0.5rem 0;
+    color: #777;
 }

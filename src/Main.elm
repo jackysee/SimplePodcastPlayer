@@ -292,15 +292,28 @@ updateModel msg model cmds =
                                 }
                             )
                             model
+                nextInQueue =
+                    model.playList
+                        |> getNext (\url_ -> url == url_)
+                        |> (\url -> 
+                                case url of
+                                    Just url_ ->
+                                        getItemByUrl model url_
+                                    Nothing ->
+                                        Nothing
+                            )
                 nextItem =
-                    itemList model
-                        |> fst
-                        |> getNext (\(feed, item) -> item.url == url)
-                        |> Maybe.map snd
+                    if nextInQueue == Nothing then
+                        itemList model
+                            |> fst
+                            |> getNext (\(feed, item) -> item.url == url)
+                            |> Maybe.map snd
+                    else
+                        nextInQueue
             in
                 case nextItem of
                     Just item' ->
-                        updateModel (Play item') model cmds
+                        updateModel (Play item') model' cmds
 
                     Nothing ->
                         ({ model' | currentItemUrl = Nothing }, cmds)
@@ -390,10 +403,19 @@ updateModel msg model cmds =
                 (model', cmds)
 
         SelectNext ->
-            let
-                (model', cmd) = selectNext model
-            in
-                (model', [cmd] ++ cmds)
+            case selectNext model of
+                Just (model', cmd) ->
+                    (model', [cmd] ++ cmds)
+
+                Nothing ->
+                    updateModel 
+                        ( MsgBatch 
+                            [ ShowMoreItem
+                            , SelectNext
+                            ]
+                        )
+                        model
+                        cmds
 
         SelectPrev ->
             let
@@ -564,85 +586,89 @@ viewStatus model =
 
 
 viewItemList : Model -> Maybe Feed -> Html Msg
-viewItemList model feed' =
+viewItemList model feed_ =
     let
         (list, hasMoreItem) = itemList model
-        itemListDiv =
-            case feed' of
-            Just feed ->
-                div
-                    [ class "item-list-wrap"
-                    , onScroll HideItemDropdown
-                    ]
-                    [ ul [ class "item-list" ]
-                        ( list
+        itemList_ = 
+            case feed_ of
+                Just feed ->
+                    ul 
+                        [ class "item-list" ] 
+                        (list
                             |> List.map snd
                             |> List.indexedMap (,)
                             |> List.map (viewItem model Nothing)
                         )
+                Nothing ->
+                    if List.length list == 0 && List.length model.list > 0 then
+                        div
+                            [ class "item-empty" ]
+                            [ text "This list is empty." ]
+                    else
+                        ul
+                            [ class "item-list"]
+                            ( list
+                                |> List.indexedMap (,)
+                                |> List.map (\(index, (feed, item)) ->
+                                     viewItem model (Just feed) (index, item)
+                                  )
+                            )
+
+        sortBar =
+            if List.length list > 0 then 
+                viewItemSortLatest model
+            else
+                Nothing
+
+        showMore =
+            if feed_ == Nothing && hasMoreItem then
+                div
+                    [ class "feed-show-more" ]
+                    [ button
+                        [ class "btn btn-text"
+                        , onClick ShowMoreItem
+                        ]
+                        [ text "show more"]
                     ]
+              else
+                  text ""
+    in 
+        div
+            [ classList 
+                [ ("item-list-wrap", True)
+                , ("has-sort", sortBar /= Nothing)
+                ]
+            , onScroll HideItemDropdown
+            ]
+            [ sortBar |> Maybe.withDefault (text "")
+            , if model.itemFilter == Queued then
+                div 
+                    [ class "item-queued-info" ] 
+                    [ text "Queued items will be played first" ] 
+              else
+                text ""
+            , itemList_
+            , showMore
+            ]
 
-            Nothing ->
-                let
-                    itemList' =
-                        if List.length list == 0 && List.length model.list > 0 then
-                            div
-                                [ class "item-empty" ]
-                                [ text "This list is empty." ]
-                        else
-                            ul
-                                [ class "item-list"]
-                                ( list
-                                    |> List.indexedMap (,)
-                                    |> List.map (\(index, (feed, item)) ->
-                                         viewItem model (Just feed) (index, item)
-                                      )
-                                )
-                    showMore =
-                        if hasMoreItem then
-                            div
-                                [ class "feed-show-more" ]
-                                [ button
-                                    [ class "btn btn-text"
-                                    , onClick ShowMoreItem
-                                    ]
-                                    [ text "show more"]
-                                ]
-                          else
-                              text ""
-                in
-                    div
-                        [ class "item-list-wrap"
-                        , onScroll HideItemDropdown
-                        ]
-                        [ itemList'
-                        , showMore
-                        ]
-    in
-        itemListDiv
-        -- div
-        --     []
-        --     [ if List.length list > 0 then
-        --         viewItemSortLatest model
-        --       else
-        --         text ""
-        --     , itemListDiv
-        --     ]
 
-viewItemSortLatest : Model -> Html Msg
+
+viewItemSortLatest : Model -> Maybe (Html Msg)
 viewItemSortLatest model =
     if model.itemFilter /= Queued then
-        div
-            [ class "item-sort"
-            , onClick (SetItemSortLatest (not model.itemSortLatest))
-            ]
-            [ if model.itemSortLatest then
-                text "Latest first"
-              else
-                text "Oldest first"
-            ]
+        Just <|
+            div
+                [ class "item-sort" ] 
+                [ span
+                    [ onClick (SetItemSortLatest (not model.itemSortLatest)) ]
+                    [ if model.itemSortLatest then
+                        text "latest first"
+                      else
+                        text "oldest first"
+                    ]
+                ]
     else
-        text ""
+        Nothing
 
 
 flushPlayCount : List Feed -> List Feed

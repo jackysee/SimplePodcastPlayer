@@ -58,3 +58,16 @@ getNext predicate list =
 
         _ ->
             Nothing
+
+
+findFirst: (a -> Bool) -> List a -> Maybe a
+findFirst predicate list =
+    case list of
+        [] -> 
+            Nothing
+
+        x::xs ->
+            if predicate x then
+                Just x
+            else
+                findFirst predicate xs
