@@ -441,6 +441,9 @@ updateModel msg model cmds =
                 (model, cmds)
                 list
 
+        SetItemSortLatest flag ->
+            ({ model | itemSortLatest = flag }, cmds)
+
 
 view : Model -> Html Msg
 view model =
@@ -564,8 +567,8 @@ viewItemList : Model -> Maybe Feed -> Html Msg
 viewItemList model feed' =
     let
         (list, hasMoreItem) = itemList model
-    in
-        case feed' of
+        itemListDiv =
+            case feed' of
             Just feed ->
                 div
                     [ class "item-list-wrap"
@@ -615,6 +618,31 @@ viewItemList model feed' =
                         [ itemList'
                         , showMore
                         ]
+    in
+        itemListDiv
+        -- div
+        --     []
+        --     [ if List.length list > 0 then
+        --         viewItemSortLatest model
+        --       else
+        --         text ""
+        --     , itemListDiv
+        --     ]
+
+viewItemSortLatest : Model -> Html Msg
+viewItemSortLatest model =
+    if model.itemFilter /= Queued then
+        div
+            [ class "item-sort"
+            , onClick (SetItemSortLatest (not model.itemSortLatest))
+            ]
+            [ if model.itemSortLatest then
+                text "Latest first"
+              else
+                text "Oldest first"
+            ]
+    else
+        text ""
 
 
 flushPlayCount : List Feed -> List Feed

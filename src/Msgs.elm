@@ -51,3 +51,4 @@ type Msg
     | ToggleShortcutGoto Bool
     | SetFloatPanel FloatPanel
     | MsgBatch (List Msg)
+    | SetItemSortLatest Bool

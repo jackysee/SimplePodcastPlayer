@@ -76,6 +76,7 @@ type alias Model =
     , playerVol : Float
     , showFeedUrl : Maybe String
     , itemFilter: ItemFilter
+    , itemSortLatest: Bool
     , itemSelected : Maybe String
     , playList: List String
     , shortcutGoTo: Bool
@@ -91,6 +92,7 @@ type alias StoreModel =
     , playerRate : Float
     , playerVol : Float
     , itemFilter : String
+    , itemSortLatest : Bool
     , playList: List String
     }
 
@@ -189,6 +191,7 @@ toStoreModel model =
     , playerRate = model.playerRate
     , playerVol = model.playerVol
     , itemFilter = itemFilterToStr model.itemFilter
+    , itemSortLatest = model.itemSortLatest
     , playList = model.playList
     }
 
@@ -243,15 +246,20 @@ itemListAll limit model =
 
 itemsByDate: Model -> List Feed -> List (Feed, Item)
 itemsByDate model list =
-    list
-        |> List.concatMap (\feed ->
-                List.map (\item -> (feed, item)) feed.items
-            )
-        |> List.filter (\(feed, item) ->
-                filterByItemFilter model item
-            )
-        |> List.sortBy (\(feed, item) -> item.pubDate)
-        |> List.reverse
+    let
+        list_ = list
+            |> List.concatMap (\feed ->
+                    List.map (\item -> (feed, item)) feed.items
+                )
+            |> List.filter (\(feed, item) ->
+                    filterByItemFilter model item
+                )
+            |> List.sortBy (\(feed, item) -> item.pubDate)
+    in
+        if model.itemSortLatest then
+            List.reverse list_
+        else
+            list_
 
 
 filterByItemFilter : Model -> Item -> Bool
@@ -278,6 +286,7 @@ defaultModel =
     , showFeedUrl = Nothing
     , itemFilter = Unlistened
     , itemSelected = Nothing
+    , itemSortLatest = True
     , playList = []
     , shortcutGoTo = False
     , floatPanel = Hidden
