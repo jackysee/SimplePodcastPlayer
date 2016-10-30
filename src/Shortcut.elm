@@ -3,7 +3,7 @@ port module Shortcut exposing (keyMap, selectNext, selectPrev)
 import Msgs exposing (..)
 import Models exposing (..)
 import Feed exposing (markListenedMsg)
-import ListUtil exposing (getNext)
+import ListUtil exposing (getNext, findFirst)
 
 keyMap: Model -> String -> Msg
 keyMap model key =
@@ -12,17 +12,32 @@ keyMap model key =
         selectedItem = getSelectedItem model
         gotoMsgs =
             if model.shortcutGoTo then
-                case key of
-                    "u" ->
-                        [ SetItemFilter Unlistened
-                        , ToggleShortcutGoto False
-                        ]
-                    "q" ->
-                        [ SetItemFilter Queued
-                        , ToggleShortcutGoto False
-                        ]
-                    _ ->
-                        [ ToggleShortcutGoto False ]
+                let 
+                    msg =
+                        case key of
+                            "u" ->
+                                [ SetItemFilter Unlistened ]
+                            "q" ->
+                                [ SetItemFilter Queued ]
+                            "f" ->
+                                model.itemSelected
+                                    |> Maybe.map (\itemUrl ->
+                                        model.list
+                                            |> findFirst (\feed -> 
+                                                List.any (\item_ -> item_.url == itemUrl) feed.items
+                                            )
+                                            |> Maybe.map (\feed -> [ ShowFeed feed.url ] )
+                                            |> Maybe.withDefault []
+                                    )
+                                    |> Maybe.withDefault []
+
+                            "a" ->
+                                [ HideFeed ]
+
+                            _ ->
+                                []
+                in
+                    msg ++ [ ToggleShortcutGoto False ]
             else
                 []
 
@@ -42,39 +57,45 @@ keyMap model key =
                     [ SelectPrev ]
 
                 "o" ->
-                    case selectedItem of
-                        Just item ->
-                            case item.link of
-                                Just link' ->
-                                    [ OpenNewLink link' ]
-
-                                Nothing ->
-                                    [ NoOp ]
-
-                        Nothing ->
-                            [ NoOp ]
+                    selectedItem
+                        |> Maybe.map (\item -> 
+                            item.link 
+                                |> Maybe.map (\link -> [ OpenNewLink link ])
+                                |> Maybe.withDefault [ NoOp ]
+                        )
+                        |> Maybe.withDefault [ NoOp ]
 
                 "p" ->
-                    case selectedItem of
-                        Just item ->
-                            if Just item.url /= model.currentItemUrl then
-                                [ Play item ]
-                            else
-                                case model.playerState of
-                                    Playing ->
-                                        [ Pause item ]
+                    model.currentItemUrl
+                        |> Maybe.map (\url ->
+                            getItemByUrl model url
+                                |> Maybe.map (\item ->
+                                    case model.playerState of
+                                        Playing ->
+                                            [ Pause item ]
 
-                                    Paused ->
-                                        [ Play item ]
+                                        Paused ->
+                                            [ Play item ]
 
-                                    Stopped ->
-                                        [ Play item ]
+                                        Stopped ->
+                                            [ Play item ]
 
-                                    _ ->
-                                        [ NoOp ]
+                                        _ ->
+                                            [ NoOp ]
+                                )
+                                |> Maybe.withDefault [ NoOp ]
+                        )
+                        |> Maybe.withDefault [ NoOp ]
 
-                        Nothing ->
-                            [ NoOp ]
+                "right" ->
+                    selectedItem
+                        |> Maybe.map (\item -> [ Play item ] )
+                        |> Maybe.withDefault [ NoOp ]
+
+                "s" ->
+                    selectedItem
+                        |> Maybe.map (\item -> [ Play item ] )
+                        |> Maybe.withDefault [ NoOp ]
 
                 "n" ->
                     [ ShowAddPanel ]
@@ -84,35 +105,30 @@ keyMap model key =
 
                 "u" ->
                     if model.itemFilter == Queued then
-                        case selectedItem of
-                            Just item ->
-                                [ MoveQueuedItemUp item.url ]
-
-                            Nothing  ->
-                                [ NoOp ]
+                        selectedItem
+                            |> Maybe.map (\item -> [ MoveQueuedItemUp item.url ])
+                            |> Maybe.withDefault [ NoOp ]
                     else
                         [ NoOp ]
 
                 "d" ->
                     if model.itemFilter == Queued then
-                        case selectedItem of
-                            Just item ->
-                                [ MoveQueuedItemDown item.url ]
-
-                            _ ->
-                                [ NoOp ]
+                        selectedItem
+                            |> Maybe.map (\item -> [ MoveQueuedItemDown item.url ])
+                            |> Maybe.withDefault [ NoOp ]
                     else
                         [ NoOp ]
 
                 "q" ->
-                    case selectedItem of
-                        Just item ->
-                            if List.member item.url model.playList then
-                                [ Dequeue item.url ]
-                            else
-                                [ Enqueue item.url ]
-                        _ ->
-                            [ NoOp ]
+                    selectedItem 
+                        |> Maybe.map 
+                            (\item ->
+                                if List.member item.url model.playList then
+                                    [ Dequeue item.url ]
+                                else
+                                    [ Enqueue item.url ]
+                            )
+                        |> Maybe.withDefault [ NoOp ]
 
                 "g" ->
                     if model.shortcutGoTo then
@@ -121,11 +137,9 @@ keyMap model key =
                         [ ToggleShortcutGoto True ]
 
                 "m" ->
-                    case selectedItem of
-                        Just item ->
-                            [ markListenedMsg item ]
-                        _ ->
-                            [ NoOp ]
+                    selectedItem
+                        |> Maybe.map (\item -> [ markListenedMsg item ])
+                        |> Maybe.withDefault [ NoOp ]
 
                 _ ->
                     [ NoOp ]

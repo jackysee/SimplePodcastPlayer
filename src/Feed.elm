@@ -207,8 +207,6 @@ viewItem model feed (index, item) =
                     [ text item.title ]
                 ]
             , viewItemQueued model item
-            , renderReorder item model.itemFilter
-            , viewItemControl listened model item
             , div
                 [ class "item-date"
                 , title <| format item.pubDate model.currentTime True
@@ -216,6 +214,8 @@ viewItem model feed (index, item) =
                 [ text <| format item.pubDate model.currentTime False ]
             , div [ class "item-progress" ]
                 [ text <| formatDurationShort item.duration ]
+            , renderQueueControl item model.itemFilter
+            , viewItemControl listened model item
             ]
 
 
@@ -249,8 +249,8 @@ renderItemState item currentItemUrl playerState =
             ]
 
 
-renderReorder: Item -> ItemFilter -> Html Msg
-renderReorder item filter =
+renderQueueControl: Item -> ItemFilter -> Html Msg
+renderQueueControl item filter =
     if filter == Queued then
         div
             [ class "item-reorder" ]
@@ -264,6 +264,11 @@ renderReorder item filter =
                 , onInternalClick (MoveQueuedItemDown item.url)
                 ]
                 [ img [ src "assets/arrow-down.svg" ] [] ]
+            , button
+                [ class "btn btn-icon"
+                , onInternalClick (Dequeue item.url)
+                ]
+                [ img [ src "assets/close.svg" ] [] ]
             ]
     else
         text ""

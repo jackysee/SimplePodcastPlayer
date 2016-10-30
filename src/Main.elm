@@ -284,7 +284,7 @@ updateModel msg model cmds =
 
         PlayEnd url ->
             let
-                model' = updateCurrentItem
+                model_ = updateCurrentItem
                             (\item ->
                                 { item
                                     | progress = 0
@@ -293,15 +293,13 @@ updateModel msg model cmds =
                             )
                             model
                 nextInQueue =
-                    model.playList
-                        |> getNext (\url_ -> url == url_)
-                        |> (\url -> 
-                                case url of
-                                    Just url_ ->
-                                        getItemByUrl model url_
-                                    Nothing ->
-                                        Nothing
-                            )
+                    Maybe.oneOf
+                        [ getNext (\url_ -> url == url_) model.playList
+                        , List.head model.playList
+                        ]
+                    |> Maybe.map (getItemByUrl model)
+                    |> Maybe.withDefault Nothing
+
                 nextItem =
                     if nextInQueue == Nothing then
                         itemList model
@@ -312,11 +310,18 @@ updateModel msg model cmds =
                         nextInQueue
             in
                 case nextItem of
-                    Just item' ->
-                        updateModel (Play item') model' cmds
+                    Just item_ ->
+                        updateModel 
+                            (MsgBatch
+                                [ Play item_
+                                , Dequeue url
+                                ]
+                            )
+                            model_ 
+                            cmds
 
                     Nothing ->
-                        ({ model' | currentItemUrl = Nothing }, cmds)
+                        ({ model_ | currentItemUrl = Nothing }, cmds)
 
         ToggleRate ->
             let
@@ -478,7 +483,16 @@ view model =
                 div
                     [ class "feed-filter" ]
                     [ filterButton "Unlistened" Unlistened model.itemFilter
-                    , filterButton "Queued" Queued model.itemFilter
+                    , filterButton 
+                        (let
+                            playListLen = List.length model.playList
+                            playListLen_ = if playListLen > 0 then 
+                                " " ++ toString playListLen 
+                                else ""
+                        in
+                            "Queued" ++ playListLen_
+                        )
+                        Queued model.itemFilter
                     , filterButton "All" All model.itemFilter
                     ]
             else
@@ -491,18 +505,19 @@ view model =
                 [ class "wrap"
                 , onClick (SetFloatPanel Hidden)
                 ]
-                [ div
-                    [ class "top-bar-wrap" ]
+                <|
                     [ div
-                        [ class "top-bar"]
-                        [ viewTitle model feed'
-                        , filterBar
-                        , topLeftBar model
+                        [ class "top-bar-wrap" ]
+                        [ div
+                            [ class "top-bar"]
+                            [ viewTitle model feed'
+                            , filterBar
+                            , topLeftBar model
+                            ]
                         ]
                     ]
-                , viewItemList model feed'
-                , viewPlayer model
-                ]
+                    ++ (viewItemList model feed')
+                    ++ [ viewPlayer model ]
             ]
 
 
@@ -585,7 +600,7 @@ viewStatus model =
             [ text txt ]
 
 
-viewItemList : Model -> Maybe Feed -> Html Msg
+viewItemList : Model -> Maybe Feed -> List (Html Msg)
 viewItemList model feed_ =
     let
         (list, hasMoreItem) = itemList model
@@ -633,23 +648,18 @@ viewItemList model feed_ =
               else
                   text ""
     in 
-        div
+        [ sortBar |> Maybe.withDefault (text "")
+        , div
             [ classList 
                 [ ("item-list-wrap", True)
                 , ("has-sort", sortBar /= Nothing)
                 ]
             , onScroll HideItemDropdown
             ]
-            [ sortBar |> Maybe.withDefault (text "")
-            , if model.itemFilter == Queued then
-                div 
-                    [ class "item-queued-info" ] 
-                    [ text "Queued items will be played first" ] 
-              else
-                text ""
-            , itemList_
+            [ itemList_
             , showMore
             ]
+        ]
 
 
 

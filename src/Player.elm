@@ -100,6 +100,21 @@ viewPlayer model =
                                     [ marquee item'.title (model.playerState == Playing)
                                     ]
                                 , progressBar item'.progress item'.duration
+                                , div 
+                                    [ class "player-item-queued-info" ] 
+                                    [ let
+                                        currentInQueue = List.member
+                                            (Maybe.withDefault "" model.currentItemUrl) 
+                                            model.playList 
+                                      in
+                                        if model.playerState == Playing then
+                                            if currentInQueue  then
+                                                text "Playing queued items"
+                                            else
+                                                text "Queued items will be played next."
+                                        else
+                                            text ""
+                                    ] 
                                 ]
                             , div [ class "player-rate" ]
                                 [ button
