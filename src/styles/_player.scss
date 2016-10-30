@@ -145,9 +145,10 @@ $player-top-padding : 0.5rem;
 }
 
 .player-item-queued-info{
-    margin-top: 0rem;
-    margin-bottom: -0.8rem;
-    font-size: 0.8rem;
+    margin-top: -0.2rem;
+    margin-bottom: -0.4rem;
+    font-size: 0.7rem;
     color: #777;
-    height: 0.8rem;
+    height: 0.7rem;
+    text-align: right;
 }
