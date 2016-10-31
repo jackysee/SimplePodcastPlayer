@@ -1,4 +1,4 @@
-module DecodeFeed exposing (decodeFeed)
+module DecodeFeed exposing (decodeYqlFeed, decodeCustomFeed)
 
 import Json.Decode as Json exposing ((:=))
 import Json.Decode.Pipeline exposing
@@ -10,13 +10,14 @@ import DateFormat exposing (parseDuration)
 import Regex
 
 
-decodeFeed : String -> Json.Decoder Feed
-decodeFeed url =
+decodeFeed : List String -> String -> Json.Decoder Feed
+decodeFeed paths url =
     decode Feed
         |> hardcoded url
-        |> requiredAt ["query", "results", "rss", "channel", "title"] Json.string
-        |> requiredAt ["query", "results", "rss", "channel", "item"]
-            (Json.list decodeItem
+        |> requiredAt (paths ++ ["title"]) Json.string
+        -- |> requiredAt (paths ++ ["item"]) (Json.list decodeItem)
+        |> requiredAt (paths ++ ["item"])
+            (Json.list (Json.maybe decodeItem)
                 `Json.andThen`
                     (\list -> list
                         |> List.filterMap identity
@@ -27,19 +28,27 @@ decodeFeed url =
         |> hardcoded False
 
 
-decodeItem : Json.Decoder (Maybe Item)
+decodeYqlFeed : String -> Json.Decoder Feed
+decodeYqlFeed =
+    decodeFeed ["query", "results", "rss", "channel"]
+
+
+decodeCustomFeed : String -> Json.Decoder Feed
+decodeCustomFeed =
+    decodeFeed []
+
+
+decodeItem : Json.Decoder Item
 decodeItem =
-    Json.maybe
-        ( decode Item
-            |> required "title" Json.string
-            |> required "pubDate" jsonDate
-            |> custom (Json.maybe ("link" := Json.string))
-            |> custom decodeEnclosure
-            |> optional "duration" decodeDuration -1
-            |> hardcoded -1
-            |> hardcoded 0
-            |> hardcoded -1
-        )
+    decode Item
+        |> required "title" Json.string
+        |> required "pubDate" jsonDate
+        |> custom (Json.maybe ("link" := Json.string))
+        |> custom decodeEnclosure
+        |> optional "duration" decodeDuration -1
+        |> hardcoded -1
+        |> hardcoded 0
+        |> hardcoded -1
 
 
 decodeEnclosure : Json.Decoder String
@@ -63,6 +72,7 @@ decodeSingleEnclosureUrl =
                     Json.fail "not audio type"
             )
         )
+
 
 decodeEnclosureListUrl : Json.Decoder String
 decodeEnclosureListUrl =
@@ -97,5 +107,6 @@ decodeDuration =
             case parseDuration val of
                 Ok value ->
                     Json.succeed value
+
                 Err error ->
                     Json.fail "not a correct duration"

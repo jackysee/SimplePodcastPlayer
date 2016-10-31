@@ -115,7 +115,7 @@ updateModel msg model cmds =
                 ({ model | loadFeedState = AlreadyExist }, cmds)
             else
                 ({ model | loadFeedState = Loading }
-                , [ loadFeed model.urlToAdd ] ++ cmds
+                , [ loadFeed model.fallbackRssServiceUrl model.urlToAdd ] ++ cmds
                 )
 
         ShowMoreItem ->
@@ -181,7 +181,7 @@ updateModel msg model cmds =
             let
                 model' = updateModelFeed { feed | state = Refreshing } model
             in
-                (model', [ updateFeed feed feeds ] ++ cmds)
+                (model', [ updateFeed model.fallbackRssServiceUrl feed feeds ] ++ cmds)
 
         UpdateFeedFail feeds feed error ->
             let
@@ -297,27 +297,25 @@ updateModel msg model cmds =
                         [ getNext (\url_ -> url == url_) model.playList
                         , List.head model.playList
                         ]
-                    |> Maybe.map (getItemByUrl model)
-                    |> Maybe.withDefault Nothing
-
+                        |> Maybe.map (getItemByUrl model)
+                        |> Maybe.withDefault Nothing
                 nextItem =
-                    if nextInQueue == Nothing then
-                        itemList model
+                    Maybe.oneOf
+                        [ nextInQueue
+                        , itemList model
                             |> fst
                             |> getNext (\(feed, item) -> item.url == url)
-                            |> Maybe.map snd
-                    else
-                        nextInQueue
+                        ]
             in
                 case nextItem of
-                    Just item_ ->
-                        updateModel 
+                    Just (feed, item_) ->
+                        updateModel
                             (MsgBatch
                                 [ Play item_
                                 , Dequeue url
                                 ]
                             )
-                            model_ 
+                            model_
                             cmds
 
                     Nothing ->
@@ -413,8 +411,8 @@ updateModel msg model cmds =
                     (model', [cmd] ++ cmds)
 
                 Nothing ->
-                    updateModel 
-                        ( MsgBatch 
+                    updateModel
+                        ( MsgBatch
                             [ ShowMoreItem
                             , SelectNext
                             ]
@@ -462,14 +460,21 @@ updateModel msg model cmds =
 
         MsgBatch list ->
             List.foldl
-                (\msg (model, cmds) ->
-                    updateModel msg model cmds
-                )
+                (\msg (model, cmds) -> updateModel msg model cmds)
                 (model, cmds)
                 list
 
         SetItemSortLatest flag ->
             ({ model | itemSortLatest = flag }, cmds)
+
+        SetFallbackRssServiceUrl url ->
+            ({ model | fallbackRssServiceUrl =
+                    if url /= "" then
+                        Just url
+                    else
+                        Nothing
+             }
+            , cmds)
 
 
 view : Model -> Html Msg
@@ -483,11 +488,11 @@ view model =
                 div
                     [ class "feed-filter" ]
                     [ filterButton "Unlistened" Unlistened model.itemFilter
-                    , filterButton 
+                    , filterButton
                         (let
                             playListLen = List.length model.playList
-                            playListLen_ = if playListLen > 0 then 
-                                " " ++ toString playListLen 
+                            playListLen_ = if playListLen > 0 then
+                                " " ++ toString playListLen
                                 else ""
                         in
                             "Queued" ++ playListLen_
@@ -604,11 +609,11 @@ viewItemList : Model -> Maybe Feed -> List (Html Msg)
 viewItemList model feed_ =
     let
         (list, hasMoreItem) = itemList model
-        itemList_ = 
+        itemList_ =
             case feed_ of
                 Just feed ->
-                    ul 
-                        [ class "item-list" ] 
+                    ul
+                        [ class "item-list" ]
                         (list
                             |> List.map snd
                             |> List.indexedMap (,)
@@ -630,7 +635,7 @@ viewItemList model feed_ =
                             )
 
         sortBar =
-            if List.length list > 0 then 
+            if List.length list > 0 then
                 viewItemSortLatest model
             else
                 Nothing
@@ -647,10 +652,10 @@ viewItemList model feed_ =
                     ]
               else
                   text ""
-    in 
+    in
         [ sortBar |> Maybe.withDefault (text "")
         , div
-            [ classList 
+            [ classList
                 [ ("item-list-wrap", True)
                 , ("has-sort", sortBar /= Nothing)
                 ]
@@ -668,7 +673,7 @@ viewItemSortLatest model =
     if model.itemFilter /= Queued then
         Just <|
             div
-                [ class "item-sort" ] 
+                [ class "item-sort" ]
                 [ span
                     [ onClick (SetItemSortLatest (not model.itemSortLatest)) ]
                     [ if model.itemSortLatest then

@@ -12,7 +12,7 @@ keyMap model key =
         selectedItem = getSelectedItem model
         gotoMsgs =
             if model.shortcutGoTo then
-                let 
+                let
                     msg =
                         case key of
                             "u" ->
@@ -22,11 +22,10 @@ keyMap model key =
                             "f" ->
                                 model.itemSelected
                                     |> Maybe.map (\itemUrl ->
-                                        model.list
-                                            |> findFirst (\feed -> 
-                                                List.any (\item_ -> item_.url == itemUrl) feed.items
+                                        getItemByUrl model itemUrl
+                                            |> Maybe.map (\(feed, item) ->
+                                                [ ShowFeed feed.url ]
                                             )
-                                            |> Maybe.map (\feed -> [ ShowFeed feed.url ] )
                                             |> Maybe.withDefault []
                                     )
                                     |> Maybe.withDefault []
@@ -58,8 +57,8 @@ keyMap model key =
 
                 "o" ->
                     selectedItem
-                        |> Maybe.map (\item -> 
-                            item.link 
+                        |> Maybe.map (\item ->
+                            item.link
                                 |> Maybe.map (\link -> [ OpenNewLink link ])
                                 |> Maybe.withDefault [ NoOp ]
                         )
@@ -69,7 +68,7 @@ keyMap model key =
                     model.currentItemUrl
                         |> Maybe.map (\url ->
                             getItemByUrl model url
-                                |> Maybe.map (\item ->
+                                |> Maybe.map (\(feed, item) ->
                                     case model.playerState of
                                         Playing ->
                                             [ Pause item ]
@@ -88,11 +87,6 @@ keyMap model key =
                         |> Maybe.withDefault [ NoOp ]
 
                 "right" ->
-                    selectedItem
-                        |> Maybe.map (\item -> [ Play item ] )
-                        |> Maybe.withDefault [ NoOp ]
-
-                "s" ->
                     selectedItem
                         |> Maybe.map (\item -> [ Play item ] )
                         |> Maybe.withDefault [ NoOp ]
@@ -120,8 +114,8 @@ keyMap model key =
                         [ NoOp ]
 
                 "q" ->
-                    selectedItem 
-                        |> Maybe.map 
+                    selectedItem
+                        |> Maybe.map
                             (\item ->
                                 if List.member item.url model.playList then
                                     [ Dequeue item.url ]
@@ -154,10 +148,10 @@ selectNext model =
     let
         (list, more) = itemList model
         listHasUrl = List.any (\(feed, item) -> Just item.url == model.itemSelected) list
-        url_ = 
-            if listHasUrl then 
-                model.itemSelected 
-            else 
+        url_ =
+            if listHasUrl then
+                model.itemSelected
+            else
                 Nothing
         next =
             case url_ of

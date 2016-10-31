@@ -52,3 +52,4 @@ type Msg
     | SetFloatPanel FloatPanel
     | MsgBatch (List Msg)
     | SetItemSortLatest Bool
+    | SetFallbackRssServiceUrl String

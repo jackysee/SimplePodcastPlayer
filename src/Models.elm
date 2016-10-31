@@ -60,9 +60,15 @@ type ItemFilter
 
 type FloatPanel
     = AddPanel
-    | About
+    | About AboutPanel
     | ItemDropdown String
     | Hidden
+
+
+type AboutPanel
+    = Credit
+    | Shortcut
+    | Settings
 
 
 type alias Model =
@@ -82,6 +88,7 @@ type alias Model =
     , playList: List String
     , shortcutGoTo: Bool
     , floatPanel : FloatPanel
+    , fallbackRssServiceUrl : Maybe String
     }
 
 
@@ -273,11 +280,13 @@ filterByItemFilter model item =
             List.member item.url model.playList
 
 
-getItemByUrl : Model -> String -> Maybe Item            
+getItemByUrl : Model -> String -> Maybe (Feed, Item)
 getItemByUrl model url =
     model.list
-        |> List.concatMap (\feed -> feed.items)
-        |> findFirst (\item -> item.url == url)
+        |> List.concatMap (\feed ->
+            List.map (\item -> (feed, item)) feed.items
+        )
+        |> findFirst (\(feed, item) -> item.url == url)
 
 
 defaultModel : Model
@@ -298,4 +307,5 @@ defaultModel =
     , playList = []
     , shortcutGoTo = False
     , floatPanel = Hidden
+    , fallbackRssServiceUrl = Nothing
     }

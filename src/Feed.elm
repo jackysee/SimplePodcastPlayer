@@ -2,7 +2,7 @@ module Feed exposing
     ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
     , viewFeedTitle , viewItem, viewConfirmDelete, markListenedMsg )
 
-import Task
+import Task exposing (Task)
 import Http
 import String
 import Html exposing (Html, text, button, ul, li, div, span, img, a)
@@ -12,11 +12,11 @@ import Dict
 
 import Models exposing (..)
 import Msgs exposing (..)
-import DecodeFeed exposing (decodeFeed)
+import DecodeFeed exposing (decodeYqlFeed, decodeCustomFeed)
 import DateFormat exposing (formatDuration, formatDurationShort, format)
 import Events exposing (onInternalClick, onClickPosBottomRight)
 
-yqlUrl: String -> String 
+yqlUrl: String -> String
 yqlUrl url =
     String.join ""
         [ "//query.yahooapis.com/v1/public/yql?q="
@@ -25,18 +25,45 @@ yqlUrl url =
         ]
 
 
-loadFeed : String -> Cmd Msg
-loadFeed url =
-    Http.get (decodeFeed url) (yqlUrl url)
-        |> Task.perform FetchFeedFail FetchFeedSucceed
+customUrl : String -> String -> String
+customUrl serviceUrl url =
+    String.join ""
+        [ serviceUrl ++ "?url="
+        , Http.uriEncode url
+        ]
 
 
-updateFeed : Feed -> List Feed -> Cmd Msg
-updateFeed feed feeds =
-    Http.get (decodeFeed feed.url) (yqlUrl feed.url)
-        |> Task.perform
-            (UpdateFeedFail feeds feed)
-            (UpdateFeedSucceed feeds)
+loadFeed : Maybe String -> String -> Cmd Msg
+loadFeed fallbackRssServiceUrl url =
+    Task.perform
+        FetchFeedFail
+        FetchFeedSucceed
+        (Http.get (decodeYqlFeed url) (yqlUrl url)
+            `Task.onError`
+            loadFallbackFeed fallbackRssServiceUrl url
+        )
+
+
+updateFeed : Maybe String -> Feed -> List Feed -> Cmd Msg
+updateFeed fallbackRssServiceUrl feed feeds =
+    Task.perform
+        (UpdateFeedFail feeds feed)
+        (UpdateFeedSucceed feeds)
+        (Http.get (decodeYqlFeed feed.url) (yqlUrl feed.url)
+            `Task.onError`
+            loadFallbackFeed fallbackRssServiceUrl feed.url
+        )
+
+
+loadFallbackFeed : Maybe String -> String -> (Http.Error -> Task Http.Error Feed)
+loadFallbackFeed serviceUrl_ url =
+    (\err ->
+        case serviceUrl_ of
+            Just serviceUrl ->
+                Http.get (decodeCustomFeed url) (customUrl serviceUrl url)
+            Nothing ->
+                Task.fail err
+    )
 
 
 updateModelFeed : Feed -> Model -> Model
