@@ -1,7 +1,7 @@
 module About exposing (viewAbout, viewAboutButton)
 
-import Html exposing (Html, div, text, img, button, h2, span, input)
-import Html.Attributes exposing (class, src, classList, value)
+import Html exposing (Html, div, text, img, button, h2, span, input, a)
+import Html.Attributes exposing (class, src, classList, value, href, target)
 import Html.Events exposing (onClick, onInput)
 import Models exposing (..)
 import Msgs exposing (..)
@@ -57,21 +57,22 @@ viewAbout model =
                     ]
                 , h2 [] [ text "Simple Podcast Player" ]
                 , div
-                    [ class "about-tabs" ]
-                    <| List.map (\(content_, label) ->
-                            div
-                                [ classList
-                                    [ ("about-tab", True)
-                                    , ("is-selected", content == content_)
+                    [ class "about-tabs" ] <|
+                        List.map 
+                            (\(content_, label) ->
+                                div
+                                    [ classList
+                                        [ ("about-tab", True)
+                                        , ("is-selected", content == content_)
+                                        ]
+                                    , onClick (SetFloatPanel (About content_))
                                     ]
-                                , onClick (SetFloatPanel (About content_))
-                                ]
-                                [ text label ]
-                        )
-                        [ (Settings, "Settings")
-                        , (Shortcut ,"Shortcuts")
-                        , (Credit, "Credits")
-                        ]
+                                    [ text label ]
+                            )
+                            [ (Settings, "Settings")
+                            , (Shortcut ,"Shortcuts")
+                            , (Credit, "Credits")
+                            ]
                 , case content of
                     Credit ->
                         Markdown.toHtml
@@ -86,13 +87,31 @@ viewAbout model =
                             [ class "about-tab-content about-settings" ]
                             [ div 
                                 [ class "about-setting-item" ]
-                                [ span [] [ text "Fallback rss to json service for YQL" ]
-                                , input
-                                    [ class "about-setting-input"
-                                    , onInput SetFallbackRssServiceUrl
-                                    , value (Maybe.withDefault "" model.fallbackRssServiceUrl)
+                                [ div 
+                                    [] 
+                                    [ text "Fallback rss to json service for YQL" ]
+                                , div
+                                    [ class "about-setting-input-wrap" ]
+                                    [ div
+                                        [] 
+                                        [ input
+                                            [ class "about-setting-input" 
+                                            , onInput SetFallbackRssServiceUrl
+                                            , value (Maybe.withDefault "" model.fallbackRssServiceUrl)
+                                            ]
+                                            []
+                                        ]
+                                    , div
+                                    -- , Markdown.toHtml
+                                        [ class "about-setting-note" ]
+                                        [ text "You may use your own rss service like "
+                                        , a 
+                                            [ href "https://github.com/jackysee/RssJson" 
+                                            , target "_blank"
+                                            ]
+                                            [ text "this one" ]
+                                        ]
                                     ]
-                                    []
                                 ]
                             ]
                 ]
