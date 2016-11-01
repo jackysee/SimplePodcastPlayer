@@ -49,6 +49,7 @@ init storeModel =
                     , playerVol = m.playerVol
                     , itemFilter = toItemFilter m.itemFilter
                     , playList = m.playList
+                    , fallbackRssServiceUrl = m.fallbackRssServiceUrl
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds

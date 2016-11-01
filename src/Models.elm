@@ -102,6 +102,7 @@ type alias StoreModel =
     , itemFilter : String
     , itemSortLatest : Bool
     , playList: List String
+    , fallbackRssServiceUrl : Maybe String
     }
 
 type alias StoreFeed =
@@ -201,6 +202,7 @@ toStoreModel model =
     , itemFilter = itemFilterToStr model.itemFilter
     , itemSortLatest = model.itemSortLatest
     , playList = model.playList
+    , fallbackRssServiceUrl = model.fallbackRssServiceUrl
     }
 
 
