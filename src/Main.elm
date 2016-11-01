@@ -132,6 +132,7 @@ updateModel msg model cmds =
                 , loadFeedState = Empty
                 , urlToAdd = ""
                 , floatPanel = Hidden
+                , showFeedUrl = Just feed.url
             }
             , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
             )
