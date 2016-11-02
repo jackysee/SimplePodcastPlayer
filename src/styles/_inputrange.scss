@@ -131,9 +131,13 @@ $contrast: 5% !default;
 .range-wrap {
     margin: 0;
     position: relative;
+    height: 20px;
 
     input[type=range]{
         margin: 0;
+        position: absolute;
+        top: 0px;
+        height: 20px;
     }
 }
 
@@ -141,7 +145,7 @@ $contrast: 5% !default;
     position: absolute;
     height: $track-height;
     margin: 0;
-    top: 10px;
+    top: 7px;
     left: 2px;
     background: $thumb-color;
 }
