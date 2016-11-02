@@ -17,6 +17,10 @@ body {
   color: #333;
 }
 
+*:focus{
+    outline: none;
+}
+
 .app-wrap{
     // max-width: 850px;
     // margin: 0 auto;

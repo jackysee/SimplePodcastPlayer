@@ -130,9 +130,6 @@ store.get(function(_model){
             var tagName = ev.target.tagName.toLowerCase();
             if(tagName !== "input" && tagName !== "textarea"){
                 var key = keycode(ev) || "";
-                // if(key === 'space'){
-                //     ev.preventDefault();
-                // }
                 if(ev.ctrlKey){
                     key = "ctrl-"+key;
                 }
@@ -140,6 +137,11 @@ store.get(function(_model){
             }
         }
     };
+
+    document.body.addEventListener('PlayPause', function(){
+        console.log('PlayPause');
+        app.ports.keyUp.send('p');
+    });
 
     app.ports.scrollToElement.subscribe(function(id){
         var el = document.getElementById(id);
