@@ -71,6 +71,9 @@
 .subscription-item{
     margin-right: 0.5rem;
     display: inline-block;
+    &:hover{
+        background: #eee;
+    }
 }
 
 .add-feed-title{

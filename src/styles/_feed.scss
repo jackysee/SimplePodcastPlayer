@@ -35,6 +35,9 @@
     font-weight: bold;
     margin-right: 1rem;
     font-size: 1.5rem;
+    overflow: hidden;
+    max-width: calc(100% - 10rem);
+    text-overflow: ellipsis;
 }
 
 .feed-filter{

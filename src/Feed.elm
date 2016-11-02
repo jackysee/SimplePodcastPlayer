@@ -150,7 +150,11 @@ viewFeedTitle model feed =
                 , onClick HideFeed
                 ]
                 [ img [ src "assets/arrow-left.svg" ] [] ]
-            , span [ class "feed-title" ] [ text feed.title ]
+            , span 
+                [ class "feed-title" 
+                , title feed.title
+                ] 
+                [ text feed.title ]
             , feedState
             , refreshBtn
             , if feed.state /= Refreshing then
