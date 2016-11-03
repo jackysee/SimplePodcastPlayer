@@ -13,7 +13,7 @@ import Time exposing (Time)
 range: Float -> Float -> Float -> Float -> (Float -> msg) -> Html msg
 range min max step value' msg =
     let
-        percentage = value' * 100 / max
+        fraction = value' / max
     in
         div
             [ class "range-wrap" ]
@@ -27,13 +27,17 @@ range min max step value' msg =
                 ]
                 []
             , div
-                [ class "range-progress"
-                , style
-                    [("width"
-                    , "calc((100% - 4px) * " ++ toString (percentage / 100) ++ ")"
-                    )]
+                [ class "range-progress" ]
+                [ div
+                    [ class "range-progress-left"
+                    , style [("flex" , (toString fraction) ++ " 1 0%")]
+                    ]
+                    []
+                , div
+                    [ class "range-progress-right"
+                    , style [("flex" , (toString (1 - fraction)) ++ " 1 0%")]
+                    ] []
                 ]
-                []
             ]
 
 

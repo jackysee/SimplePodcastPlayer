@@ -10,7 +10,7 @@ $thumb-color: #000000!default;
 
 $thumb-radius: 0% !default;
 $thumb-height: 15px !default;
-$thumb-width: 5px !default;
+$thumb-width: 6px !default;
 $thumb-shadow-size: 0px !default;
 $thumb-shadow-blur: 0px !default;
 $thumb-shadow-color: #111 !default;
@@ -25,7 +25,7 @@ $track-shadow-color: #222 !default;
 $track-border-width: 0px !default;
 $track-border-color: #000 !default;
 
-$track-radius: 5px !default;
+$track-radius: 0 !default;
 $contrast: 5% !default;
 
 @mixin shadow($shadow-size, $shadow-blur, $shadow-color) {
@@ -146,6 +146,10 @@ $contrast: 5% !default;
     height: $track-height;
     margin: 0;
     top: 7px;
-    left: 2px;
+    left: 1px;
+    width: calc(100% - 2px);
+    display: flex;
+}
+.range-progress-left{
     background: $thumb-color;
 }
