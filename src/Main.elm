@@ -1,9 +1,9 @@
 port module Main exposing (..)
 
-import Html exposing (div, text, input, Html, span, ul, li, button, img)
+import Html exposing (div, text, input, Html, span, ul, li, button, img, node)
 import Html.App as App
 import Html.Events exposing (onClick)
-import Html.Attributes exposing (class, src, style, classList, type', checked, title)
+import Html.Attributes exposing (class, src, style, classList, type', checked, title, property)
 import Task exposing (Task)
 import Time exposing (Time)
 import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp, getNext)
@@ -21,6 +21,7 @@ import Shortcut exposing (keyMap, selectNext, selectPrev)
 import Events exposing (onScroll)
 import About exposing (viewAbout, viewAboutButton)
 import FloatPlanel exposing (hideItemDropdown, initAddPanel)
+import Json.Encode
 
 
 main : Program (Maybe StoreModel)
@@ -506,7 +507,12 @@ view model =
                 text ""
     in
         div [ class "app-wrap" ]
-            [ viewAddFeed model
+            [ node "style" 
+                [ property "innerHTML" 
+                    (Json.Encode.string "html{font-size:16px;}")
+                ] 
+                []
+            , viewAddFeed model
             , viewAbout model
             , div
                 [ class "wrap"
