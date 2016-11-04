@@ -501,7 +501,11 @@ view model =
             else
                 text ""
     in
-        div [ class "app-wrap" ]
+        div [ classList
+                [ ("app-wrap", True)
+                , ("theme-dark", True)
+                ]
+            ]
             [ viewFontSizeStyle model.fontSize
             , viewAddFeed model
             , viewAbout model
@@ -621,13 +625,21 @@ viewItemList model feed_ =
         itemList_ =
             case feed_ of
                 Just feed ->
-                    ul
-                        [ class "item-list" ]
-                        (list
-                            |> List.map snd
-                            |> List.indexedMap (,)
-                            |> List.map (viewItem model Nothing)
-                        )
+                    let
+                        list_ = viewItem model Nothing
+                    in
+                        if List.length list == 0 then
+                            div
+                                [ class "item-empty" ]
+                                [ text "This list is empty." ]
+                        else
+                            ul
+                                [ class "item-list" ]
+                                (list
+                                    |> List.map snd
+                                    |> List.indexedMap (,)
+                                    |> List.map list_
+                                )
                 Nothing ->
                     if List.length list == 0 && List.length model.list > 0 then
                         div

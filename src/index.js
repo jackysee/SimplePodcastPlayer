@@ -1,4 +1,3 @@
-//require('./main.css');
 require('./styles/main.scss')
 
 require('howler'); //Howl

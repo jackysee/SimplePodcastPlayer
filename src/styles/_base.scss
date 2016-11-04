@@ -8,14 +8,10 @@
 }
 
 html{ font-size: 16px; }
-html.small{ font-size: 12px; }
-html.normal{ font-size: 16px; }
-html.large{ font-size: 18px; }
 
 body {
   margin: 0;
   font-family:  Pingfang SC,Lantinghei SC,Microsoft YaHei New,Microsoft Yahei,\\5FAE软雅黑,arial,sans-serif;
-  color: #333;
 }
 
 *:focus{
@@ -25,7 +21,15 @@ body {
 .app-wrap{
     // max-width: 850px;
     // margin: 0 auto;
+  color: var(--body-color);
+  background: var(--body-bg);
+
+  a{
+      color: var(--link-color);
+  }
 }
+
+
 
 .wrap{
     /*padding: 5px;*/

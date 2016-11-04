@@ -3,9 +3,9 @@
     display: inline-block;
     // padding: 1rem;
     margin: 0;
-    background-color: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 3px #ccc;
+    background-color: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    box-shadow: 0 0 3px var(--panel-shadow);
     z-index: 999;
     top: 0;
     right: 0;
@@ -15,8 +15,7 @@
 .dropdown-item{
     padding: 0.5rem 1rem;
     margin: 0;
-    color: black;
 }
 .dropdown-item:hover{
-    background: #DDD;
+    background: var(--state-selected-bg);
 }

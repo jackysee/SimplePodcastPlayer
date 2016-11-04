@@ -1,3 +1,27 @@
+/*$body-color: #333!default;
+$button-color: #666!default;
+$button-bg: #EFEFEF!default;
+$button-active-color: #CCC!default;
+$button-active-bg: #333!default;
+$panel-shadow: #BBB!default;
+$panel-border: #CCC!default;
+$input-border: #CCC!default;
+$input-color: #333!default;
+$state-color: #666!default;
+$state-empty-color: #CCC!default;
+$state-played-color: #CCC!default;
+$state-selected-bg: #DDD!default;
+$state-selected-border: #333!default;
+$state-current-bg: #F5F5F5!default;
+$control-color: #AAA!default;
+$tab-border: #CCC!default;
+$tab-selected-border: #AAA!default;
+$thumb-color: #000000!default;
+$track-color: #CCC!default;
+*/
+
+@import "light";
+@import "dark";
 
 @import "base";
 @import "button";

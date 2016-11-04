@@ -5,9 +5,7 @@
     cursor: pointer;
     outline: none;
     padding: 0;
-    // height: 1rem;
     display: inline-block;
-    color: #666;
     border-radius: 3px;
     font-size: 100%;
 }
@@ -30,8 +28,8 @@
 }
 
 .btn-text{
-    color: #666;
-    background: #DFF;
+    color: var(--button-color);
+    background: var(--button-bg);
     padding-left: 3px;
     padding-right: 3px;
 }
@@ -42,6 +40,6 @@ img[src$=svg]{
 }
 
 .btn.is-active{
-    background: #333;
-    color: #CCC;
+    background: var(--button-active-bg);
+    color: var(--button-active-color);
 }

@@ -5,8 +5,8 @@
     transition: all 0.3s ease-in-out;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 0 4px #CCC;
-    border: 1px solid #ccc;
+    box-shadow: 0 0 4px var(--panel-shadow);
+    border: 1px solid var(--panel-border);
     margin-top: 0;
 }
 
@@ -118,8 +118,8 @@ $player-top-padding : 0.5rem;
 .player-title-text{
     overflow: hidden;
     font-size: 0.85rem;
-    color: #555;
     position: relative;
+    color: var(--state-color);
 }
 
 .marquee-text{
@@ -150,7 +150,7 @@ $player-top-padding : 0.5rem;
     margin-top: -0.2rem;
     margin-bottom: -0.4rem;
     font-size: 0.7rem;
-    color: #777;
+    color: var(--state-color);
     height: 0.7rem;
     text-align: right;
 }

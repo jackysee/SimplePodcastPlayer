@@ -150,10 +150,10 @@ viewFeedTitle model feed =
                 , onClick HideFeed
                 ]
                 [ img [ src "assets/arrow-left.svg" ] [] ]
-            , span 
-                [ class "feed-title" 
+            , span
+                [ class "feed-title"
                 , title feed.title
-                ] 
+                ]
                 [ text feed.title ]
             , feedState
             , refreshBtn
@@ -211,7 +211,6 @@ viewItem model feed (index, item) =
             [ classList
                 [ ("item", True)
                 , ("is-current", Just item.url == model.currentItemUrl)
-                -- , ("is-error", item.url == Nothing)
                 , ("is-unplayed", item.progress == -1 && not listened)
                 , ("is-played", listened)
                 , ("is-selected", model.itemSelected == Just item.url)
