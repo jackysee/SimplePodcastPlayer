@@ -5,7 +5,7 @@
 // Version 1.1.0
 // MIT License
 
-$track-color: #CCCCCC!default;
+$track-color: transparent; //#CCCCCC!default;
 $thumb-color: #000000!default;
 
 $thumb-radius: 0% !default;
@@ -54,6 +54,7 @@ $contrast: 5% !default;
   margin: $thumb-height / 2 0;
   width: $track-width;
   cursor: pointer;
+  background: transparent;
 
   &:focus{
     outline: none;
@@ -149,7 +150,13 @@ $contrast: 5% !default;
     left: 1px;
     width: calc(100% - 2px);
     display: flex;
+    z-index: -1;
 }
 .range-progress-left{
+    margin-top: 0;
     background: $thumb-color;
+}
+.range-progress-right{
+    margin-top: 0;
+    background: #CCCCCC;
 }

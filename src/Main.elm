@@ -51,6 +51,7 @@ init storeModel =
                     , itemFilter = toItemFilter m.itemFilter
                     , playList = m.playList
                     , fallbackRssServiceUrl = m.fallbackRssServiceUrl
+                    , fontSize = toFontSize m.fontSize
                 }
                     ! [ updateCurrentTime
                       , updateFeeds feeds
@@ -479,6 +480,9 @@ updateModel msg model cmds =
              }
             , cmds)
 
+        SetFontSize fontSize ->
+            ({ model | fontSize = fontSize }, cmds)
+
 
 view : Model -> Html Msg
 view model =
@@ -507,11 +511,7 @@ view model =
                 text ""
     in
         div [ class "app-wrap" ]
-            [ node "style" 
-                [ property "innerHTML" 
-                    (Json.Encode.string "html{font-size:16px;}")
-                ] 
-                []
+            [ viewFontSizeStyle model.fontSize
             , viewAddFeed model
             , viewAbout model
             , div
@@ -532,6 +532,16 @@ view model =
                     ++ (viewItemList model feed')
                     ++ [ viewPlayer model ]
             ]
+
+
+viewFontSizeStyle : FontSize -> Html Msg
+viewFontSizeStyle fontSize =
+    node "style"
+        [ property "innerHTML" <|
+            Json.Encode.string
+                ("html{font-size:" ++ getFontSizePx fontSize ++ "}")
+        ]
+        []
 
 
 viewTitle : Model -> Maybe Feed -> Html Msg

@@ -71,6 +71,12 @@ type AboutPanel
     | Settings
 
 
+type FontSize
+    = Small
+    | Medium
+    | Large
+
+
 type alias Model =
     { urlToAdd : String
     , loadFeedState : LoadFeedState
@@ -89,6 +95,7 @@ type alias Model =
     , shortcutGoTo: Bool
     , floatPanel : FloatPanel
     , fallbackRssServiceUrl : Maybe String
+    , fontSize : FontSize
     }
 
 
@@ -103,6 +110,7 @@ type alias StoreModel =
     , itemSortLatest : Bool
     , playList: List String
     , fallbackRssServiceUrl : Maybe String
+    , fontSize : String
     }
 
 type alias StoreFeed =
@@ -181,6 +189,22 @@ itemFilterToStr filter =
         All -> "All"
 
 
+fontSizeToStr : FontSize -> String
+fontSizeToStr fontSize =
+    case fontSize of
+        Small -> "Small"
+        Medium -> "Medium"
+        Large -> "Large"
+
+
+toFontSize : String -> FontSize
+toFontSize str =
+    case str of
+        "Small" -> Small
+        "Large" -> Large
+        _ -> Medium
+
+
 toFeed : StoreFeed -> Feed
 toFeed storeFeed =
     { url = storeFeed.url
@@ -203,8 +227,8 @@ toStoreModel model =
     , itemSortLatest = model.itemSortLatest
     , playList = model.playList
     , fallbackRssServiceUrl = model.fallbackRssServiceUrl
+    , fontSize = fontSizeToStr model.fontSize
     }
-
 
 
 toStoreFeed : Feed -> StoreFeed
@@ -310,4 +334,12 @@ defaultModel =
     , shortcutGoTo = False
     , floatPanel = Hidden
     , fallbackRssServiceUrl = Nothing
+    , fontSize = Medium
     }
+
+getFontSizePx : FontSize -> String
+getFontSizePx fontSize =
+    case fontSize of
+        Large -> "18px"
+        Medium -> "16px"
+        Small -> "12px"

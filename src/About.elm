@@ -1,7 +1,7 @@
 module About exposing (viewAbout, viewAboutButton)
 
 import Html exposing (Html, div, text, img, button, h2, span, input, a)
-import Html.Attributes exposing (class, src, classList, value, href, target)
+import Html.Attributes exposing (class, src, classList, value, href, target, style)
 import Html.Events exposing (onClick, onInput)
 import Models exposing (..)
 import Msgs exposing (..)
@@ -58,7 +58,7 @@ viewAbout model =
                 , h2 [] [ text "Simple Podcast Player" ]
                 , div
                     [ class "about-tabs" ] <|
-                        List.map 
+                        List.map
                             (\(content_, label) ->
                                 div
                                     [ classList
@@ -85,39 +85,71 @@ viewAbout model =
                     Settings ->
                         div
                             [ class "about-tab-content about-settings" ]
-                            [ div 
-                                [ class "about-setting-item" ]
-                                [ div 
-                                    [] 
-                                    [ text "Fallback rss to json service for YQL" ]
-                                , div
-                                    [ class "about-setting-input-wrap" ]
-                                    [ div
-                                        [] 
-                                        [ input
-                                            [ class "about-setting-input" 
-                                            , onInput SetFallbackRssServiceUrl
-                                            , value (Maybe.withDefault "" model.fallbackRssServiceUrl)
-                                            ]
-                                            []
-                                        ]
-                                    , div
-                                    -- , Markdown.toHtml
-                                        [ class "about-setting-note" ]
-                                        [ text "You may use your own rss service like "
-                                        , a 
-                                            [ href "https://github.com/jackysee/RssJson" 
-                                            , target "_blank"
-                                            ]
-                                            [ text "this one" ]
-                                        ]
-                                    ]
-                                ]
+                            [ viewSettingFallbackUrl model.fallbackRssServiceUrl
+                            , viewSettingFontSize model.fontSize
                             ]
                 ]
 
         _ ->
             text ""
+
+
+viewSettingFallbackUrl : Maybe String -> Html Msg
+viewSettingFallbackUrl fallbackRssServiceUrl =
+    div
+        [ class "about-setting-item" ]
+        [ div
+            [ class "about-setting-label" ]
+            [ text "Fallback rss to json service for YQL" ]
+        , div
+            [ class "about-setting-input-wrap" ]
+            [ div
+                []
+                [ input
+                    [ class "about-setting-input"
+                    , onInput SetFallbackRssServiceUrl
+                    , value (Maybe.withDefault "" fallbackRssServiceUrl)
+                    ]
+                    []
+                ]
+            , div
+                [ class "about-setting-note" ]
+                [ text "You may use your own rss service like "
+                , a
+                    [ href "https://github.com/jackysee/RssJson"
+                    , target "_blank"
+                    ]
+                    [ text "this one" ]
+                ]
+            ]
+        ]
+
+
+viewSettingFontSize : FontSize -> Html Msg
+viewSettingFontSize fontSize =
+    div
+        [ class "about-setting-item" ]
+        [ div
+            [ class "about-setting-label" ]
+            [ text "Font Size" ]
+        , div
+            [ class "font-size-boxes about-setting-input-wrap" ]
+            <| List.map
+                (\(fontSize_) ->
+                    div
+                        [ classList
+                            [ ("is-selected", fontSize == fontSize_) ]
+                        , style
+                            [ ("font-size", getFontSizePx fontSize_) ]
+                        , onClick (SetFontSize fontSize_)
+                        ]
+                        [ text "aA" ]
+                )
+                [ Small
+                , Medium
+                , Large
+                ]
+        ]
 
 
 viewAboutButton : Html Msg

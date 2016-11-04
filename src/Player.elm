@@ -36,7 +36,8 @@ range min max step value' msg =
                 , div
                     [ class "range-progress-right"
                     , style [("flex" , (toString (1 - fraction)) ++ " 1 0%")]
-                    ] []
+                    ]
+                    []
                 ]
             ]
 

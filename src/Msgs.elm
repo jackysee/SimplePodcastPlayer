@@ -53,3 +53,4 @@ type Msg
     | MsgBatch (List Msg)
     | SetItemSortLatest Bool
     | SetFallbackRssServiceUrl String
+    | SetFontSize FontSize
