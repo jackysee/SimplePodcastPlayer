@@ -96,6 +96,7 @@ type alias Model =
     , floatPanel : FloatPanel
     , fallbackRssServiceUrl : Maybe String
     , fontSize : FontSize
+    , playerShowTimeLeft : Bool
     }
 
 
@@ -111,6 +112,7 @@ type alias StoreModel =
     , playList: List String
     , fallbackRssServiceUrl : Maybe String
     , fontSize : String
+    , playerShowTimeLeft : Bool
     }
 
 type alias StoreFeed =
@@ -228,6 +230,7 @@ toStoreModel model =
     , playList = model.playList
     , fallbackRssServiceUrl = model.fallbackRssServiceUrl
     , fontSize = fontSizeToStr model.fontSize
+    , playerShowTimeLeft = model.playerShowTimeLeft
     }
 
 
@@ -237,6 +240,58 @@ toStoreFeed feed =
     , title = feed.title
     , items = feed.items
     }
+
+
+defaultModel : Model
+defaultModel =
+    { urlToAdd = ""
+    , list = []
+    , loadFeedState = Empty
+    , currentTime = 0
+    , itemsToShow = 30
+    , currentItemUrl = Nothing
+    , playerState = Stopped
+    , playerRate = 1
+    , playerVol = toFloat 1
+    , showFeedUrl = Nothing
+    , itemFilter = Unlistened
+    , itemSelected = Nothing
+    , itemSortLatest = True
+    , playList = []
+    , shortcutGoTo = False
+    , floatPanel = Hidden
+    , fallbackRssServiceUrl = Nothing
+    , fontSize = Medium
+    , playerShowTimeLeft = True
+    }
+
+
+fromStoreModel : StoreModel -> Model
+fromStoreModel m =
+    let
+        feeds = List.map toFeed m.list
+    in
+        { defaultModel
+            | floatPanel = initAddPanel feeds
+            , urlToAdd = m.urlToAdd
+            , list = feeds
+            , currentItemUrl = m.currentItemUrl
+            , playerRate = m.playerRate
+            , playerVol = m.playerVol
+            , itemFilter = toItemFilter m.itemFilter
+            , playList = m.playList
+            , fallbackRssServiceUrl = m.fallbackRssServiceUrl
+            , fontSize = toFontSize m.fontSize
+            , playerShowTimeLeft = m.playerShowTimeLeft
+        }
+
+
+initAddPanel : List feed -> FloatPanel
+initAddPanel feeds =
+    if List.length feeds  == 0 then
+        AddPanel
+    else
+        Hidden
 
 
 itemList: Model -> (List (Feed, Item), Bool)
@@ -315,27 +370,6 @@ getItemByUrl model url =
         |> findFirst (\(feed, item) -> item.url == url)
 
 
-defaultModel : Model
-defaultModel =
-    { urlToAdd = ""
-    , list = []
-    , loadFeedState = Empty
-    , currentTime = 0
-    , itemsToShow = 30
-    , currentItemUrl = Nothing
-    , playerState = Stopped
-    , playerRate = 1
-    , playerVol = toFloat 1
-    , showFeedUrl = Nothing
-    , itemFilter = Unlistened
-    , itemSelected = Nothing
-    , itemSortLatest = True
-    , playList = []
-    , shortcutGoTo = False
-    , floatPanel = Hidden
-    , fallbackRssServiceUrl = Nothing
-    , fontSize = Medium
-    }
 
 getFontSizePx : FontSize -> String
 getFontSizePx fontSize =

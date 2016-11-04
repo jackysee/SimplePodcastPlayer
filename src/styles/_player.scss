@@ -19,7 +19,7 @@ $player-top-padding : 0.5rem;
 }
 
 .player{
-    height: $player-height - $player-top-padding; 
+    height: $player-height - $player-top-padding;
     /*margin-top: 5px;*/
     margin:0 5px 0 5px;
     padding: 1rem;
@@ -77,6 +77,7 @@ $player-top-padding : 0.5rem;
     min-width: 5rem;
     // height: 1rem;
     vertical-align: middle;
+    cursor: pointer;
 }
 
 .player-close{

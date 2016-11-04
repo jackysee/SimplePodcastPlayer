@@ -54,3 +54,4 @@ type Msg
     | SetItemSortLatest Bool
     | SetFallbackRssServiceUrl String
     | SetFontSize FontSize
+    | SetPlayerShowTimeLeft Bool

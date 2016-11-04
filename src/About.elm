@@ -45,10 +45,18 @@ shortcutContent = """
 
 viewAbout : Model -> Html Msg
 viewAbout model =
-    case model.floatPanel of
-        About content ->
-            div
-                [ class "app-about" ]
+    div
+        [ classList
+            [ ("app-about", True)
+            , ("is-show",
+                case model.floatPanel of
+                    About _ -> True
+                    _ -> False
+              )
+            ]
+        ] <|
+        case model.floatPanel of
+            About content ->
                 [ button
                     [ class "btn btn-icon app-about-close"
                     , onClick (SetFloatPanel Hidden)
@@ -90,8 +98,8 @@ viewAbout model =
                             ]
                 ]
 
-        _ ->
-            text ""
+            _ ->
+                [ text "" ]
 
 
 viewSettingFallbackUrl : Maybe String -> Html Msg

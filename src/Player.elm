@@ -77,7 +77,7 @@ viewPlayer model =
             [ div
                 [ class "player" ] <|
                 case item of
-                    Just item' ->
+                    Just item_ ->
                         [ div
                             [ class "player-control "]
                             [ div
@@ -89,22 +89,22 @@ viewPlayer model =
                                     else if (model.playerState == Stopped || model.playerState == Paused) then
                                         button
                                             [ class "btn player-btn"
-                                            , onClick (Play item')
+                                            , onClick (Play item_)
                                             ]
                                             [ img [ src "assets/play.svg" ] [] ]
                                     else
                                         button
                                             [ class "btn player-btn"
-                                            , onClick (Pause item')
+                                            , onClick (Pause item_)
                                             ]
                                             [ img [ src "assets/pause.svg" ] [] ]
                                 ]
                             , div [ class "progress" ]
                                 [ div
                                     [ class "player-title" ]
-                                    [ marquee item'.title (model.playerState == Playing)
+                                    [ marquee item_.title (model.playerState == Playing)
                                     ]
-                                , progressBar item'.progress item'.duration
+                                , progressBar item_.progress item_.duration
                                 , div
                                     [ class "player-item-queued-info" ]
                                     [ let
@@ -146,9 +146,21 @@ viewPlayer model =
                                     [ range 0 1 0.01 model.playerVol SetVol ]
                                 ]
                             , div
-                                [ class "player-progress" ]
-                                [ text <| "-"
-                                    ++ formatDuration (item'.duration - item'.progress)
+                                [ class "player-progress"
+                                , onClick (SetPlayerShowTimeLeft <| not model.playerShowTimeLeft)
+                                ]
+                                [ text <|
+                                    let
+                                        progress_ =
+                                            if item_.progress == -1 then
+                                                0
+                                            else
+                                                item_.progress
+                                    in
+                                        if model.playerShowTimeLeft then
+                                            "-" ++ formatDuration (item_.duration - progress_)
+                                        else
+                                            formatDuration progress_
                                 ]
                             , div
                                 [ class "player-close" ]
@@ -160,7 +172,7 @@ viewPlayer model =
                                 ]
                             -- , div
                             --     [ class "player-title "]
-                            --     [ text item'.title ]
+                            --     [ text item_.title ]
                             ]
                         ]
                     Nothing ->

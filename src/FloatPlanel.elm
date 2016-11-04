@@ -1,4 +1,4 @@
-module FloatPlanel exposing (hideItemDropdown, initAddPanel)
+module FloatPlanel exposing (hideItemDropdown)
 
 import Models exposing (..)
 
@@ -9,10 +9,3 @@ hideItemDropdown source =
             Hidden
         _ ->
             source
-
-initAddPanel : List feed -> FloatPanel
-initAddPanel feeds =
-    if List.length feeds  == 0 then
-        AddPanel
-    else
-        Hidden

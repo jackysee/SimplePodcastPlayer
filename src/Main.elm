@@ -20,7 +20,7 @@ import Player exposing (viewPlayer)
 import Shortcut exposing (keyMap, selectNext, selectPrev)
 import Events exposing (onScroll)
 import About exposing (viewAbout, viewAboutButton)
-import FloatPlanel exposing (hideItemDropdown, initAddPanel)
+import FloatPlanel exposing (hideItemDropdown)
 import Json.Encode
 
 
@@ -37,25 +37,13 @@ main =
 init : Maybe StoreModel -> ( Model, Cmd Msg )
 init storeModel =
     case storeModel of
-        Just m ->
+        Just storeModel_ ->
             let
-                feeds = List.map toFeed m.list
+                model = fromStoreModel storeModel_
             in
-                { defaultModel
-                    | floatPanel = initAddPanel feeds
-                    , urlToAdd = m.urlToAdd
-                    , list = feeds
-                    , currentItemUrl = m.currentItemUrl
-                    , playerRate = m.playerRate
-                    , playerVol = m.playerVol
-                    , itemFilter = toItemFilter m.itemFilter
-                    , playList = m.playList
-                    , fallbackRssServiceUrl = m.fallbackRssServiceUrl
-                    , fontSize = toFontSize m.fontSize
-                }
-                    ! [ updateCurrentTime
-                      , updateFeeds feeds
-                      ]
+                model ! [ updateCurrentTime
+                        , updateFeeds model.list
+                        ]
         Nothing ->
             defaultModel ! [ updateCurrentTime ]
 
@@ -482,6 +470,9 @@ updateModel msg model cmds =
 
         SetFontSize fontSize ->
             ({ model | fontSize = fontSize }, cmds)
+
+        SetPlayerShowTimeLeft show ->
+            ({ model | playerShowTimeLeft = show }, cmds)
 
 
 view : Model -> Html Msg
