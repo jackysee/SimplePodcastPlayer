@@ -258,11 +258,16 @@ updateModel msg model cmds =
                         [ stop "" ]
                     else
                         []
+                itemUrls = List.map (\item -> item.url) feed.items
+                playList = List.filter 
+                    (\url -> not (List.member url itemUrls)) 
+                    model.playList 
             in
                 ({ model
                     | list = list
                     , currentItemUrl = currentItemUrl
                     , showFeedUrl = Nothing
+                    , playList = playList
                  }
                 , cmds' ++ cmds
                 )
