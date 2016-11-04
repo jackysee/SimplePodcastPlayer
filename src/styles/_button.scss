@@ -34,8 +34,8 @@
     padding-right: 3px;
 }
 
-.btn svg{
-    fill: black;
+svg{
+    fill: var(--icon-color);
 }
 
 svg, img[src$=svg]{

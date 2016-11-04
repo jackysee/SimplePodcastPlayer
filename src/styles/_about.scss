@@ -120,6 +120,8 @@ $about-width: 80vw;
     border-bottom: 1px solid var(--input-border);
     font-size: 1rem;
     width: 100%;
+    background: transparent;
+    color: var(--input-color);
 }
 .about-setting-note{
     margin: 0;

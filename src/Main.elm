@@ -6,7 +6,7 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, src, style, classList, type', checked, title, property)
 import Task exposing (Task)
 import Time exposing (Time)
-import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp, getNext)
+import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp, getNext, getPrev)
 import Dom
 import Dict
 import Json.Encode
@@ -436,11 +436,20 @@ updateModel msg model cmds =
             , cmds)
 
         Dequeue url ->
-            ({ model
-                | playList = List.filter (\url_ -> url /= url_) model.playList
-                , floatPanel = hideItemDropdown model.floatPanel
-             }
-            , cmds)
+            let
+                isDequeued = (\url_ -> url == url_)
+            in
+                ({ model
+                    | playList = List.filter (not << isDequeued) model.playList
+                    , floatPanel = hideItemDropdown model.floatPanel
+                    , itemSelected = 
+                        Maybe.oneOf
+                            [ getNext isDequeued model.playList
+                            , getPrev isDequeued model.playList
+                            ]
+
+                 }
+                , cmds)
 
         MoveQueuedItemUp url ->
             ({ model | playList = swapUp url model.playList }
@@ -509,7 +518,7 @@ view model =
     in
         div [ classList
                 [ ("app-wrap", True)
-                , ("theme-light", True)
+                , ("theme-dark", True)
                 ]
             ]
             [ viewFontSizeStyle model.fontSize

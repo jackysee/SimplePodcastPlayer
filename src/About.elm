@@ -109,7 +109,7 @@ viewSettingFallbackUrl fallbackRssServiceUrl =
         [ class "about-setting-item" ]
         [ div
             [ class "about-setting-label" ]
-            [ text "Fallback rss to json service for YQL" ]
+            [ text "Fallback rss service" ]
         , div
             [ class "about-setting-input-wrap" ]
             [ div
@@ -123,7 +123,7 @@ viewSettingFallbackUrl fallbackRssServiceUrl =
                 ]
             , div
                 [ class "about-setting-note" ]
-                [ text "You may use your own rss service like "
+                [ text "Fallback to this service if YQL failed. You may use your own rss service like "
                 , a
                     [ href "https://github.com/jackysee/RssJson"
                     , target "_blank"

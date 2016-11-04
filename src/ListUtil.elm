@@ -60,6 +60,13 @@ getNext predicate list =
             Nothing
 
 
+getPrev: (a -> Bool) -> List a -> Maybe a
+getPrev predicate list =
+    list
+        |> List.reverse
+        |> getNext predicate
+
+
 findFirst: (a -> Bool) -> List a -> Maybe a
 findFirst predicate list =
     case list of
