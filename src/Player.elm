@@ -1,31 +1,35 @@
 module Player exposing (viewPlayer)
 
 import Html exposing (Html, text, div, img, button, input)
-import Html.Attributes exposing (class, style, src, classList, type', min, max, value)
+import Html.Attributes exposing (class, style, src, classList, type', value)
 import Html.Events exposing (on, onClick, onInput)
+import String
+import Time exposing (Time)
 
 import Models exposing (..)
 import Msgs exposing (..)
 import DateFormat exposing (formatDuration)
-import String
-import Time exposing (Time)
+import Icons
 
-range: Float -> Float -> Float -> Float -> (Float -> msg) -> Html msg
-range min max step value' msg =
+range: Float -> Float -> Float -> Float -> Bool -> (Float -> msg) -> Html msg
+range vmin vmax step val disabled msg =
     let
-        fraction = value' / max
+        fraction = val / vmax
     in
         div
             [ class "range-wrap" ]
-            [ input
-                [ type' "range"
-                , Html.Attributes.min (toString min)
-                , Html.Attributes.max (toString max)
-                , Html.Attributes.step (toString step)
-                , value (toString value')
-                , onInput (setFloat msg)
-                ]
-                []
+            [ if not disabled then 
+                input
+                    [ type' "range"
+                    , Html.Attributes.min (toString vmin)
+                    , Html.Attributes.max (toString vmax)
+                    , Html.Attributes.step (toString step)
+                    , value (toString val)
+                    , onInput (setFloat msg)
+                    ]
+                    []
+              else 
+                text ""
             , div
                 [ class "range-progress" ]
                 [ div
@@ -45,9 +49,9 @@ range min max step value' msg =
 progressBar : Time -> Time -> Html Msg
 progressBar progress duration =
     if duration == -1 then
-        text ""
+        range 0 100 1 0 True (\_ -> NoOp)
     else
-        range 0 duration 1 progress SetProgress
+        range 0 duration 1 progress False SetProgress
 
 
 setFloat: (Float -> msg) -> String -> msg
@@ -85,19 +89,19 @@ viewPlayer model =
                                 [
                                     if model.playerState == SoundLoading then
                                         div [ class "btn player-btn" ]
-                                            [ img [ src "assets/loading-spin.svg" ] [] ]
+                                            [ Icons.loadingSpin ]
                                     else if (model.playerState == Stopped || model.playerState == Paused) then
                                         button
                                             [ class "btn player-btn"
                                             , onClick (Play item_)
                                             ]
-                                            [ img [ src "assets/play.svg" ] [] ]
+                                            [ Icons.play ]
                                     else
                                         button
                                             [ class "btn player-btn"
                                             , onClick (Pause item_)
                                             ]
-                                            [ img [ src "assets/pause.svg" ] [] ]
+                                            [ Icons.pause ]
                                 ]
                             , div [ class "progress" ]
                                 [ div
@@ -136,14 +140,14 @@ viewPlayer model =
                                     [ button
                                         [ class "btn player-btn" ]
                                         [ if model.playerVol == 0 then
-                                            img [ src "assets/volume-off.svg" ] []
+                                            Icons.volumeOff
                                           else
-                                            img [ src "assets/volume-up.svg" ] []
+                                            Icons.volumeUp
                                         ]
                                     ]
                                 , div
                                     [ class "player-vol-bar" ]
-                                    [ range 0 1 0.01 model.playerVol SetVol ]
+                                    [ range 0 1 0.01 model.playerVol False SetVol ]
                                 ]
                             , div
                                 [ class "player-progress"
@@ -168,7 +172,7 @@ viewPlayer model =
                                     [ class "btn btn-icon"
                                     , onClick ClosePlayer
                                     ]
-                                    [ img [ src "assets/close.svg"] [] ]
+                                    [ Icons.close ]
                                 ]
                             -- , div
                             --     [ class "player-title "]

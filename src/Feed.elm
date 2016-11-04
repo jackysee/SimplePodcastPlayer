@@ -15,6 +15,7 @@ import Msgs exposing (..)
 import DecodeFeed exposing (decodeYqlFeed, decodeCustomFeed)
 import DateFormat exposing (formatDuration, formatDurationShort, format)
 import Events exposing (onInternalClick, onClickPosBottomRight)
+import Icons
 
 yqlUrl: String -> String
 yqlUrl url =
@@ -121,7 +122,7 @@ viewFeedTitle model feed =
                 Refreshing ->
                     div
                         [ class "feed-state" ]
-                        [ img [ src  "assets/loading-spin.svg" ] []
+                        [ Icons.loadingSpin
                         , span
                             [ class "feed-status" ]
                             [ text <| feed.title ++ " is refreshing..." ]
@@ -131,7 +132,7 @@ viewFeedTitle model feed =
                         [ class "feed-state feed-state-error"
                         , title "Error in updating feed. Please try later"
                         ]
-                        [ img [ src "assets/exclamation.svg" ] [] ]
+                        [ Icons.exclamation ]
                 _ ->
                     text ""
         refreshBtn =
@@ -142,14 +143,14 @@ viewFeedTitle model feed =
                         [ class "btn btn-icon feed-control feed-refresh"
                         , onClick (UpdateFeeds [] feed)
                         ]
-                        [ img [ src "assets/refresh.svg" ] [] ]
+                        [ Icons.refresh ]
     in
         div [ class "feed-header" ]
             [ button
                 [ class "btn btn-icon top-bar-outset-btn"
                 , onClick HideFeed
                 ]
-                [ img [ src "assets/arrow-left.svg" ] [] ]
+                [ Icons.arrowLeft ]
             , span
                 [ class "feed-title"
                 , title feed.title
@@ -193,7 +194,7 @@ viewConfirmDelete feed =
                     [ ("btn btn-icon feed-control feed-trash", True) ]
                 , onClick (ShowConfirmDeleteFeed feed)
                 ]
-                [ img [ src "assets/trash.svg"] [] ]
+                [ Icons.trash ]
         ]
 
 
@@ -266,17 +267,16 @@ renderItemState item currentItemUrl playerState =
         div
             [ class "item-state" ]
             [ if playerState == SoundLoading then
-                img [ src "assets/loading-spin.svg" ] []
+                Icons.loadingSpin
               else if playerState == Playing then
-                img [ src "assets/equalizer-playing.svg" ] []
+                Icons.equalizerPlaying
               else
-                img [ src "assets/equalizer-stop.svg" ] []
+                Icons.equalizerStop
             ]
     else
         div
             [ class "item-state" ]
-            [ img [ src "assets/play.svg" ] []
-            ]
+            [ Icons.play ]
 
 
 renderQueueControl: Item -> ItemFilter -> Html Msg
@@ -288,17 +288,17 @@ renderQueueControl item filter =
                 [ class "btn btn-icon"
                 , onInternalClick (MoveQueuedItemUp item.url)
                 ]
-                [ img [ src "assets/arrow-up.svg" ] [] ]
+                [ Icons.arrowUp ]
             , button
                 [ class "btn btn-icon"
                 , onInternalClick (MoveQueuedItemDown item.url)
                 ]
-                [ img [ src "assets/arrow-down.svg" ] [] ]
+                [ Icons.arrowDown ]
             , button
                 [ class "btn btn-icon"
                 , onInternalClick (Dequeue item.url)
                 ]
-                [ img [ src "assets/close.svg" ] [] ]
+                [ Icons.close ]
             ]
     else
         text ""
@@ -389,8 +389,7 @@ viewItemControl listened model item =
                                 )
                             )
                         ]
-                        [ img [ src "assets/ellipsis-v.svg" ] []
-                        ]
+                        [ Icons.ellipsisV ]
                     , case model.floatPanel of
                         ItemDropdown url ->
                             if url == item.url || Just url == item.link then

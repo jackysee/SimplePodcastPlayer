@@ -7,6 +7,7 @@ import Models exposing (..)
 import Msgs exposing (..)
 import Markdown
 import Events exposing (onInternalClick)
+import Icons
 
 creditContent : String
 creditContent = """
@@ -61,7 +62,7 @@ viewAbout model =
                     [ class "btn btn-icon app-about-close"
                     , onClick (SetFloatPanel Hidden)
                     ]
-                    [ img [ src "assets/close.svg" ] []
+                    [ Icons.close 
                     ]
                 , h2 [] [ text "Simple Podcast Player" ]
                 , div
@@ -166,5 +167,5 @@ viewAboutButton =
         [ class "btn btn-icon"
         , onInternalClick (SetFloatPanel (About Credit))
         ]
-        [ img [ src "assets/info-circle.svg" ] []
+        [ Icons.infoCircle
         ]

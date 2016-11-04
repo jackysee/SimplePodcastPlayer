@@ -9,6 +9,7 @@ import Time exposing (Time)
 import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp, getNext)
 import Dom
 import Dict
+import Json.Encode
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -21,7 +22,7 @@ import Shortcut exposing (keyMap, selectNext, selectPrev)
 import Events exposing (onScroll)
 import About exposing (viewAbout, viewAboutButton)
 import FloatPlanel exposing (hideItemDropdown)
-import Json.Encode
+import Icons
 
 
 main : Program (Maybe StoreModel)
@@ -503,7 +504,7 @@ view model =
     in
         div [ classList
                 [ ("app-wrap", True)
-                , ("theme-dark", True)
+                , ("theme-light", True)
                 ]
             ]
             [ viewFontSizeStyle model.fontSize
@@ -567,7 +568,7 @@ viewTitle model feed' =
                     , if isRefreshing then
                         div
                             [ class "feed-state" ]
-                            [ img [ src "assets/loading-spin.svg" ] []
+                            [ Icons.loadingSpin
                             , viewStatus model
                             ]
                       else
@@ -579,7 +580,7 @@ viewTitle model feed' =
                             , onClick UpdateAllFeed
                             , title "Refresh all feeds"
                             ]
-                            [ img [ src "assets/refresh.svg" ] [] ]
+                            [ Icons.refresh ]
                       else
                           text ""
                     ]

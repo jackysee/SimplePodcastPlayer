@@ -7,6 +7,7 @@ import Html.Events exposing (onClick, onInput, on, keyCode, onWithOptions)
 import Models exposing (..)
 import Msgs exposing (..)
 import Events exposing (onInternalClick, onKeydown)
+import Icons
 
 
 viewAddFeed : Model -> Html Msg
@@ -23,7 +24,8 @@ viewAddFeed model =
                 [ class "btn btn-icon add-close"
                 , onClick HideAddPanel
                 ]
-                [ img [ src "assets/close.svg"] [] ]
+                [ Icons.close 
+                ]
             , input
                 [ id "add-feed"
                 , class "add-feed"
@@ -84,5 +86,5 @@ addFeedButton =
         [ class "btn add-btn btn-icon top-bar-outset-btn"
         , onInternalClick ShowAddPanel
         ]
-        [ img [ src "assets/subscription.svg" ] []
+        [ Icons.subscription
         ]

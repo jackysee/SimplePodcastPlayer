@@ -34,7 +34,11 @@
     padding-right: 3px;
 }
 
-img[src$=svg]{
+.btn svg{
+    fill: black;
+}
+
+svg, img[src$=svg]{
     height: 100%;
     vertical-align: top;
 }
