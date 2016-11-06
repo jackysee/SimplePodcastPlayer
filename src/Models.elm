@@ -93,6 +93,7 @@ type alias Model =
     , itemSelected : Maybe String
     , playList: List String
     , shortcutGoTo: Bool
+    , shortcutKeys : List String
     , floatPanel : FloatPanel
     , fallbackRssServiceUrl : Maybe String
     , fontSize : FontSize
@@ -259,6 +260,7 @@ defaultModel =
     , itemSortLatest = True
     , playList = []
     , shortcutGoTo = False
+    , shortcutKeys = []
     , floatPanel = Hidden
     , fallbackRssServiceUrl = Nothing
     , fontSize = Medium

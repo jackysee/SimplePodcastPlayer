@@ -5,11 +5,160 @@ import Models exposing (..)
 import Feed exposing (markListenedMsg)
 import ListUtil exposing (getNext, findFirst)
 
+(=>) = (,)
+
+shortcuts =
+    [ ["g", "u"] => \model item -> SetItemFilter Unlistened 
+    , ["g", "q"] => \model item -> SetItemFilter Queued
+    , ["g", "f"] => 
+        \model item ->
+            model.itemSelected
+                |> Maybe.map (\itemUrl ->
+                    getItemByUrl model itemUrl
+                        |> Maybe.map (\(feed, item) ->
+                            ShowFeed feed.url
+                        )
+                        |> Maybe.withDefault NoOp
+                )
+                |> Maybe.withDefault NoOp
+
+    , ["g", "a"] => \model item -> HideFeed
+    , ["j"] => \model item -> SelectNext 
+    , ["down"] => \model item -> SelectNext
+    , ["k"] => \model item -> SelectPrev
+    , ["up"] => \model item -> SelectPrev
+    , ["o"] => 
+        \model item ->
+           item  
+                |> Maybe.map (\item_ ->
+                    item_.link
+                        |> Maybe.map (\link ->  OpenNewLink link)
+                        |> Maybe.withDefault  NoOp
+                )
+                |> Maybe.withDefault NoOp
+
+    , ["p"] =>
+        \model selectedItem ->
+            model.currentItemUrl
+                |> Maybe.map (\url ->
+                    getItemByUrl model url
+                        |> Maybe.map (\(feed, item) ->
+                            case model.playerState of
+                                Playing ->
+                                    Pause item
+
+                                Paused ->
+                                    Play item
+
+                                Stopped ->
+                                    Play item
+
+                                _ ->
+                                    NoOp
+                        )
+                        |> Maybe.withDefault NoOp
+                )
+                |> Maybe.withDefault NoOp
+
+    , ["right"] => 
+        \model selectedItem ->
+            selectedItem
+                |> Maybe.map (\item ->  Play item  )
+                |> Maybe.withDefault  NoOp 
+
+    , ["n"] => \model item -> ShowAddPanel
+    , ["esc"] => \model item  -> HideAddPanel
+    , ["u"] => 
+        \model selectedItem ->
+            if model.itemFilter == Queued then
+                selectedItem
+                    |> Maybe.map (\item ->  MoveQueuedItemUp item.url )
+                    |> Maybe.withDefault  NoOp
+            else
+                NoOp
+
+    , ["d"] => 
+        \model selectedItem ->
+            if model.itemFilter == Queued then
+                selectedItem
+                    |> Maybe.map (\item -> MoveQueuedItemDown item.url)
+                    |> Maybe.withDefault NoOp
+            else
+                NoOp
+
+    , ["q"] => 
+        \model selectedItem ->
+            selectedItem
+                |> Maybe.map
+                    (\item ->
+                        if List.member item.url model.playList then
+                            Dequeue item.url
+                        else
+                            Enqueue item.url
+                    )
+                |> Maybe.withDefault NoOp
+
+    , ["m"] => 
+        \model selectedItem ->
+            selectedItem
+                |> Maybe.map (\item -> markListenedMsg item)
+                |> Maybe.withDefault NoOp
+
+    ]
+
+{--
+    if listStartWith shortcut [] keys then
+        if shortcut /= keys then
+            SetShortcutKey keys
+        else
+            -- do action
+            SetShortcutKeys []
+--}
+
 keyMap: Model -> String -> Msg
 keyMap model key =
     let
         a = Debug.log "key" key
         selectedItem = getSelectedItem model
+        keys = model.shortcutKeys ++ [key]
+        getActions = 
+            (\list ->
+                case list of
+                    [] -> 
+                        SetShortcutKeys []
+
+                    (shortcut, createMsg)::xs ->
+                        --let 
+                        --    c = Debug.log "startwith" (listStartsWith keys [] shortcut)
+                        --    a = Debug.log "shortcut to match" shortcut 
+                        --    b = Debug.log "input keys" keys 
+                        --in
+                        if listStartsWith keys [] shortcut then
+                            --let
+                            --    d = Debug.log "not equal to shortcut" (shortcut /= keys)
+                            --in
+                            if shortcut /= keys then
+                                SetShortcutKeys keys
+                            else
+                                MsgBatch
+                                    [ createMsg model selectedItem
+                                    , SetShortcutKeys []
+                                    ]
+                        else
+                            getActions xs
+            )
+    in
+        -- Debug.log "result" <| 
+        getActions shortcuts
+
+
+
+keyMap1: Model -> String -> Msg
+keyMap1 model key =
+    let
+        a = Debug.log "key" key
+        selectedItem = getSelectedItem model
+
         gotoMsgs =
             if model.shortcutGoTo then
                 let
@@ -141,6 +290,25 @@ keyMap model key =
                 []
     in
         MsgBatch <| gotoMsgs ++ msgs
+
+
+listStartsWith : List String -> List String -> List String -> Bool
+listStartsWith toMatch list1 list2 =
+    --let
+    --    c = Debug.log "toMatch" toMatch 
+    --    a = Debug.log "list1" list1
+    --    b = Debug.log "list2" list2
+    --    d = Debug.log "toMatch == list1?" (list1 == toMatch)
+    --in
+    if list1 == toMatch then
+        True
+    else
+        case list2 of
+            [] ->
+                False
+
+            x::xs ->
+                listStartsWith toMatch (list1 ++ [x]) xs
 
 
 selectNext : Model -> Maybe (Model, Cmd Msg)

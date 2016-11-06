@@ -49,6 +49,7 @@ type Msg
     | MoveQueuedItemUp String
     | MoveQueuedItemDown String
     | ToggleShortcutGoto Bool
+    | SetShortcutKeys (List String)
     | SetFloatPanel FloatPanel
     | MsgBatch (List Msg)
     | SetItemSortLatest Bool

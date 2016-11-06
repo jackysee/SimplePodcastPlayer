@@ -443,10 +443,13 @@ updateModel msg model cmds =
                     | playList = List.filter (not << isDequeued) model.playList
                     , floatPanel = hideItemDropdown model.floatPanel
                     , itemSelected = 
-                        Maybe.oneOf
-                            [ getNext isDequeued model.playList
-                            , getPrev isDequeued model.playList
-                            ]
+                        if model.itemFilter == Queued then
+                            Maybe.oneOf
+                                [ getNext isDequeued model.playList
+                                , getPrev isDequeued model.playList
+                                ]
+                        else
+                            model.itemSelected
 
                  }
                 , cmds)
@@ -461,6 +464,9 @@ updateModel msg model cmds =
 
         ToggleShortcutGoto flag ->
             ({ model | shortcutGoTo = flag }, cmds)
+
+        SetShortcutKeys keys ->
+            ({ model | shortcutKeys = keys }, cmds)
 
         SetFloatPanel panel ->
             ({ model | floatPanel = panel }, cmds)
@@ -757,7 +763,7 @@ subscriptions model =
         [ updateProgress UpdateProgress
         , soundLoaded SoundLoaded
         , playEnd PlayEnd
-        , keyUp (keyMap model)
+        , keyUp <| keyMap model
         ]
 
 
