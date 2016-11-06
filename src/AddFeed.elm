@@ -1,7 +1,7 @@
 module AddFeed exposing (viewAddFeed, addFeedButton)
 
 import Html exposing (Html, div, button, img, span, input, text, ul, li)
-import Html.Attributes exposing (classList, class, src, id, class, value, placeholder)
+import Html.Attributes exposing (classList, class, src, id, class, value, placeholder, disabled)
 import Html.Events exposing (onClick, onInput, on, keyCode, onWithOptions)
 
 import Models exposing (..)
@@ -36,6 +36,7 @@ viewAddFeed model =
                 , onInput SetUrl
                 , value model.urlToAdd
                 , placeholder "Add Feed"
+                , disabled <| model.loadFeedState == Loading
                 ]
                 []
             , viewLoadFeedState model.loadFeedState
