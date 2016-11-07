@@ -10,6 +10,7 @@ import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Html.Attributes exposing (class, title, src, classList, id, href, target)
 import Dict
 import Regex
+import String
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -242,7 +243,8 @@ viewItem model feed (index, item) =
                     [ text
                         (item.description
                             |> Maybe.map stripHtml
-                            |> Maybe.withDefault "" 
+                            |> Maybe.withDefault ""
+                            |> String.slice 0 300
                         )
                     ]
                 ]
