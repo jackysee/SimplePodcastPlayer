@@ -27,6 +27,8 @@ shortcutContent = """
     - **gq** : Go to Queued
     - **gf** : Go to Feed of the selected item
     - **ga** : Go to All Podcasts
+    - **s** : show settings
+    - **?** : show shortcuts
 - Selection
     - **j / down** : next item
     - **k / up** : previous item
@@ -35,6 +37,8 @@ shortcutContent = """
     - **right** : play selected item
     - **q** : Enqueue / Dequeue selected item
     - **m** : mark as listened
+- Actions
+    - **rr** : refresh selected feed / all feeds
 - Player
     - **p** : Play / Pause
 - Add Feed Panel
@@ -43,9 +47,6 @@ shortcutContent = """
 - Queue
     - **u** : move selected item up
     - **d** : move sleected item down
-- Info
-    - **s** : show settings
-    - **?** : show shortcuts
 """
 
 viewAbout : Model -> Html Msg
@@ -68,7 +69,6 @@ viewAbout model =
                     ]
                     [ Icons.close
                     ]
-                , h2 [] [ text "Simple Podcast Player" ]
                 , div
                     [ class "about-tabs" ] <|
                         List.map
@@ -88,9 +88,12 @@ viewAbout model =
                             ]
                 , case content of
                     Credit ->
-                        Markdown.toHtml
-                            [ class "about-tab-content app-about-content" ]
-                            creditContent
+                        div []
+                            [ h2 [] [ text "Simple Podcast Player" ]
+                            , Markdown.toHtml
+                                [ class "about-tab-content app-about-content" ]
+                                creditContent
+                            ]
                     Shortcut ->
                         Markdown.toHtml
                             [ class "about-tab-content about-shortcut"]

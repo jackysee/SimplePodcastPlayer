@@ -60,7 +60,7 @@ shortcuts =
                 )
                 |> Maybe.withDefault NoOp
 
-    , ["right"] =>
+    , ["enter"] =>
         \model ->
             getSelectedItem model
                 |> Maybe.map (\item ->  Play item  )
@@ -106,6 +106,17 @@ shortcuts =
 
     , ["s"] => \_ -> SetFloatPanel (About Settings)
     , ["/"] => \_ -> SetFloatPanel (About Shortcut)
+    , ["r", "r"] => \model ->
+        model.showFeedUrl
+            |> Maybe.map
+                (\url ->
+                    model.list
+                     |> findFirst (\feed -> feed.url == url )
+                     |> Maybe.map (\feed -> UpdateFeeds [] feed)
+                     |> Maybe.withDefault NoOp
+                )
+            |> Maybe.withDefault UpdateAllFeed
+
     ]
 
 
