@@ -125,27 +125,27 @@ keyMap model key =
     let
         a = Debug.log "key" key
         keys = model.shortcutKeys ++ [key]
-        getActions =
-            (\list ->
-                case list of
-                    [] ->
-                        SetShortcutKeys []
-
-                    (shortcut, createMsg)::xs ->
-                        if listStartsWith keys [] shortcut then
-                            if shortcut /= keys then
-                                SetShortcutKeys keys
-                            else
-                                MsgBatch
-                                    [ createMsg model
-                                    , SetShortcutKeys []
-                                    ]
-                        else
-                            getActions xs
-            )
     in
-        -- Debug.log "result" <|
-        getActions shortcuts
+        getActions model shortcuts keys
+
+
+getActions: Model -> List (List String, (Model -> Msg)) -> List String -> Msg
+getActions model list keys =
+    case list of
+        [] ->
+            SetShortcutKeys []
+
+        (shortcut, createMsg)::xs ->
+            if listStartsWith keys [] shortcut then
+                if shortcut /= keys then
+                    SetShortcutKeys keys
+                else
+                    MsgBatch
+                        [ createMsg model
+                        , SetShortcutKeys []
+                        ]
+            else
+                getActions model xs keys
 
 
 listStartsWith : List String -> List String -> List String -> Bool

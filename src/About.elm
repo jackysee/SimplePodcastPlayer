@@ -29,21 +29,17 @@ shortcutContent = """
     - **ga** : Go to All Podcasts
     - **s** : show settings
     - **?** : show shortcuts
+    - **n** : Show Add feed panel
 - Selection
     - **j / down** : next item
     - **k / up** : previous item
-- Actions on selected item
-    - **o** : Open link (if any)
-    - **right** : play selected item
+    - **o** : Open selected item link (if any)
+    - **enter** : play selected item
     - **q** : Enqueue / Dequeue selected item
-    - **m** : mark as listened
+    - **m** : mark selected item as listened
 - Actions
     - **rr** : refresh selected feed / all feeds
-- Player
-    - **p** : Play / Pause
-- Add Feed Panel
-    - **n** : Show Add feed panel
-    - **Esc** : Hide Add Panel
+    - **p** : Play / Pause player item
 - Queue
     - **u** : move selected item up
     - **d** : move sleected item down
