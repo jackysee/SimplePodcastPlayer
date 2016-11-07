@@ -524,7 +524,7 @@ view model =
     in
         div [ classList
                 [ ("app-wrap", True)
-                , ("theme-dark", True)
+                , ("theme-light", True)
                 ]
             ]
             [ viewFontSizeStyle model.fontSize
