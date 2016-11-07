@@ -10,6 +10,7 @@ import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp, getNext, getPr
 import Dom
 import Dict
 import Json.Encode
+import String
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -259,9 +260,9 @@ updateModel msg model cmds =
                     else
                         []
                 itemUrls = List.map (\item -> item.url) feed.items
-                playList = List.filter 
-                    (\url -> not (List.member url itemUrls)) 
-                    model.playList 
+                playList = List.filter
+                    (\url -> not (List.member url itemUrls))
+                    model.playList
             in
                 ({ model
                     | list = list
@@ -442,7 +443,7 @@ updateModel msg model cmds =
                 ({ model
                     | playList = List.filter (not << isDequeued) model.playList
                     , floatPanel = hideItemDropdown model.floatPanel
-                    , itemSelected = 
+                    , itemSelected =
                         if model.itemFilter == Queued then
                             Maybe.oneOf
                                 [ getNext isDequeued model.playList
@@ -495,6 +496,9 @@ updateModel msg model cmds =
         SetPlayerShowTimeLeft show ->
             ({ model | playerShowTimeLeft = show }, cmds)
 
+        SetTheme theme ->
+            ({ model | theme = theme }, cmds)
+
 
 view : Model -> Html Msg
 view model =
@@ -524,7 +528,7 @@ view model =
     in
         div [ classList
                 [ ("app-wrap", True)
-                , ("theme-light", True)
+                , ("theme-" ++ (themeToStr model.theme |> String.toLower) , True)
                 ]
             ]
             [ viewFontSizeStyle model.fontSize

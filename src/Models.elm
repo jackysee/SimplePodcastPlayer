@@ -78,6 +78,11 @@ type FontSize
     | Large
 
 
+type Theme
+    = Light
+    | Dark
+
+
 type alias Model =
     { urlToAdd : String
     , loadFeedState : LoadFeedState
@@ -99,6 +104,7 @@ type alias Model =
     , fallbackRssServiceUrl : Maybe String
     , fontSize : FontSize
     , playerShowTimeLeft : Bool
+    , theme : Theme
     }
 
 
@@ -115,6 +121,7 @@ type alias StoreModel =
     , fallbackRssServiceUrl : Maybe String
     , fontSize : String
     , playerShowTimeLeft : Bool
+    , theme : String
     }
 
 type alias StoreFeed =
@@ -209,6 +216,20 @@ toFontSize str =
         _ -> Medium
 
 
+themeToStr : Theme -> String
+themeToStr theme =
+    case theme of
+        Light -> "Light"
+        Dark -> "Dark"
+
+
+toTheme : String -> Theme
+toTheme str =
+    case str of
+        "Dark" -> Dark
+        _ -> Light
+
+
 toFeed : StoreFeed -> Feed
 toFeed storeFeed =
     { url = storeFeed.url
@@ -233,6 +254,7 @@ toStoreModel model =
     , fallbackRssServiceUrl = model.fallbackRssServiceUrl
     , fontSize = fontSizeToStr model.fontSize
     , playerShowTimeLeft = model.playerShowTimeLeft
+    , theme = themeToStr model.theme
     }
 
 
@@ -266,6 +288,7 @@ defaultModel =
     , fallbackRssServiceUrl = Nothing
     , fontSize = Medium
     , playerShowTimeLeft = True
+    , theme = Light
     }
 
 
@@ -286,6 +309,7 @@ fromStoreModel m =
             , fallbackRssServiceUrl = m.fallbackRssServiceUrl
             , fontSize = toFontSize m.fontSize
             , playerShowTimeLeft = m.playerShowTimeLeft
+            , theme = toTheme m.theme
         }
 
 

@@ -56,3 +56,4 @@ type Msg
     | SetFallbackRssServiceUrl String
     | SetFontSize FontSize
     | SetPlayerShowTimeLeft Bool
+    | SetTheme Theme

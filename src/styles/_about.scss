@@ -131,16 +131,13 @@ $about-width: 80vw;
     p { margin: 0; }
 }
 
-.font-size-boxes{
+.input-boxes{
     display: flex;
     align-items: flex-start;
 
     > * {
         margin-top: 0;
         margin-right: 1rem;
-        width: 50px;
-        height: 50px;
-        line-height: 50px;
         text-align: center;
         border: 1px solid var(--input-border);
         cursor: pointer;
@@ -150,6 +147,11 @@ $about-width: 80vw;
         }
     }
 }
+.font-size-box{
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+}
 .about-setting-font-size-small{
     font-size: 12px;
 }
@@ -158,4 +160,11 @@ $about-width: 80vw;
 }
 .about-setting-font-size-large{
     font-size: 18px;
+}
+
+.theme-box{
+    padding: 0 1rem;
+    height: 50px;
+    line-height: 50px;
+    margin: 0.3rem;
 }

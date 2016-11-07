@@ -8,6 +8,7 @@ import Msgs exposing (..)
 import Markdown
 import Events exposing (onInternalClick)
 import Icons
+import String
 
 creditContent : String
 creditContent = """
@@ -62,7 +63,7 @@ viewAbout model =
                     [ class "btn btn-icon app-about-close"
                     , onClick (SetFloatPanel Hidden)
                     ]
-                    [ Icons.close 
+                    [ Icons.close
                     ]
                 , h2 [] [ text "Simple Podcast Player" ]
                 , div
@@ -96,6 +97,7 @@ viewAbout model =
                             [ class "about-tab-content about-settings" ]
                             [ viewSettingFallbackUrl model.fallbackRssServiceUrl
                             , viewSettingFontSize model.fontSize
+                            , viewSettingTheme model.theme
                             ]
                 ]
 
@@ -142,12 +144,14 @@ viewSettingFontSize fontSize =
             [ class "about-setting-label" ]
             [ text "Font Size" ]
         , div
-            [ class "font-size-boxes about-setting-input-wrap" ]
+            [ class "input-boxes about-setting-input-wrap" ]
             <| List.map
                 (\(fontSize_) ->
                     div
                         [ classList
-                            [ ("is-selected", fontSize == fontSize_) ]
+                            [ ("font-size-box", True)
+                            , ("is-selected", fontSize == fontSize_)
+                            ]
                         , style
                             [ ("font-size", getFontSizePx fontSize_) ]
                         , onClick (SetFontSize fontSize_)
@@ -158,6 +162,38 @@ viewSettingFontSize fontSize =
                 , Medium
                 , Large
                 ]
+        ]
+
+
+viewSettingTheme : Theme -> Html Msg
+viewSettingTheme theme =
+    div
+        [ class "about-setting-item" ]
+        [ div
+            [ class "about-setting-label" ]
+            [ text "Theme" ]
+        , div
+            [ class "input-boxes about-setting-input-wrap" ]
+            <| List.map
+                (\theme_ ->
+                    div
+                        [ classList [ ("is-selected", theme == theme_) ]
+                        , onClick (SetTheme theme_)
+                        ]
+                        [ div
+                            [ class <| "theme-box theme-" ++ (themeToStr theme_ |> String.toLower)
+                            , style
+                                [ ("color",  "var(--body-color)")
+                                , ("background-color", "var(--body-bg)")
+                                ]
+                            ]
+                            [ text <| themeToStr theme_ ]
+                        ]
+                )
+                [ Light
+                , Dark
+                ]
+
         ]
 
 
