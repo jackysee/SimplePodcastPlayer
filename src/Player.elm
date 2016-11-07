@@ -18,7 +18,7 @@ range vmin vmax step val disabled msg =
     in
         div
             [ class "range-wrap" ]
-            [ if not disabled then 
+            [ if not disabled then
                 input
                     [ type' "range"
                     , Html.Attributes.min (toString vmin)
@@ -28,7 +28,7 @@ range vmin vmax step val disabled msg =
                     , onInput (setFloat msg)
                     ]
                     []
-              else 
+              else
                 text ""
             , div
                 [ class "range-progress" ]
@@ -86,27 +86,35 @@ viewPlayer model =
                             [ class "player-control "]
                             [ div
                                 [ class "player-buttons" ]
-                                [
-                                    if model.playerState == SoundLoading then
-                                        div [ class "btn player-btn" ]
-                                            [ Icons.loadingSpin ]
-                                    else if (model.playerState == Stopped || model.playerState == Paused) then
-                                        button
-                                            [ class "btn player-btn"
-                                            , onClick (Play item_)
-                                            ]
-                                            [ Icons.play ]
-                                    else
-                                        button
-                                            [ class "btn player-btn"
-                                            , onClick (Pause item_)
-                                            ]
-                                            [ Icons.pause ]
+                                [ if model.playerState == SoundLoading then
+                                    div [ class "btn player-btn" ]
+                                        [ Icons.loadingSpin ]
+                                  else if (model.playerState == Stopped || model.playerState == Paused || model.playerState == SoundError) then
+                                    button
+                                        [ class "btn player-btn"
+                                        , onClick (Play item_)
+                                        ]
+                                        [ Icons.play ]
+                                  else
+                                    button
+                                        [ class "btn player-btn"
+                                        , onClick (Pause item_)
+                                        ]
+                                        [ Icons.pause ]
                                 ]
                             , div [ class "progress" ]
                                 [ div
                                     [ class "player-title" ]
-                                    [ marquee item_.title (model.playerState == Playing)
+                                    [ if model.playerState == SoundError then
+                                        div
+                                            [ class "player-title-text player-error" ]
+                                            [ text "Cannot load the file! " ]
+                                      else
+                                        text ""
+                                    , div
+                                        [ class "player-title-text" ]
+                                        [ marquee item_.title (model.playerState == Playing)
+                                        ]
                                     ]
                                 , progressBar item_.progress item_.duration
                                 , div
@@ -188,10 +196,8 @@ viewPlayer model =
 marquee : String -> Bool -> Html Msg
 marquee txt isPlaying =
     div
-        [ class "player-title-text" ]
-        [ div
-            [ classList
-                [ ("marquee-text", True)
-                , ("is-playing", isPlaying) ] ]
-            [ text txt ]
+        [ classList
+            [ ("marquee-text", True)
+            , ("is-playing", isPlaying) ]
         ]
+        [ text txt ]

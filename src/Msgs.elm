@@ -31,6 +31,7 @@ type Msg
     | HideConfirmDeleteFeed Feed
     | ConfirmDeleteFeed Feed
     | ClosePlayer
+    | PlayError String
     | PlayEnd String
     | ToggleRate
     | OpenNewLink String

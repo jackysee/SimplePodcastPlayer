@@ -51,6 +51,7 @@ type PlayerState
     | Playing
     | Paused
     | SoundLoading
+    | SoundError
 
 
 type ItemFilter

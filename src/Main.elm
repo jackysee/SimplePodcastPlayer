@@ -320,6 +320,9 @@ updateModel msg model cmds =
                     Nothing ->
                         ({ model_ | currentItemUrl = Nothing }, cmds)
 
+        PlayError url ->
+            ({ model | playerState = SoundError }, cmds)
+
         ToggleRate ->
             let
                 rate = [1, 1.2, 1.5, 2.0]
@@ -768,6 +771,7 @@ subscriptions model =
         , soundLoaded SoundLoaded
         , playEnd PlayEnd
         , keyUp <| keyMap model
+        , playError PlayError
         ]
 
 
@@ -783,3 +787,4 @@ port setRate : Float -> Cmd msg
 port openNewLink : String -> Cmd msg
 port setVol : Float -> Cmd msg
 port keyUp: (String -> msg) -> Sub msg
+port playError: (String -> msg) -> Sub msg

@@ -24,6 +24,16 @@ store.get(function(_model){
             },
             onload: function(){
                 app.ports.soundLoaded.send(true);
+                if(playLoad.seek !== -1){
+                    sound.seek(playLoad.seek);
+                }
+            },
+            onloaderror: function(){
+                if(sound){
+                    sound.unload();
+                    sound = undefined;
+                }
+                app.ports.playError.send(playLoad.url);
             },
             onend: function(){
                 console.log( 'end, state = ', sound ? sound.state() : 'no sound' );
@@ -38,9 +48,6 @@ store.get(function(_model){
                 }
             }
         });
-        if(playLoad.seek !== -1){
-            sound.seek(playLoad.seek);
-        }
         if(playLoad.rate){
             sound.rate(playLoad.rate);
         }

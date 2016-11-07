@@ -56,6 +56,10 @@ $player-top-padding : 0.5rem;
     // margin-top: 0.3rem;
     width: 4rem;
     text-align: center;
+
+    .btn{
+        color: var(--body-color);
+    }
 }
 
 .player-rate .btn{
@@ -120,6 +124,11 @@ $player-top-padding : 0.5rem;
     font-size: 0.85rem;
     position: relative;
     color: var(--state-color);
+    display: inline;
+
+    &.player-error{
+        color: red;
+    }
 }
 
 .marquee-text{
