@@ -9,6 +9,7 @@ import Html exposing (Html, text, button, ul, li, div, span, img, a)
 import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Html.Attributes exposing (class, title, src, classList, id, href, target)
 import Dict
+import Regex
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -236,6 +237,14 @@ viewItem model feed (index, item) =
                 [ div
                     [ class "item-title", title item.title ]
                     [ text item.title ]
+                , div
+                    [ class "item-description-text" ]
+                    [ text
+                        (item.description
+                            |> Maybe.map stripHtml
+                            |> Maybe.withDefault "" 
+                        )
+                    ]
                 ]
             , viewItemQueued model item
             , div
@@ -277,6 +286,15 @@ renderItemState item currentItemUrl playerState =
         div
             [ class "item-state" ]
             [ Icons.play ]
+
+
+stripHtml : String -> String
+stripHtml str =
+    Regex.replace
+        Regex.All
+        (Regex.regex "<\\/?([a-z][a-z0-9]*)\\b[^>]*>?")
+        (\_ -> "")
+        str
 
 
 renderQueueControl: Item -> ItemFilter -> Html Msg

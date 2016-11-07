@@ -216,7 +216,8 @@
     margin: top;
     flex: 1;
     overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: nowrap;
+    // text-overflow: ellipsis;
 }
 
 .item-date{
@@ -229,8 +230,17 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     padding-right: 1rem;
-    flex: 1;
     position: relative;
+    display: inline;
+}
+
+.item-description-text{
+    display: inline;
+    margin-top: 0;
+    color: var(--body-sub-color);
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0.8rem;
 }
 
 .item-feed-title{

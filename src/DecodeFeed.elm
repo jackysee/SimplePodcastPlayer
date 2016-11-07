@@ -45,6 +45,7 @@ decodeItem =
         |> required "pubDate" jsonDate
         |> custom (Json.maybe ("link" := Json.string))
         |> custom decodeEnclosure
+        |> custom (Json.maybe ("description" := Json.string))
         |> optional "duration" decodeDuration -1
         |> hardcoded -1
         |> hardcoded 0

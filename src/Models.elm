@@ -10,6 +10,7 @@ type alias Item =
     , pubDate : Time
     , link : Maybe String
     , url: String
+    , description: Maybe String
     , duration : Time
     , progress : Time
     , playCount : Int
