@@ -43,6 +43,9 @@ shortcutContent = """
 - Queue
     - **u** : move selected item up
     - **d** : move sleected item down
+- Info
+    - **s** : show settings
+    - **?** : show shortcuts
 """
 
 viewAbout : Model -> Html Msg

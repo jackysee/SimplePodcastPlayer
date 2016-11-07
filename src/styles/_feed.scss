@@ -80,7 +80,6 @@
     font-size: 0.8rem;
     display: flex;
     align-items: center;
-    color: red;
 }
 
 .confirm-delete > *{
@@ -127,7 +126,7 @@
     span {
         display: block;
         float: right;
-        margin-right: 7rem;
+        margin-right: 9rem;
         cursor: pointer;
     }
 }
@@ -209,7 +208,7 @@
 }
 
 .item-progress{
-    min-width: 3rem;
+    min-width: 3.5rem;
     text-align: right;
 }
 

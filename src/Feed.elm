@@ -125,9 +125,9 @@ viewFeedTitle model feed =
                     div
                         [ class "feed-state" ]
                         [ Icons.loadingSpin
-                        , span
-                            [ class "feed-status" ]
-                            [ text <| feed.title ++ " is refreshing..." ]
+                        -- , span
+                        --     [ class "feed-status" ]
+                        --     [ text <| feed.title ++ " is refreshing..." ]
                         ]
                 RefreshError ->
                     span

@@ -138,7 +138,6 @@ store.get(function(_model){
     };
 
     document.body.addEventListener('PlayPause', function(){
-        console.log('PlayPause');
         app.ports.keyUp.send('p');
     });
 
