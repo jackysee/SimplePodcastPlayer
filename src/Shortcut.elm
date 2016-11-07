@@ -8,9 +8,9 @@ import ListUtil exposing (getNext, findFirst)
 (=>) = (,)
 
 shortcuts =
-    [ ["g", "u"] => \model item -> SetItemFilter Unlistened 
+    [ ["g", "u"] => \model item -> SetItemFilter Unlistened
     , ["g", "q"] => \model item -> SetItemFilter Queued
-    , ["g", "f"] => 
+    , ["g", "f"] =>
         \model item ->
             model.itemSelected
                 |> Maybe.map (\itemUrl ->
@@ -23,13 +23,13 @@ shortcuts =
                 |> Maybe.withDefault NoOp
 
     , ["g", "a"] => \model item -> HideFeed
-    , ["j"] => \model item -> SelectNext 
+    , ["j"] => \model item -> SelectNext
     , ["down"] => \model item -> SelectNext
     , ["k"] => \model item -> SelectPrev
     , ["up"] => \model item -> SelectPrev
-    , ["o"] => 
+    , ["o"] =>
         \model item ->
-           item  
+           item
                 |> Maybe.map (\item_ ->
                     item_.link
                         |> Maybe.map (\link ->  OpenNewLink link)
@@ -60,15 +60,15 @@ shortcuts =
                 )
                 |> Maybe.withDefault NoOp
 
-    , ["right"] => 
+    , ["right"] =>
         \model selectedItem ->
             selectedItem
                 |> Maybe.map (\item ->  Play item  )
-                |> Maybe.withDefault  NoOp 
+                |> Maybe.withDefault  NoOp
 
     , ["n"] => \model item -> ShowAddPanel
     , ["esc"] => \model item  -> HideAddPanel
-    , ["u"] => 
+    , ["u"] =>
         \model selectedItem ->
             if model.itemFilter == Queued then
                 selectedItem
@@ -77,7 +77,7 @@ shortcuts =
             else
                 NoOp
 
-    , ["d"] => 
+    , ["d"] =>
         \model selectedItem ->
             if model.itemFilter == Queued then
                 selectedItem
@@ -86,7 +86,7 @@ shortcuts =
             else
                 NoOp
 
-    , ["q"] => 
+    , ["q"] =>
         \model selectedItem ->
             selectedItem
                 |> Maybe.map
@@ -98,12 +98,13 @@ shortcuts =
                     )
                 |> Maybe.withDefault NoOp
 
-    , ["m"] => 
+    , ["m"] =>
         \model selectedItem ->
             selectedItem
                 |> Maybe.map (\item -> markListenedMsg item)
                 |> Maybe.withDefault NoOp
 
+    , ["s"] => \model item -> SetFloatPanel (About Settings)
     ]
 
 {--
@@ -121,17 +122,17 @@ keyMap model key =
         a = Debug.log "key" key
         selectedItem = getSelectedItem model
         keys = model.shortcutKeys ++ [key]
-        getActions = 
+        getActions =
             (\list ->
                 case list of
-                    [] -> 
+                    [] ->
                         SetShortcutKeys []
 
                     (shortcut, createMsg)::xs ->
-                        --let 
+                        --let
                         --    c = Debug.log "startwith" (listStartsWith keys [] shortcut)
-                        --    a = Debug.log "shortcut to match" shortcut 
-                        --    b = Debug.log "input keys" keys 
+                        --    a = Debug.log "shortcut to match" shortcut
+                        --    b = Debug.log "input keys" keys
                         --in
                         if listStartsWith keys [] shortcut then
                             --let
@@ -148,7 +149,7 @@ keyMap model key =
                             getActions xs
             )
     in
-        -- Debug.log "result" <| 
+        -- Debug.log "result" <|
         getActions shortcuts
 
 
@@ -295,7 +296,7 @@ keyMap1 model key =
 listStartsWith : List String -> List String -> List String -> Bool
 listStartsWith toMatch list1 list2 =
     --let
-    --    c = Debug.log "toMatch" toMatch 
+    --    c = Debug.log "toMatch" toMatch
     --    a = Debug.log "list1" list1
     --    b = Debug.log "list2" list2
     --    d = Debug.log "toMatch == list1?" (list1 == toMatch)

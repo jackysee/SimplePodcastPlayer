@@ -148,6 +148,7 @@
     cursor: pointer;
     align-items: center;
     height: 2.5rem;
+    border: 1px solid transparent;
 }
 
 
@@ -165,6 +166,7 @@
 
 .item.is-selected:not(.item-more){
     background: var(--state-selected-bg);
+    // border: 1px solid var(--state-selected-border);
 }
 
 .item:not(.is-current):not(.is-error) .item-state{
