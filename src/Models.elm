@@ -3,6 +3,7 @@ module Models exposing (..)
 import Time exposing (Time)
 import Dict
 import ListUtil exposing (findFirst)
+import Regex
 
 
 type alias Item =
@@ -54,9 +55,14 @@ type PlayerState
     | SoundError
 
 
+type ListView
+    = AllFeed
+    | ViewFeed String
+    | Queued
+
+
 type ItemFilter
     = All
-    | Queued
     | Unlistened
 
 
@@ -94,7 +100,7 @@ type alias Model =
     , currentItemUrl : Maybe String
     , playerRate : Float
     , playerVol : Float
-    , showFeedUrl : Maybe String
+    , listView : ListView
     , itemFilter: ItemFilter
     , itemSortLatest: Bool
     , itemSelected : Maybe String
@@ -116,6 +122,7 @@ type alias StoreModel =
     , currentItemUrl : Maybe String
     , playerRate : Float
     , playerVol : Float
+    , listView : String
     , itemFilter : String
     , itemSortLatest : Bool
     , playList: List String
@@ -129,7 +136,6 @@ type alias StoreFeed =
     { url : String
     , title : String
     , items : List Item
-    -- , state : UpdateFeedState
     }
 
 
@@ -189,7 +195,6 @@ toItemFilter : String -> ItemFilter
 toItemFilter str =
     case str of
         "Unlistened" -> Unlistened
-        "Queued" -> Queued
         _ -> All
 
 
@@ -197,7 +202,6 @@ itemFilterToStr : ItemFilter -> String
 itemFilterToStr filter =
     case filter of
         Unlistened -> "Unlistened"
-        Queued -> "Queued"
         All -> "All"
 
 
@@ -241,6 +245,27 @@ toFeed storeFeed =
     }
 
 
+listViewToStr : ListView -> String
+listViewToStr listView =
+    case listView of
+        AllFeed -> "AllFeed"
+        Queued -> "Queued"
+        ViewFeed url -> "ViewFeed::" ++ url
+
+
+toListView : String -> ListView
+toListView str =
+    let
+        regex = Regex.regex "^ViewFeed::"
+    in
+    if Regex.contains regex str then
+        ViewFeed <| Regex.replace Regex.All regex (\_ -> "") str
+    else if str == "Queued" then
+        Queued
+    else
+        AllFeed
+
+
 toStoreModel : Model -> StoreModel
 toStoreModel model =
     { urlToAdd = model.urlToAdd
@@ -249,6 +274,7 @@ toStoreModel model =
     , currentItemUrl = model.currentItemUrl
     , playerRate = model.playerRate
     , playerVol = model.playerVol
+    , listView = listViewToStr model.listView
     , itemFilter = itemFilterToStr model.itemFilter
     , itemSortLatest = model.itemSortLatest
     , playList = model.playList
@@ -278,7 +304,7 @@ defaultModel =
     , playerState = Stopped
     , playerRate = 1
     , playerVol = toFloat 1
-    , showFeedUrl = Nothing
+    , listView = AllFeed
     , itemFilter = Unlistened
     , itemSelected = Nothing
     , itemSortLatest = True
@@ -305,6 +331,7 @@ fromStoreModel m =
             , currentItemUrl = m.currentItemUrl
             , playerRate = m.playerRate
             , playerVol = m.playerVol
+            , listView = toListView m.listView
             , itemFilter = toItemFilter m.itemFilter
             , playList = m.playList
             , fallbackRssServiceUrl = m.fallbackRssServiceUrl
@@ -329,8 +356,8 @@ itemList =
 
 itemListAll : Bool -> Model -> (List (Feed, Item), Bool)
 itemListAll limit model =
-    case model.showFeedUrl of
-        Just url' ->
+    case model.listView of
+        ViewFeed url' ->
             let
                 list = model.list
                     |> List.filter (\f -> f.url == url' )
@@ -343,28 +370,30 @@ itemListAll limit model =
                 else
                     (list, False)
 
-        Nothing ->
-            if model.itemFilter == Queued then
-                let
-                    items = model.list
-                        |> List.concatMap (\feed ->
-                           List.map (\item -> (item.url, (feed, item))) feed.items
+        Queued ->
+            let
+                items = model.list
+                    |> List.concatMap (\feed ->
+                            List.map
+                                (\item -> (item.url, (feed, item)))
+                                feed.items
                         )
-                        |> Dict.fromList
-                    playListItem =  model.playList
-                        |> List.filterMap (\url -> Dict.get url items)
-                in
-                    (playListItem, False)
-            else
-                let
-                    list = itemsByDate model model.list
-                in
-                    if limit then
-                        ( List.take model.itemsToShow list
-                        , List.length list > model.itemsToShow
-                        )
-                    else
-                        (list, False)
+                    |> Dict.fromList
+                playListItem =  model.playList
+                    |> List.filterMap (\url -> Dict.get url items)
+            in
+                (playListItem, False)
+
+        AllFeed ->
+            let
+                list = itemsByDate model model.list
+            in
+                if limit then
+                    ( List.take model.itemsToShow list
+                    , List.length list > model.itemsToShow
+                    )
+                else
+                    (list, False)
 
 
 itemsByDate: Model -> List Feed -> List (Feed, Item)
@@ -391,8 +420,6 @@ filterByItemFilter model item =
         All -> True
         Unlistened ->
             item.playCount == 0
-        Queued ->
-            List.member item.url model.playList
 
 
 getItemByUrl : Model -> String -> Maybe (Feed, Item)

@@ -24,7 +24,7 @@ viewAddFeed model =
                 [ class "btn btn-icon add-close"
                 , onClick HideAddPanel
                 ]
-                [ Icons.close 
+                [ Icons.close
                 ]
             , input
                 [ id "add-feed"
@@ -54,7 +54,7 @@ viewAddFeed model =
                             [ class "subscription-item" ]
                             [ span
                                 [ class "add-feed-title"
-                                , onInternalClick (ShowFeed feed.url)
+                                , onInternalClick (SetListView (ViewFeed feed.url))
                                 ]
                                 [ text feed.title ]
                             ]

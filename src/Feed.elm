@@ -148,12 +148,7 @@ viewFeedTitle model feed =
                         [ Icons.refresh ]
     in
         div [ class "feed-header" ]
-            [ button
-                [ class "btn btn-icon top-bar-outset-btn"
-                , onClick HideFeed
-                ]
-                [ Icons.arrowLeft ]
-            , span
+            [ span
                 [ class "feed-title"
                 , title feed.title
                 ]
@@ -229,7 +224,7 @@ viewItem model feed (index, item) =
                 Just feed' ->
                     div
                         [ class "item-feed-title"
-                        , onInternalClick (ShowFeed feed'.url)
+                        , onInternalClick (SetListView <| ViewFeed feed'.url)
                         ]
                         [ text feed'.title ]
                 Nothing ->
@@ -249,15 +244,15 @@ viewItem model feed (index, item) =
                     ]
                 ]
             , viewItemQueued model item
+            , renderQueueControl item model.listView
+            , viewItemControl listened model item
+            , div [ class "item-progress" ]
+                [ text <| formatDurationShort item.duration ]
             , div
                 [ class "item-date"
                 , title <| format item.pubDate model.currentTime True
                 ]
                 [ text <| format item.pubDate model.currentTime False ]
-            , div [ class "item-progress" ]
-                [ text <| formatDurationShort item.duration ]
-            , renderQueueControl item model.itemFilter
-            , viewItemControl listened model item
             ]
 
 
@@ -299,9 +294,9 @@ stripHtml str =
         str
 
 
-renderQueueControl: Item -> ItemFilter -> Html Msg
-renderQueueControl item filter =
-    if filter == Queued then
+renderQueueControl: Item -> ListView -> Html Msg
+renderQueueControl item listView =
+    if listView == Queued then
         div
             [ class "item-reorder" ]
             [ button
@@ -326,7 +321,7 @@ renderQueueControl item filter =
 
 viewItemQueued: Model -> Item -> Html Msg
 viewItemQueued model item =
-    if List.member item.url model.playList && model.itemFilter /= Queued then
+    if List.member item.url model.playList && model.listView /= Queued then
         div
             [ class "item-queued" ]
             [ text "queued" ]

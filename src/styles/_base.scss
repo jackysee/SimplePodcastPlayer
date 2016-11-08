@@ -56,6 +56,19 @@ body {
 
 .top-bar{
     position: relative;
+    display: flex;
+    align-items: center;
+    padding: 1rem 0rem 0.5rem 0.6rem;
+
+    .feed-header{
+        flex: 1;
+        overflow: hidden;
+    }
+
+    > * {
+        margin-top: 0;
+    }
+
 }
 
 .top-bar-outset-btn{
@@ -65,7 +78,33 @@ body {
 
 
 .top-left-bar{
+    display: flex;
+    align-items: center;
+
+    > *{
+        margin-top: 0;
+        margin-left: 1rem;
+    }
+
+    > .btn{
+        min-width: 2rem;
+    }
+}
+
+.queued-btn{
+    position: relative;
+}
+
+.queued-count{
+    // background-color: var(--body-color);
+    // color: var(--body-bg);
+    color: var(--body-color);
     position: absolute;
-    top: 0rem;
-    right: 1rem;
+    bottom: -0.5rem;
+    right: -0.5rem;
+    font-size: 0.7rem;
+    // border-radius: 1rem;
+    width: 0.7rem;
+    // box-shadow: 0 0 4px var(--body-color);
+
 }

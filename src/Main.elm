@@ -124,7 +124,8 @@ updateModel msg model cmds =
                 , loadFeedState = Empty
                 , urlToAdd = ""
                 , floatPanel = Hidden
-                , showFeedUrl = Just feed.url
+                , listView = ViewFeed feed.url
+                , itemFilter = Unlistened
             }
             , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
             )
@@ -220,9 +221,9 @@ updateModel msg model cmds =
             , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
             )
 
-        ShowFeed url ->
+        SetListView listView ->
             ({ model
-                | showFeedUrl = Just url
+                | listView = listView
                 , list = flushPlayCount model.list
                 , floatPanel = Hidden
                 , itemsToShow = defaultModel.itemsToShow
@@ -231,7 +232,7 @@ updateModel msg model cmds =
 
         HideFeed ->
             ({ model
-                | showFeedUrl = Nothing
+                | listView = AllFeed
                 , list = flushPlayCount model.list
              }
             , cmds)
@@ -268,7 +269,7 @@ updateModel msg model cmds =
                 ({ model
                     | list = list
                     , currentItemUrl = currentItemUrl
-                    , showFeedUrl = Nothing
+                    , listView = AllFeed
                     , playList = playList
                  }
                 , cmds' ++ cmds
@@ -444,7 +445,7 @@ updateModel msg model cmds =
                     | playList = List.filter (not << isDequeued) model.playList
                     , floatPanel = hideItemDropdown model.floatPanel
                     , itemSelected =
-                        if model.itemFilter == Queued then
+                        if model.listView == Queued then
                             Maybe.oneOf
                                 [ getNext isDequeued model.playList
                                 , getPrev isDequeued model.playList
@@ -504,23 +505,20 @@ view : Model -> Html Msg
 view model =
     let
         feed' = model.list
-            |> List.filter (\f -> Just f.url == model.showFeedUrl)
+            |> List.filter
+                (\f ->
+                    case model.listView of
+                        ViewFeed url ->
+                            f.url == url
+                        _ ->
+                            False
+                )
             |> List.head
         filterBar =
-            if List.length model.list > 0 then
+            if List.length model.list > 0 && model.listView /= Queued then
                 div
                     [ class "feed-filter" ]
                     [ filterButton "Unlistened" Unlistened model.itemFilter
-                    , filterButton
-                        (let
-                            playListLen = List.length model.playList
-                            playListLen_ = if playListLen > 0 then
-                                " " ++ toString playListLen
-                                else ""
-                        in
-                            "Queued" ++ playListLen_
-                        )
-                        Queued model.itemFilter
                     , filterButton "All" All model.itemFilter
                     ]
             else
@@ -543,10 +541,11 @@ view model =
                         [ class "top-bar-wrap" ]
                         [ div
                             [ class "top-bar"]
-                            [ viewTitle model feed'
-                            , filterBar
-                            , topLeftBar model
+                            [ viewLeftBtn model.listView
+                            , viewTitle model feed'
+                            , viewTopLeftBar model
                             ]
+                        , filterBar
                         ]
                     ]
                     ++ (viewItemList model feed')
@@ -564,6 +563,18 @@ viewFontSizeStyle fontSize =
         []
 
 
+viewLeftBtn : ListView -> Html Msg
+viewLeftBtn listView =
+    if listView == AllFeed then
+        addFeedButton
+      else
+        button
+            [ class "btn add-btn btn-icon top-bar-outset-btn"
+            , onClick (SetListView AllFeed)
+            ]
+            [ Icons.arrowLeft ]
+
+
 viewTitle : Model -> Maybe Feed -> Html Msg
 viewTitle model feed' =
     case feed' of
@@ -579,15 +590,18 @@ viewTitle model feed' =
             in
                 div
                     [ class "feed-header" ]
-                    [ addFeedButton
-                    , div
+                    [ div
                         [ class "feed-title" ]
                         [ if List.length model.list == 0 then
                             span
                                 [ class "feed-empty" ]
                                 [ text "← Click to add feed" ]
                           else
-                            text "All Podcasts"
+                              case model.listView of
+                                  Queued ->
+                                      text "Queued"
+                                  _ ->
+                                      text "All Podcasts"
                         ]
                     , if isRefreshing then
                         div
@@ -598,7 +612,7 @@ viewTitle model feed' =
                       else
                         text ""
 
-                    , if not isRefreshing && List.length model.list > 0 then
+                    , if not isRefreshing && List.length model.list > 0 && model.listView /= Queued then
                         button
                             [ class "btn btn-icon feed-control feed-refresh"
                             , onClick UpdateAllFeed
@@ -608,6 +622,29 @@ viewTitle model feed' =
                       else
                           text ""
                     ]
+
+
+viewTopLeftBar : Model -> Html Msg
+viewTopLeftBar model =
+        div
+            [ class "top-left-bar" ]
+            [ if List.length model.list > 0 then
+                button
+                    [ class "btn btn-icon queued-btn"
+                    , onClick (SetListView Queued)
+                    ]
+                    [ Icons.list
+                    , if List.length model.playList > 0 then
+                        span
+                            [ class "queued-count" ]
+                            [ List.length model.playList |> toString |> text ]
+                      else
+                        text ""
+                    ]
+            else
+                text ""
+            , viewAboutButton
+            ]
 
 
 filterButton : String -> ItemFilter -> ItemFilter -> Html Msg
@@ -620,13 +657,6 @@ filterButton label filter modelItemFilter =
         , onClick (SetItemFilter filter)
         ]
         [ text label ]
-
-
-topLeftBar : Model -> Html Msg
-topLeftBar model =
-    div
-        [ class "top-left-bar" ]
-        [ viewAboutButton ]
 
 
 viewStatus : Model -> Html Msg
@@ -716,7 +746,7 @@ viewItemList model feed_ =
 
 viewItemSortLatest : Model -> Maybe (Html Msg)
 viewItemSortLatest model =
-    if model.itemFilter /= Queued then
+    if model.listView /= Queued then
         Just <|
             div
                 [ class "item-sort" ]

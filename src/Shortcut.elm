@@ -9,14 +9,14 @@ import ListUtil exposing (getNext, findFirst)
 
 shortcuts =
     [ ["g", "u"] => \_ -> SetItemFilter Unlistened
-    , ["g", "q"] => \_ -> SetItemFilter Queued
+    , ["g", "q"] => \_ -> SetListView Queued
     , ["g", "f"] =>
         \model ->
             model.itemSelected
                 |> Maybe.map (\itemUrl ->
                     getItemByUrl model itemUrl
                         |> Maybe.map (\(feed, item) ->
-                            ShowFeed feed.url
+                            SetListView (ViewFeed feed.url)
                         )
                         |> Maybe.withDefault NoOp
                 )
@@ -70,7 +70,7 @@ shortcuts =
     , ["esc"] => \_ -> HideAddPanel
     , ["u"] =>
         \model ->
-            if model.itemFilter == Queued then
+            if model.listView == Queued then
                 getSelectedItem model
                     |> Maybe.map (\item ->  MoveQueuedItemUp item.url )
                     |> Maybe.withDefault  NoOp
@@ -79,7 +79,7 @@ shortcuts =
 
     , ["d"] =>
         \model ->
-            if model.itemFilter == Queued then
+            if model.listView == Queued then
                 getSelectedItem model
                     |> Maybe.map (\item -> MoveQueuedItemDown item.url)
                     |> Maybe.withDefault NoOp
@@ -107,15 +107,14 @@ shortcuts =
     , ["s"] => \_ -> SetFloatPanel (About Settings)
     , ["shift-/"] => \_ -> SetFloatPanel (About Shortcut)
     , ["r", "r"] => \model ->
-        model.showFeedUrl
-            |> Maybe.map
-                (\url ->
-                    model.list
-                     |> findFirst (\feed -> feed.url == url )
-                     |> Maybe.map (\feed -> UpdateFeeds [] feed)
-                     |> Maybe.withDefault NoOp
-                )
-            |> Maybe.withDefault UpdateAllFeed
+        case model.listView of
+            ViewFeed url ->
+                model.list
+                    |> findFirst (\feed -> feed.url == url )
+                    |> Maybe.map (\feed -> UpdateFeeds [] feed)
+                    |> Maybe.withDefault NoOp
+            _ ->
+                UpdateAllFeed
     , ["shift-a"] => \model -> MarkAllItemsAsListened
 
     ]

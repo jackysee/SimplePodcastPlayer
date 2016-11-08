@@ -25,7 +25,7 @@ type Msg
     | UpdateFeedFail (List Feed) Feed Http.Error
     | UpdateFeedSucceed (List Feed) Feed
     | SetProgress Float
-    | ShowFeed String
+    | SetListView ListView
     | HideFeed
     | ShowConfirmDeleteFeed Feed
     | HideConfirmDeleteFeed Feed
@@ -39,7 +39,7 @@ type Msg
     | SetItemFilter ItemFilter
     | MarkPlayCount String Int
     | MarkItemsBelowListened String
-    | MarkAllItemsAsListened 
+    | MarkAllItemsAsListened
     | ShowItemDropdown String
     | HideItemDropdown
     | SelectItem Item
