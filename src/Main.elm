@@ -16,7 +16,7 @@ import Models exposing (..)
 import Msgs exposing (..)
 import Feed exposing
     ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , viewFeedTitle, viewItem )
+    , viewFeedTitle, viewItem, markItemsListened )
 import AddFeed exposing (viewAddFeed, addFeedButton)
 import Player exposing (viewPlayer)
 import Shortcut exposing (keyMap, selectNext, selectPrev)
@@ -112,7 +112,7 @@ updateModel msg model cmds =
                 )
 
         ShowMoreItem ->
-            ({ model | itemsToShow = model.itemsToShow + 30 }
+            ({ model | itemsToShow = model.itemsToShow + defaultModel.itemsToShow }
             , cmds
             )
 
@@ -225,6 +225,7 @@ updateModel msg model cmds =
                 | showFeedUrl = Just url
                 , list = flushPlayCount model.list
                 , floatPanel = Hidden
+                , itemsToShow = defaultModel.itemsToShow
              }
             , cmds)
 
@@ -343,7 +344,7 @@ updateModel msg model cmds =
             ({ model
                 | itemFilter = filter
                 , list = flushPlayCount model.list
-                , itemsToShow = 30
+                , itemsToShow = defaultModel.itemsToShow
              }
             , cmds
             )
@@ -385,25 +386,21 @@ updateModel msg model cmds =
                 model' =
                     { model
                         | floatPanel = hideItemDropdown model.floatPanel
-                        , list = List.map
-                            (\feed ->
-                                { feed | items = List.map
-                                    (\item ->
-                                        if Dict.member item.url toUpdate then
-                                            { item | markPlayCount =
-                                                if item.markPlayCount == -1 then
-                                                    item.playCount + 1
-                                                else
-                                                    item.markPlayCount
-                                            }
-                                        else
-                                            item
-                                    )
-                                    feed.items
-                                }
-                            )
-                            model.list
-                }
+                        , list = markItemsListened toUpdate model.list
+                    }
+            in
+                (model', cmds)
+
+        MarkAllItemsAsListened ->
+            let
+                toUpdate =
+                    Dict.fromList
+                        (itemListAll False model
+                            |> fst
+                            |> List.map (\(feed, item) -> (item.url, True))
+                        )
+                model' =
+                    { model | list = markItemsListened toUpdate model.list }
             in
                 (model', cmds)
 
@@ -690,7 +687,7 @@ viewItemList model feed_ =
                 Nothing
 
         showMore =
-            if feed_ == Nothing && hasMoreItem then
+            if hasMoreItem then
                 div
                     [ class "feed-show-more" ]
                     [ button

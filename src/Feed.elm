@@ -1,6 +1,6 @@
 module Feed exposing
     ( loadFeed, updateFeed, updateModelFeed, updateFeedItems
-    , viewFeedTitle , viewItem, viewConfirmDelete, markListenedMsg )
+    , viewFeedTitle , viewItem, viewConfirmDelete, markListenedMsg, markItemsListened)
 
 import Task exposing (Task)
 import Http
@@ -8,7 +8,7 @@ import String
 import Html exposing (Html, text, button, ul, li, div, span, img, a)
 import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Html.Attributes exposing (class, title, src, classList, id, href, target)
-import Dict
+import Dict exposing (Dict)
 import Regex
 import String
 
@@ -438,3 +438,25 @@ markListenedMsg item =
         markPlayCount = if listened then 0 else 1
     in
         MarkPlayCount item.url markPlayCount
+
+
+markItemsListened : Dict String Bool -> List Feed -> List Feed
+markItemsListened toUpdate list =
+    List.map
+        (\feed ->
+            { feed | items = List.map
+                (\item ->
+                    if Dict.member item.url toUpdate then
+                        { item | markPlayCount =
+                            if item.markPlayCount == -1 then
+                                item.playCount + 1
+                            else
+                                item.markPlayCount
+                        }
+                    else
+                        item
+                )
+                feed.items
+            }
+        )
+        list

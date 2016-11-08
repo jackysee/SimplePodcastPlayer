@@ -105,7 +105,7 @@ shortcuts =
                 |> Maybe.withDefault NoOp
 
     , ["s"] => \_ -> SetFloatPanel (About Settings)
-    , ["/"] => \_ -> SetFloatPanel (About Shortcut)
+    , ["shift-/"] => \_ -> SetFloatPanel (About Shortcut)
     , ["r", "r"] => \model ->
         model.showFeedUrl
             |> Maybe.map
@@ -116,6 +116,7 @@ shortcuts =
                      |> Maybe.withDefault NoOp
                 )
             |> Maybe.withDefault UpdateAllFeed
+    , ["shift-a"] => \model -> MarkAllItemsAsListened
 
     ]
 

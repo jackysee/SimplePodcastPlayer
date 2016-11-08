@@ -331,11 +331,17 @@ itemListAll : Bool -> Model -> (List (Feed, Item), Bool)
 itemListAll limit model =
     case model.showFeedUrl of
         Just url' ->
-            ( model.list
-                |> List.filter (\f -> f.url == url' )
-                |> itemsByDate model
-            , False
-            )
+            let
+                list = model.list
+                    |> List.filter (\f -> f.url == url' )
+                    |> itemsByDate model
+            in
+                if limit then
+                    ( List.take model.itemsToShow list
+                    , List.length list > model.itemsToShow
+                    )
+                else
+                    (list, False)
 
         Nothing ->
             if model.itemFilter == Queued then
@@ -348,7 +354,7 @@ itemListAll limit model =
                     playListItem =  model.playList
                         |> List.filterMap (\url -> Dict.get url items)
                 in
-                    ( playListItem, False )
+                    (playListItem, False)
             else
                 let
                     list = itemsByDate model model.list
@@ -358,7 +364,7 @@ itemListAll limit model =
                         , List.length list > model.itemsToShow
                         )
                     else
-                        ( list, False )
+                        (list, False)
 
 
 itemsByDate: Model -> List Feed -> List (Feed, Item)

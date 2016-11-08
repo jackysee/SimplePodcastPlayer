@@ -139,6 +139,9 @@ store.get(function(_model){
                 if(ev.ctrlKey){
                     key = "ctrl-"+key;
                 }
+                if(ev.shiftKey){
+                    key = "shift-"+key;
+                }
                 app.ports.keyUp.send(key);
             }
         }

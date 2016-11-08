@@ -28,7 +28,7 @@ shortcutContent = """
     - **gf** : Go to Feed of the selected item
     - **ga** : Go to All Podcasts
     - **s** : show settings
-    - **?** : show shortcuts
+    - **shift+/** : show shortcuts
     - **n** : Show Add feed panel
 - Selection
     - **j / down** : next item
@@ -63,8 +63,7 @@ viewAbout model =
                     [ class "btn btn-icon app-about-close"
                     , onClick (SetFloatPanel Hidden)
                     ]
-                    [ Icons.close
-                    ]
+                    [ Icons.close ]
                 , div
                     [ class "about-tabs" ] <|
                         List.map
@@ -79,7 +78,7 @@ viewAbout model =
                                     [ text label ]
                             )
                             [ (Settings, "Settings")
-                            , (Shortcut ,"Shortcuts")
+                            , (Shortcut, "Shortcuts")
                             , (Credit, "Credits")
                             ]
                 , case content of
