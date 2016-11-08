@@ -27,7 +27,7 @@ shortcutContent = """
     - **gq** : Go to Queued
     - **gf** : Go to Feed of the selected item
     - **ga** : Go to All Podcasts
-    - **s** : show settings
+    - **ctrl+,** : show settings
     - **shift+/** : show shortcuts
     - **n** : Show Add feed panel
 - Selection

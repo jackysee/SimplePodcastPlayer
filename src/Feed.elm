@@ -238,8 +238,8 @@ viewItem model feed (index, item) =
                     [ text
                         (item.description
                             |> Maybe.map stripHtml
-                            |> Maybe.withDefault ""
-                            |> String.slice 0 300
+                            >> Maybe.withDefault ""
+                            >> String.slice 0 300
                         )
                     ]
                 ]

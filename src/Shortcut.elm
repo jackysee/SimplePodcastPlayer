@@ -104,7 +104,7 @@ shortcuts =
                 |> Maybe.map (\item -> markListenedMsg item)
                 |> Maybe.withDefault NoOp
 
-    , ["s"] => \_ -> SetFloatPanel (About Settings)
+    , ["ctrl-,"] => \_ -> SetFloatPanel (About Settings)
     , ["shift-/"] => \_ -> SetFloatPanel (About Shortcut)
     , ["r", "r"] => \model ->
         case model.listView of
