@@ -59,3 +59,5 @@ type Msg
     | SetFontSize FontSize
     | SetPlayerShowTimeLeft Bool
     | SetTheme Theme
+    | SetEditingFeedTitle Bool
+    | SetFeedTitle Feed String

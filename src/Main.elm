@@ -498,6 +498,21 @@ updateModel msg model cmds =
         SetTheme theme ->
             ({ model | theme = theme }, cmds)
 
+        SetEditingFeedTitle editing ->
+            let
+                cmd_ =
+                    if editing then
+                        [ noOpTask (Dom.focus "input-feed-title") ]
+                    else
+                        []
+            in
+                ({ model | editingFeedTitle = editing } , cmd_ ++ cmds )
+
+        SetFeedTitle feed title ->
+            ( updateModelFeed { feed | title = title } model
+            , cmds
+            )
+
 
 flushPlayCount : List Feed -> List Feed
 flushPlayCount list =

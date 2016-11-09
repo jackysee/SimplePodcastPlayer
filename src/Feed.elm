@@ -5,9 +5,9 @@ module Feed exposing
 import Task exposing (Task)
 import Http
 import String
-import Html exposing (Html, text, button, ul, li, div, span, img, a)
+import Html exposing (Html, text, button, ul, li, div, span, img, a, input)
 import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
-import Html.Attributes exposing (class, title, src, classList, id, href, target)
+import Html.Attributes exposing (class, title, src, classList, id, href, target, value)
 import Dict exposing (Dict)
 import Regex
 import String
@@ -16,7 +16,7 @@ import Models exposing (..)
 import Msgs exposing (..)
 import DecodeFeed exposing (decodeYqlFeed, decodeCustomFeed)
 import DateFormat exposing (formatDuration, formatDurationShort, format)
-import Events exposing (onInternalClick, onClickPosBottomRight)
+import Events exposing (onInternalClick, onClickPosBottomRight, onBlurNotEmpty)
 import Icons
 
 yqlUrl: String -> String
@@ -148,11 +148,29 @@ viewFeedTitle model feed =
                         [ Icons.refresh ]
     in
         div [ class "feed-header" ]
-            [ span
-                [ class "feed-title"
-                , title feed.title
-                ]
-                [ text feed.title ]
+            [ if model.editingFeedTitle then
+                input
+                    [ id "input-feed-title"
+                    , class "input-text input-feed-title"
+                    , value feed.title
+                    , onBlurNotEmpty (\value ->
+                        if value /= "" then
+                            MsgBatch
+                                [ SetFeedTitle feed value
+                                , SetEditingFeedTitle False
+                                ]
+                        else
+                            SetEditingFeedTitle False
+                      )
+                    ]
+                    []
+              else
+                span
+                    [ class "feed-title"
+                    , title feed.title
+                    , onClick (SetEditingFeedTitle True)
+                    ]
+                    [ text feed.title ]
             , feedState
             , refreshBtn
             , if feed.state /= Refreshing then

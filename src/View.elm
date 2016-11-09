@@ -243,8 +243,8 @@ viewItemList model feed_ =
                         ]
                         [ text "show more"]
                     ]
-              else
-                  text ""
+            else
+                text ""
     in
         [ sortBar |> Maybe.withDefault (text "")
         , div

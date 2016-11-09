@@ -112,6 +112,7 @@ type alias Model =
     , fontSize : FontSize
     , playerShowTimeLeft : Bool
     , theme : Theme
+    , editingFeedTitle : Bool
     }
 
 
@@ -312,6 +313,7 @@ defaultModel =
     , fontSize = Medium
     , playerShowTimeLeft = True
     , theme = Light
+    , editingFeedTitle = False
     }
 
 

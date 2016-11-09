@@ -6,7 +6,7 @@ import Html.Events exposing (onClick, onInput, on, keyCode, onWithOptions)
 
 import Models exposing (..)
 import Msgs exposing (..)
-import Events exposing (onInternalClick, onKeydown)
+import Events exposing (onInternalClick, onKeyup)
 import Icons
 
 
@@ -28,8 +28,8 @@ viewAddFeed model =
                 ]
             , input
                 [ id "add-feed"
-                , class "add-feed"
-                , onKeydown
+                , class "add-feed input-text"
+                , onKeyup
                     [ (13, \code ->
                         if model.urlToAdd == "" then
                             NoOp

@@ -1,0 +1,15 @@
+.input-text{
+    border: none;
+    border-bottom: 1px solid var(--input-border);
+    color: var(--input-color);
+    background: transparent;
+
+    &[disabled]{
+        opacity: 0.3;
+    }
+
+    &::-webkit-input-placeholder,
+    &::-moz-placeholder{
+        color: var(--input-color);
+    }
+}

@@ -19,8 +19,6 @@ body {
 }
 
 .app-wrap{
-    // max-width: 850px;
-    // margin: 0 auto;
   color: var(--body-color);
   background: var(--body-bg);
 
@@ -29,10 +27,7 @@ body {
   }
 }
 
-
-
 .wrap{
-    /*padding: 5px;*/
     padding-bottom: 0;
     display: flex;
     flex-direction: column;
@@ -95,8 +90,10 @@ body {
     height: 2rem;
     padding: 0.5rem;
     position: relative;
+
     &.is-selected{
         background-color: var(--body-color);
+        
         > *{
             --body-color: var(--body-bg);
             --icon-color: var(--body-bg);
@@ -110,8 +107,4 @@ body {
     bottom: 1px;
     right: 1px;
     font-size: 0.6rem;
-    // border-radius: 1rem;
-    // width: 0.5rem;
-    // box-shadow: 0 0 4px var(--body-color);
-
 }

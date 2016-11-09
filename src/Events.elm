@@ -5,16 +5,21 @@ import Html.Events exposing (on, onWithOptions, keyCode, targetValue)
 import DecodePosition exposing (decodeBottomRight)
 import Json.Decode as Json
 import Dict
+import String
 
 import Msgs exposing (Msg(..))
 
-onKeydown : List (Int, (Int -> Msg)) -> Html.Attribute Msg
-onKeydown msgs =
+onKeyup : List (Int, (Int -> Msg)) -> Html.Attribute Msg
+onKeyup msgs =
     let
         codeMap = Dict.fromList msgs
     in
-        on "keydown" <|
-            Json.map
+        onWithOptions
+            "keyup"
+            { stopPropagation = True
+            , preventDefault = True
+            }
+            <| Json.map
                 (\code ->
                     case Dict.get code codeMap of
                         Just msg ->
@@ -51,3 +56,12 @@ onClickPosBottomRight msg =
 onScroll: Msg -> Html.Attribute Msg
 onScroll msg =
     on "scroll" (Json.succeed msg)
+
+
+onBlurNotEmpty : (String -> Msg) -> Html.Attribute Msg
+onBlurNotEmpty msg =
+    on "blur"
+        <| Json.map (\value ->
+            msg <| String.trim value
+        )
+        targetValue
