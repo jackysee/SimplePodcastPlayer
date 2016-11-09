@@ -8,7 +8,7 @@ import Dict
 
 import Msgs exposing (Msg(..))
 
-onKeydown : List (Int, Msg) -> Html.Attribute Msg
+onKeydown : List (Int, (Int -> Msg)) -> Html.Attribute Msg
 onKeydown msgs =
     let
         codeMap = Dict.fromList msgs
@@ -18,7 +18,7 @@ onKeydown msgs =
                 (\code ->
                     case Dict.get code codeMap of
                         Just msg ->
-                            msg
+                            msg code
                         Nothing ->
                             NoOp
                 )

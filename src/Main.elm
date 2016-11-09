@@ -127,7 +127,9 @@ updateModel msg model cmds =
             let
                 e = Debug.log "error" error
             in
-                ({ model | loadFeedState = Error }, cmds)
+                ({ model | loadFeedState = Error }
+                , [ noOpTask (Dom.focus "add-feed") ] ++ cmds
+                )
 
 
         Play item ->
@@ -210,7 +212,10 @@ updateModel msg model cmds =
             )
 
         HideAddPanel ->
-            ({ model | floatPanel = Hidden }
+            ({ model
+                | floatPanel = Hidden
+                , urlToAdd = ""
+             }
             , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
             )
 

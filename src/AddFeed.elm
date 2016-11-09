@@ -30,8 +30,13 @@ viewAddFeed model =
                 [ id "add-feed"
                 , class "add-feed"
                 , onKeydown
-                    [ (13, AddFeed)
-                    , (27, HideAddPanel)
+                    [ (13, \code ->
+                        if model.urlToAdd == "" then
+                            NoOp
+                        else
+                            AddFeed
+                      )
+                    , (27, \_ -> HideAddPanel)
                     ]
                 , onInput SetUrl
                 , value model.urlToAdd

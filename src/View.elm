@@ -54,7 +54,7 @@ view model =
                     [ div
                         [ class "top-bar-wrap" ]
                         [ div
-                            [ class "top-bar"]
+                            [ class "top-bar" ]
                             [ viewLeftBtn model.listView
                             , viewTitle model feed'
                             , viewTopLeftBar model

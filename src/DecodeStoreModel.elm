@@ -2,9 +2,7 @@ module DecodeStoreModel exposing (decodeStoreValue)
 
 import Result
 import Json.Decode as Json exposing (value, (:=) )
-import Json.Decode.Pipeline exposing
-    ( decode, required, hardcoded, requiredAt, custom, optional, nullable )
-
+import Json.Decode.Pipeline exposing ( decode, required, optional, nullable )
 import Models exposing (..)
 
 decodeStoreValue : Maybe Json.Value -> Maybe StoreModel

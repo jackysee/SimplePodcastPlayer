@@ -132,8 +132,9 @@ store.get(function(_model){
     });
 
     document.onkeyup = function(ev){
-        if(ev.target){
-            var tagName = ev.target.tagName.toLowerCase();
+        var target = document.activeElement || ev.target;
+        if(target){
+            var tagName = target.tagName.toLowerCase();
             if(tagName !== "input" && tagName !== "textarea"){
                 var key = keycode(ev) || "";
                 if(ev.ctrlKey){
