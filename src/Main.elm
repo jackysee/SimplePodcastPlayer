@@ -10,6 +10,7 @@ import ListUtil exposing (dropWhile, takeWhile, swapDown, swapUp, getNext, getPr
 import Dom
 import Dict
 import Json.Encode
+import Json.Decode
 import String
 
 import Models exposing (..)
@@ -24,9 +25,10 @@ import Events exposing (onScroll)
 import About exposing (viewAbout, viewAboutButton)
 import FloatPlanel exposing (hideItemDropdown)
 import Icons
+import DecodeStoreModel exposing (decodeStoreValue)
 
 
-main : Program (Maybe StoreModel)
+main : Program (Maybe Json.Decode.Value)
 main =
     App.programWithFlags
         { init = init
@@ -36,9 +38,9 @@ main =
         }
 
 
-init : Maybe StoreModel -> ( Model, Cmd Msg )
-init storeModel =
-    case storeModel of
+init : Maybe Json.Decode.Value -> ( Model, Cmd Msg )
+init storeValue =
+    case decodeStoreValue storeValue of
         Just storeModel_ ->
             let
                 model = fromStoreModel storeModel_
@@ -630,7 +632,10 @@ viewTopLeftBar model =
             [ class "top-left-bar" ]
             [ if List.length model.list > 0 then
                 button
-                    [ class "btn btn-icon queued-btn"
+                    [ classList
+                        [ ("btn btn-icon queued-btn", True)
+                        , ("is-selected", model.listView == Queued)
+                        ]
                     , onClick (SetListView Queued)
                     ]
                     [ Icons.list

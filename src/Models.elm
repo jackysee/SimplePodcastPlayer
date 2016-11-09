@@ -116,9 +116,7 @@ type alias Model =
 
 
 type alias StoreModel =
-    { urlToAdd : String
-    , list : List StoreFeed
-    , itemsToShow : Int
+    { list : List StoreFeed
     , currentItemUrl : Maybe String
     , playerRate : Float
     , playerVol : Float
@@ -268,9 +266,7 @@ toListView str =
 
 toStoreModel : Model -> StoreModel
 toStoreModel model =
-    { urlToAdd = model.urlToAdd
-    , list = List.map toStoreFeed model.list
-    , itemsToShow = model.itemsToShow
+    { list = List.map toStoreFeed model.list
     , currentItemUrl = model.currentItemUrl
     , playerRate = model.playerRate
     , playerVol = model.playerVol
@@ -326,7 +322,6 @@ fromStoreModel m =
     in
         { defaultModel
             | floatPanel = initAddPanel feeds
-            , urlToAdd = m.urlToAdd
             , list = feeds
             , currentItemUrl = m.currentItemUrl
             , playerRate = m.playerRate
