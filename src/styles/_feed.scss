@@ -157,7 +157,8 @@
 }
 
 .item.is-played{
-    color: var(--state-played-color);
+    //color: var(--state-played-color);
+    opacity: 0.5;
 
     .btn-icon > img, .item-state > img{
         opacity: 0.3;

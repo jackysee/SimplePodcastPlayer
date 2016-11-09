@@ -98,7 +98,6 @@ body {
     &.is-selected{
         background-color: var(--body-color);
         > *{
-            --body-bg: var(--body-color);
             --body-color: var(--body-bg);
             --icon-color: var(--body-bg);
         }
@@ -108,11 +107,11 @@ body {
 .queued-count{
     color: var(--body-color);
     position: absolute;
-    bottom: 0;
-    right: 0;
-    font-size: 0.7rem;
+    bottom: 1px;
+    right: 1px;
+    font-size: 0.6rem;
     // border-radius: 1rem;
-    width: 0.7rem;
+    // width: 0.5rem;
     // box-shadow: 0 0 4px var(--body-color);
 
 }
