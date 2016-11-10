@@ -19,12 +19,12 @@ body {
 }
 
 .app-wrap{
-  color: var(--body-color);
-  background: var(--body-bg);
+    color: var(--body-color);
+    background: var(--body-bg);
 
-  a{
-      color: var(--link-color);
-  }
+    a{
+        color: var(--link-color);
+    }
 }
 
 .wrap{
@@ -33,6 +33,7 @@ body {
     flex-direction: column;
     height: 100vh;
     margin-top: 0;
+    overflow-y: hidden;
 }
 
 @media (max-width:1024px){
@@ -93,7 +94,7 @@ body {
 
     &.is-selected{
         background-color: var(--body-color);
-        
+
         > *{
             --body-color: var(--body-bg);
             --icon-color: var(--body-bg);

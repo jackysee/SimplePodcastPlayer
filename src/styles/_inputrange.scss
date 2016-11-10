@@ -61,7 +61,7 @@ $contrast: 5% !default;
     outline: none;
   }
 
-  &::-moz-focus-inner {
+  &::-moz-focus-outer{
     border: 0;
   }
 

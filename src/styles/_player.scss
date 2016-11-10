@@ -3,7 +3,7 @@
     height: 0rem;
     margin-right: 0;
     transition: all 0.3s ease-in-out;
-    overflow: hidden;
+    // overflow: hidden;
     position: relative;
     box-shadow: 0 0 4px var(--panel-shadow);
     border: 1px solid var(--panel-border);
@@ -94,22 +94,35 @@ $player-top-padding : 0.5rem;
 .player-vol{
     display: flex;
     align-items: center;
+    position: relative;
 }
 
 .player-vol-bar{
     width: 0;
     overflow: hidden;
-    margin-top: 5px;
-    transition: width 0.3s ease-in-out;
+    margin-top: 0px;
+    transform: rotate(-90deg);
+    transform-origin: left;
+    position: absolute;
+    background-color: var(--body-bg);
+    left: 1.2rem;
+    top: -1.2rem;
+    // padding: 0.5rem;
+    // transition: width 0.3s ease-in-out;
+    // box-shadow: 2px 0 1px var(--body-color);
 }
 
-.player-vol-bar .progress-bar{
-    width: calc(5rem - 20px);
-    margin: 5px 10px;
+.player-vol-bar .range-wrap{
+    margin: 0.5rem;
 }
+
+// .player-vol-bar .progress-bar{
+//     width: calc(8rem - 20px);
+//     margin: 0.5rem;
+// }
 
 .player-vol:hover .player-vol-bar{
-    width: 5rem;
+    width: 8rem;
 }
 
 .player-title{
