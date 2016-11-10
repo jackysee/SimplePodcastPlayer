@@ -9,6 +9,7 @@ import Markdown
 import Events exposing (onInternalClick)
 import Icons
 import String
+import Regex
 
 creditContent : String
 creditContent = """
@@ -23,22 +24,22 @@ Icons provided by [font-awesome](http://fontawesome.io) and:
 shortcutContent : String
 shortcutContent = """
 - Navigation
-    - **gu** : Go to Unlistened
-    - **gq** : Go to Queued
-    - **gf** : Go to Feed of the selected item
-    - **ga** : Go to All Podcasts
+    - **g u** : Go to Unlistened
+    - **g q** : Go to Queued
+    - **g f** : Go to Feed of the selected item
+    - **g a** : Go to All Podcasts
     - **ctrl+,** : show settings
     - **shift+/** : show shortcuts
     - **n** : Show Add feed panel
 - Selection
-    - **j / down** : next item
-    - **k / up** : previous item
+    - **j|down** : next item
+    - **k|up** : previous item
     - **o** : Open selected item link (if any)
     - **enter** : play selected item
     - **q** : Enqueue / Dequeue selected item
     - **m** : mark selected item as listened
 - Actions
-    - **rr** : refresh selected feed / all feeds
+    - **r r** : refresh selected feed / all feeds
     - **p** : Play / Pause player item
 - Queue
     - **u** : move selected item up
@@ -92,7 +93,7 @@ viewAbout model =
                     Shortcut ->
                         Markdown.toHtml
                             [ class "about-tab-content about-shortcut"]
-                            shortcutContent
+                            <| decorateKeys shortcutContent
                     Settings ->
                         div
                             [ class "about-tab-content about-settings" ]
@@ -104,6 +105,36 @@ viewAbout model =
 
             _ ->
                 [ text "" ]
+
+
+decorateKeys : String -> String
+decorateKeys content =
+    Regex.replace
+        Regex.All
+        (Regex.regex ("- \\*\\*(.*)\\*\\*"))
+        (\{match, submatches}->
+            let
+                keys = submatches
+                    |> List.filterMap identity
+                    |> List.map
+                        (\str ->
+                            str
+                                |> String.split "|"
+                                |> List.map (\str_ ->
+                                    str_
+                                        |> String.split " "
+                                        |> List.map (\key ->
+                                            "<div class=\"about-key\">"++ key ++"</div>"
+                                           )
+                                        |> String.join " "
+                                   )
+                                |> String.join "/"
+                        )
+                    |> String.concat
+            in
+                "- ** " ++ keys ++ "**"
+        )
+        content
 
 
 viewSettingFallbackUrl : Maybe String -> Html Msg
