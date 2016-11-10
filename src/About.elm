@@ -24,26 +24,26 @@ Icons provided by [font-awesome](http://fontawesome.io) and:
 shortcutContent : String
 shortcutContent = """
 - Navigation
-    - **g u** : Go to Unlistened
-    - **g q** : Go to Queued
-    - **g f** : Go to Feed of the selected item
-    - **g a** : Go to All Podcasts
-    - **ctrl+,** : show settings
-    - **shift+/** : show shortcuts
-    - **n** : Show Add feed panel
+    - Go to Unlistened : **g u**
+    - Go to Queued : **g q**
+    - Go to Feed of the selected item : **g f**
+    - Go to All Podcasts : **g a**
+    - show settings : **ctrl+,**
+    - show shortcuts : **shift+/**
+    - show Add feed panel : **n**
 - Selection
-    - **j|down** : next item
-    - **k|up** : previous item
-    - **o** : Open selected item link (if any)
-    - **enter** : play selected item
-    - **q** : Enqueue / Dequeue selected item
-    - **m** : mark selected item as listened
+    - next item : **j|down**
+    - previous item : **k|up**
+    - Open selected item link (if any) : **o**
+    - play selected item : **enter**
+    - Enqueue / Dequeue selected item : **q**
+    - Mark selected item as listened : **m**
 - Actions
-    - **r r** : refresh selected feed / all feeds
-    - **p** : Play / Pause player item
+    - Refresh selected feed / all feeds : **r r**
+    - Play / Pause player item : **p**
 - Queue
-    - **u** : move selected item up
-    - **d** : move sleected item down
+    - move selected item Up : **u**
+    - move sleected item Down : **d**
 """
 
 viewAbout : Model -> Html Msg
@@ -111,30 +111,44 @@ decorateKeys : String -> String
 decorateKeys content =
     Regex.replace
         Regex.All
-        (Regex.regex ("- \\*\\*(.*)\\*\\*"))
+        (Regex.regex (": \\*\\*(.*)\\*\\*"))
         (\{match, submatches}->
             let
                 keys = submatches
                     |> List.filterMap identity
                     |> List.map
-                        (\str ->
-                            str
-                                |> String.split "|"
-                                |> List.map (\str_ ->
-                                    str_
-                                        |> String.split " "
-                                        |> List.map (\key ->
-                                            "<div class=\"about-key\">"++ key ++"</div>"
-                                           )
-                                        |> String.join " "
-                                   )
-                                |> String.join "/"
+                        (splitAndJoin
+                            [ ("|", " or ")
+                            , (" ", " ")
+                            , ("+", " + ")
+                            ]
+                            (\key ->
+                                "<div class=\"about-key\">"++ key ++"</div>"
+                            )
                         )
                     |> String.concat
             in
                 "- ** " ++ keys ++ "**"
         )
         content
+
+
+splitAndJoin : List (String, String) -> (String -> String) -> String -> String
+splitAndJoin list transform str =
+    case list of
+        [] ->
+            str
+
+        (spliter, joiner)::xs ->
+            str
+                |> String.split spliter
+                |> List.map (\part ->
+                        if List.length xs == 0 then
+                            transform part
+                        else
+                            splitAndJoin xs transform part
+                   )
+                |> String.join joiner
 
 
 viewSettingFallbackUrl : Maybe String -> Html Msg
