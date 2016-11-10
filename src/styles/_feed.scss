@@ -310,7 +310,30 @@
     padding: 0.1rem 0.2rem;
 }
 
-.input-feed-title{
-    font-size: 1.5rem;
-    width: 70%;
+.feed-header-title{
+    height: 2rem;
+    position: relative;
+
+    .input-feed-title{
+        font-size: 1.5rem;
+        position: absolute;
+        left: 0;
+        display:none;
+        width: 100%;
+        font-weight: bold;
+        font-family: inherit;
+        padding: 0;
+    }
+
+    &.is-editing{
+        .input-feed-title{
+            display:block;
+        }
+
+        .feed-title{
+            opacity: 0.1;
+            white-space: pre;
+        }
+    }
+
 }

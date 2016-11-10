@@ -498,15 +498,19 @@ updateModel msg model cmds =
         SetTheme theme ->
             ({ model | theme = theme }, cmds)
 
-        SetEditingFeedTitle editing ->
+        SetEditingFeedTitle feedTitle ->
             let
                 cmd_ =
-                    if editing then
-                        [ noOpTask (Dom.focus "input-feed-title") ]
-                    else
-                        []
+                    case feedTitle of
+                        Just feedTitle_ ->
+                            if model.editingFeedTitle == Nothing then
+                                [ noOpTask (Dom.focus "input-feed-title") ]
+                            else
+                                []
+                        Nothing ->
+                            []
             in
-                ({ model | editingFeedTitle = editing } , cmd_ ++ cmds )
+                ({ model | editingFeedTitle = feedTitle } , cmd_ ++ cmds )
 
         SetFeedTitle feed title ->
             ( updateModelFeed { feed | title = title } model

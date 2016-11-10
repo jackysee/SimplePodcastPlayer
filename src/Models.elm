@@ -112,7 +112,7 @@ type alias Model =
     , fontSize : FontSize
     , playerShowTimeLeft : Bool
     , theme : Theme
-    , editingFeedTitle : Bool
+    , editingFeedTitle : Maybe String
     }
 
 
@@ -313,7 +313,7 @@ defaultModel =
     , fontSize = Medium
     , playerShowTimeLeft = True
     , theme = Light
-    , editingFeedTitle = False
+    , editingFeedTitle = Nothing 
     }
 
 

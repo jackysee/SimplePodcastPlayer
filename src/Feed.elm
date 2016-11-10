@@ -6,7 +6,7 @@ import Task exposing (Task)
 import Http
 import String
 import Html exposing (Html, text, button, ul, li, div, span, img, a, input)
-import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
+import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, onInput, onBlur)
 import Html.Attributes exposing (class, title, src, classList, id, href, target, value)
 import Dict exposing (Dict)
 import Regex
@@ -146,31 +146,67 @@ viewFeedTitle model feed =
                         , onClick (UpdateFeeds [] feed)
                         ]
                         [ Icons.refresh ]
+        feedTitle =
+            case model.editingFeedTitle of
+                Just title_ ->
+                    title_
+                Nothing ->
+                    feed.title
     in
         div [ class "feed-header" ]
-            [ if model.editingFeedTitle then
-                input
+            [ div
+                [ classList
+                    [ ("feed-header-title", True)
+                    , ("is-editing", model.editingFeedTitle /= Nothing)
+                    ]
+                ]
+                [ input
                     [ id "input-feed-title"
                     , class "input-text input-feed-title"
-                    , value feed.title
-                    , onBlurNotEmpty (\value ->
-                        if value /= "" then
-                            MsgBatch
-                                [ SetFeedTitle feed value
-                                , SetEditingFeedTitle False
-                                ]
-                        else
-                            SetEditingFeedTitle False
-                      )
+                    , value feedTitle
+                    , onInput (\value -> SetEditingFeedTitle (Just value))
+                    , onBlur <|
+                        MsgBatch
+                            [ SetFeedTitle feed <|
+                                if model.editingFeedTitle /= (Just "") then
+                                    Maybe.withDefault feed.title model.editingFeedTitle
+                                else
+                                    feed.title
+                            , SetEditingFeedTitle Nothing
+                            ]
                     ]
                     []
-              else
-                span
+                , span
                     [ class "feed-title"
-                    , title feed.title
-                    , onClick (SetEditingFeedTitle True)
+                    , title feedTitle
+                    , onClick (SetEditingFeedTitle <| Just feed.title)
                     ]
-                    [ text feed.title ]
+                    [ text feedTitle ]
+                ]
+
+            -- if model.editingFeedTitle then
+            --     input
+            --         [ id "input-feed-title"
+            --         , class "input-text input-feed-title"
+            --         , value feed.title
+            --         , onBlurNotEmpty (\value ->
+            --             if value /= "" then
+            --                 MsgBatch
+            --                     [ SetFeedTitle feed value
+            --                     , SetEditingFeedTitle False
+            --                     ]
+            --             else
+            --                 SetEditingFeedTitle False
+            --           )
+            --         ]
+            --         []
+            --   else
+            --     span
+            --         [ class "feed-title"
+            --         , title feed.title
+            --         , onClick (SetEditingFeedTitle True)
+            --         ]
+            --         [ text feed.title ]
             , feedState
             , refreshBtn
             , if feed.state /= Refreshing then
