@@ -11,6 +11,7 @@ import Html.Attributes exposing (class, title, src, classList, id, href, target,
 import Dict exposing (Dict)
 import Regex
 import String
+import Unicode
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -287,15 +288,20 @@ viewItem model feed (index, item) =
                 [ div
                     [ class "item-title", title item.title ]
                     [ text item.title ]
-                , div
-                    [ class "item-description-text" ]
-                    [ text
-                        (item.description
+                , let
+                    description_ = 
+                        item.description
                             |> Maybe.map stripHtml
                             >> Maybe.withDefault ""
-                            >> String.slice 0 300
-                        )
-                    ]
+                  in
+                    div
+                        [ class "item-description-text" 
+                        , title <| Unicode.unEsc description_
+                        ]
+                        [ description_
+                            |> String.slice 0 300
+                            >> Unicode.text'
+                        ]
                 ]
             , viewItemQueued model item
             , renderQueueControl item model.listView
