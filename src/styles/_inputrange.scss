@@ -10,8 +10,8 @@ $track-color-ori: transparent; //#CCCCCC!default;
 $thumb-color: #000000!default;
 
 $thumb-radius: 0% !default;
-$thumb-height: 15px !default;
-$thumb-width: 6px !default;
+$thumb-height: 13px !default;
+$thumb-width: 3px !default;
 $thumb-shadow-size: 0px !default;
 $thumb-shadow-blur: 0px !default;
 $thumb-shadow-color: #111 !default;
@@ -19,7 +19,7 @@ $thumb-border-width: 0px !default;
 $thumb-border-color: #000 !default;
 
 $track-width: 100% !default;
-$track-height: 5px !default;
+$track-height: 2px !default;
 $track-shadow-size: 0px !default;
 $track-shadow-blur: 0px !default;
 $track-shadow-color: #222 !default;
@@ -133,14 +133,14 @@ $contrast: 5% !default;
 .range-wrap {
     margin: 0;
     position: relative;
-    height: 20px;
+    height: 15px;
     z-index: 0;
 
     input[type=range]{
         margin: 0;
         position: absolute;
         top: 0px;
-        height: 20px;
+        height: 15px;
     }
 }
 
