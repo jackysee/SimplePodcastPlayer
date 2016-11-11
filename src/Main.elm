@@ -462,9 +462,6 @@ updateModel msg model cmds =
             ({ model | playList = swapDown url model.playList }
             , cmds)
 
-        ToggleShortcutGoto flag ->
-            ({ model | shortcutGoTo = flag }, cmds)
-
         SetShortcutKeys keys ->
             ({ model | shortcutKeys = keys }, cmds)
 

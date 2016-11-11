@@ -105,7 +105,6 @@ type alias Model =
     , itemSortLatest: Bool
     , itemSelected : Maybe String
     , playList: List String
-    , shortcutGoTo: Bool
     , shortcutKeys : List String
     , floatPanel : FloatPanel
     , fallbackRssServiceUrl : Maybe String
@@ -306,14 +305,13 @@ defaultModel =
     , itemSelected = Nothing
     , itemSortLatest = True
     , playList = []
-    , shortcutGoTo = False
     , shortcutKeys = []
     , floatPanel = Hidden
     , fallbackRssServiceUrl = Nothing
     , fontSize = Medium
     , playerShowTimeLeft = True
     , theme = Light
-    , editingFeedTitle = Nothing 
+    , editingFeedTitle = Nothing
     }
 
 

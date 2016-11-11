@@ -50,7 +50,6 @@ type Msg
     | Dequeue String
     | MoveQueuedItemUp String
     | MoveQueuedItemDown String
-    | ToggleShortcutGoto Bool
     | SetShortcutKeys (List String)
     | SetFloatPanel FloatPanel
     | MsgBatch (List Msg)
@@ -59,5 +58,5 @@ type Msg
     | SetFontSize FontSize
     | SetPlayerShowTimeLeft Bool
     | SetTheme Theme
-    | SetEditingFeedTitle (Maybe String) 
+    | SetEditingFeedTitle (Maybe String)
     | SetFeedTitle Feed String
