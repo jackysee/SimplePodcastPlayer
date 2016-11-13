@@ -109,11 +109,15 @@ $player-top-padding : 0.5rem;
     top: -1.2rem;
     // padding: 0.5rem;
     // transition: width 0.3s ease-in-out;
-    // box-shadow: 2px 0 1px var(--body-color);
+    //box-shadow: 0px 0 1px var(--body-color);
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
 }
 
 .player-vol-bar .range-wrap{
-    margin: 0.5rem;
+    flex: 1;
+    margin: auto 0.8rem;
 }
 
 // .player-vol-bar .progress-bar{
@@ -122,7 +126,8 @@ $player-top-padding : 0.5rem;
 // }
 
 .player-vol:hover .player-vol-bar{
-    width: 8rem;
+    width: 10rem;
+    border: 1px solid var(--input-border);
 }
 
 .player-title{
