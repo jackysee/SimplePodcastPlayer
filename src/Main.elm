@@ -325,7 +325,7 @@ updateModel msg model cmds =
 
         ToggleRate ->
             let
-                rate = [1, 1.2, 1.5, 2.0]
+                rate = [1, 1.12, 1.2, 1.5, 2.0]
                     |> dropWhile (\r -> r <= model.playerRate)
                     |> List.head
                     |> Maybe.withDefault 1
