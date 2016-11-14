@@ -1,54 +1,27 @@
-var db;
-function openDB(callback){
-    var idb = window.indexedDB;
-    var req = idb.open("ModelDB", 1);
-    req.onsuccess = function(ev){
-        db = this.result;
-        callback(db);
-    }
-    req.onerror = function(ev){
-        console.error('idb err : ' + ev.target.errorCode);
-    }
-    req.onupgradeneeded = function(ev){
-        ev.currentTarget.result.createObjectStore('model', {keyPath:'id'});
-    }
-}
+var StoreWorker = require('worker!./workerStore.js');
 
-var getStore = function(callback){
-    if(!db){
-        openDB(function(db){
-            getObjectStore(db, callback);
-        });
-        return;
-    }
-    getObjectStore(db, callback);
-}
+var worker = new StoreWorker();
+var queryId = 11;
+var callbacks = {};
 
-var getObjectStore = function(db, callback){
-    var tx = db.transaction('model', 'readwrite');
-    callback(tx.objectStore('model'));
-}
+worker.onmessage = function(ev){
+    if(ev.data.type === 'get'){
+        var callback = callbacks[ev.data.queryId];
+        if(callback){
+            callback(ev.data.model)
+            delete callbacks[ev.data.queryId];
+        }
+    }
+};
 
 module.exports = {
     put: function(model){
-        getStore(function(store){
-            model.id = 1;
-            store.put(model);
-        });
+        worker.postMessage({type:'put', model:model})
     },
-    get: function(callback, errCallback){
-        getStore(function(store){
-            var m = store.get(1)
-            m.onsuccess = function(ev){
-                callback(ev.target.result);
-            };
-            m.onerror = function(ev){
-                console.error('error get value', ev);
-                if(errCallback){
-                    errCallback(ev);
-                }
-            };
-
-        })
+    get: function(callback){
+        queryId = queryId + 1;
+        var queryId = ""+queryId;
+        worker.postMessage({type:'get', queryId:queryId});
+        callbacks[queryId] = callback;
     }
-}
+};
