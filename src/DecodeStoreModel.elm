@@ -5,6 +5,7 @@ import Json.Decode as Json exposing (value, (:=) )
 import Json.Decode.Pipeline exposing ( decode, required, optional, nullable )
 import Models exposing (..)
 
+
 decodeStoreValue : Maybe Json.Value -> Maybe StoreModel
 decodeStoreValue value =
     case value of
@@ -17,21 +18,34 @@ decodeStoreValue value =
             Nothing
 
 
-decodeStoreModel : Json.Decoder StoreModel
+decodeStoreModel: Json.Decoder StoreModel
 decodeStoreModel =
     decode StoreModel
-        |> required "list" (Json.list decodeStoreFeed)
-        |> required "currentItemUrl" (nullable Json.string)
-        |> optional "playerRate" Json.float defaultModel.playerRate
-        |> optional "playerVol" Json.float defaultModel.playerVol
-        |> optional "listView" Json.string (listViewToStr defaultModel.listView)
-        |> optional "itemFilter" Json.string (itemFilterToStr defaultModel.itemFilter)
-        |> optional "itemSortLatest" Json.bool (defaultModel.itemSortLatest)
-        |> required "playList" (Json.list Json.string)
+        |> required "view" decodeStoreView
+        |> required "setting" decodeStoreSetting
+        |> required "feeds" (Json.list decodeStoreFeed)
+        |> required "items" (Json.list decodeStoreItem)
+
+
+decodeStoreSetting : Json.Decoder StoreSetting
+decodeStoreSetting =
+    decode StoreSetting
         |> required "fallbackRssServiceUrl" (nullable Json.string)
-        |> optional "fontSize" Json.string (fontSizeToStr defaultModel.fontSize)
-        |> optional "playerShowTimeLeft" Json.bool defaultModel.playerShowTimeLeft
-        |> optional "theme" Json.string (themeToStr defaultModel.theme)
+        |> optional "fontSize" Json.string (fontSizeToStr defaultModel.setting.fontSize)
+        |> optional "theme" Json.string (themeToStr defaultModel.setting.theme)
+
+
+decodeStoreView: Json.Decoder StoreView
+decodeStoreView =
+    decode StoreView
+        |> required "currentItemUrl" (nullable Json.string)
+        |> optional "playerRate" Json.float defaultModel.view.playerRate
+        |> optional "playerVol" Json.float defaultModel.view.playerVol
+        |> optional "listView" Json.string (listViewToStr defaultModel.view.listView)
+        |> optional "itemFilter" Json.string (itemFilterToStr defaultModel.view.itemFilter)
+        |> optional "itemSortLatest" Json.bool (defaultModel.view.itemSortLatest)
+        |> required "playList" (Json.list Json.string)
+        |> optional "playerShowTimeLeft" Json.bool defaultModel.view.playerShowTimeLeft
 
 
 decodeStoreFeed : Json.Decoder StoreFeed
@@ -39,7 +53,7 @@ decodeStoreFeed =
     decode StoreFeed
         |> required "url" Json.string
         |> required "title" Json.string
-        |> required "items" (Json.list decodeStoreItem)
+        -- |> required "items" (Json.list decodeStoreItem)
 
 
 decodeStoreItem : Json.Decoder Item
@@ -54,3 +68,4 @@ decodeStoreItem =
         |> optional "progress" Json.float -1
         |> optional "playCount" Json.int 0
         |> optional "markPlayCount" Json.int -1
+        |> required "feedUrl" Json.string

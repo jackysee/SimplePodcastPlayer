@@ -18,10 +18,10 @@ import Icons
 view : Model -> Html Msg
 view model =
     let
-        feed' = model.list
+        feed_ = model.feeds
             |> List.filter
                 (\f ->
-                    case model.listView of
+                    case model.view.listView of
                         ViewFeed url ->
                             f.url == url
                         _ ->
@@ -29,21 +29,21 @@ view model =
                 )
             |> List.head
         filterBar =
-            if List.length model.list > 0 && model.listView /= Queued then
+            if List.length model.feeds > 0 && model.view.listView /= Queued then
                 div
                     [ class "feed-filter" ]
-                    [ filterButton "Unlistened" Unlistened model.itemFilter
-                    , filterButton "All" All model.itemFilter
+                    [ filterButton "Unlistened" Unlistened model.view.itemFilter
+                    , filterButton "All" All model.view.itemFilter
                     ]
             else
                 text ""
     in
         div [ classList
                 [ ("app-wrap", True)
-                , ("theme-" ++ (themeToStr model.theme |> String.toLower) , True)
+                , ("theme-" ++ (themeToStr model.setting.theme |> String.toLower) , True)
                 ]
             ]
-            [ viewFontSizeStyle model.fontSize
+            [ viewFontSizeStyle model.setting.fontSize
             , viewAddFeed model
             , viewAbout model
             , div
@@ -55,14 +55,14 @@ view model =
                         [ class "top-bar-wrap" ]
                         [ div
                             [ class "top-bar" ]
-                            [ viewLeftBtn model.listView
-                            , viewTitle model feed'
+                            [ viewLeftBtn model.view.listView
+                            , viewTitle model feed_
                             , viewTopLeftBar model
                             ]
                         , filterBar
                         ]
                     ]
-                    ++ (viewItemList model feed')
+                    ++ (viewItemList model feed_)
                     ++ [ viewPlayer model ]
             ]
 
@@ -97,7 +97,7 @@ viewTitle model feed' =
 
         Nothing ->
             let
-                isRefreshing = model.list
+                isRefreshing = model.feeds
                     |> List.filter (\feed -> feed.state == Refreshing )
                     |> List.length
                     |> (<) 0
@@ -106,12 +106,12 @@ viewTitle model feed' =
                     [ class "feed-header" ]
                     [ div
                         [ class "feed-title" ]
-                        [ if List.length model.list == 0 then
+                        [ if List.length model.feeds == 0 then
                             span
                                 [ class "feed-empty" ]
                                 [ text "← Click to add feed" ]
                           else
-                              case model.listView of
+                              case model.view.listView of
                                   Queued ->
                                       text "Queued"
                                   _ ->
@@ -126,7 +126,7 @@ viewTitle model feed' =
                       else
                         text ""
 
-                    , if not isRefreshing && List.length model.list > 0 && model.listView /= Queued then
+                    , if not isRefreshing && List.length model.feeds > 0 && model.view.listView /= Queued then
                         button
                             [ class "btn btn-icon feed-control feed-refresh"
                             , onClick UpdateAllFeed
@@ -142,19 +142,19 @@ viewTopLeftBar : Model -> Html Msg
 viewTopLeftBar model =
         div
             [ class "top-left-bar" ]
-            [ if List.length model.list > 0 then
+            [ if List.length model.feeds > 0 then
                 button
                     [ classList
                         [ ("btn btn-icon queued-btn", True)
-                        , ("is-selected", model.listView == Queued)
+                        , ("is-selected", model.view.listView == Queued)
                         ]
                     , onClick (SetListView Queued)
                     ]
                     [ Icons.list
-                    , if List.length model.playList > 0 then
+                    , if List.length model.view.playList > 0 then
                         span
                             [ class "queued-count" ]
-                            [ List.length model.playList |> toString |> text ]
+                            [ List.length model.view.playList |> toString |> text ]
                       else
                         text ""
                     ]
@@ -179,9 +179,9 @@ filterButton label filter modelItemFilter =
 viewStatus : Model -> Html Msg
 viewStatus model =
     let
-        txt = model.list
+        txt = model.feeds
             |> List.filter (\f -> f.state == Refreshing)
-            |> List.map (\f -> "Refreshing feed " ++ f.title ++ "...")
+            |> List.map (\f -> "Refreshing " ++ f.title ++ "...")
             |> List.head
             |> Maybe.withDefault ""
     in
@@ -213,7 +213,7 @@ viewItemList model feed_ =
                                     |> List.map list_
                                 )
                 Nothing ->
-                    if List.length list == 0 && List.length model.list > 0 then
+                    if List.length list == 0 && List.length model.feeds > 0 then
                         div
                             [ class "item-empty" ]
                             [ text "This list is empty." ]
@@ -263,13 +263,13 @@ viewItemList model feed_ =
 
 viewItemSortLatest : Model -> Maybe (Html Msg)
 viewItemSortLatest model =
-    if model.listView /= Queued then
+    if model.view.listView /= Queued then
         Just <|
             div
                 [ class "item-sort" ]
                 [ span
-                    [ onClick (SetItemSortLatest (not model.itemSortLatest)) ]
-                    [ if model.itemSortLatest then
+                    [ onClick (SetItemSortLatest (not model.view.itemSortLatest)) ]
+                    [ if model.view.itemSortLatest then
                         text "latest first"
                       else
                         text "oldest first"

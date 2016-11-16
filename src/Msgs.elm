@@ -11,7 +11,7 @@ type Msg
     | HideAddPanel
     | SetUrl String
     | AddFeed
-    | FetchFeedSucceed Feed
+    | FetchFeedSucceed (Feed, List Item)
     | FetchFeedFail Http.Error
     | UpdateCurrentTime Time
     | ShowMoreItem
@@ -23,7 +23,7 @@ type Msg
     | UpdateAllFeed
     | UpdateFeeds (List Feed) Feed
     | UpdateFeedFail (List Feed) Feed Http.Error
-    | UpdateFeedSucceed (List Feed) Feed
+    | UpdateFeedSucceed (List Feed) (Feed, List Item)
     | SetProgress Float
     | SetListView ListView
     | HideFeed
@@ -43,7 +43,6 @@ type Msg
     | ShowItemDropdown String
     | HideItemDropdown
     | SelectItem Item
-    | UnselectItem Item
     | SelectNext
     | SelectPrev
     | Enqueue String

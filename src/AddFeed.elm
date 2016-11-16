@@ -15,7 +15,7 @@ viewAddFeed model =
     div
         [ classList
             [ ("add-panel", True)
-            , ("is-show", model.floatPanel == AddPanel)
+            , ("is-show", model.view.floatPanel == AddPanel)
             ]
         ]
         [ div
@@ -31,7 +31,7 @@ viewAddFeed model =
                 , class "add-feed input-text"
                 , onKeyup
                     [ (13, \code ->
-                        if model.urlToAdd == "" then
+                        if model.view.urlToAdd == "" then
                             NoOp
                         else
                             AddFeed
@@ -39,14 +39,14 @@ viewAddFeed model =
                     , (27, \_ -> HideAddPanel)
                     ]
                 , onInput SetUrl
-                , value model.urlToAdd
+                , value model.view.urlToAdd
                 , placeholder "Add Feed"
-                , disabled <| model.loadFeedState == Loading
+                , disabled <| model.view.loadFeedState == Loading
                 ]
                 []
-            , viewLoadFeedState model.loadFeedState
+            , viewLoadFeedState model.view.loadFeedState
             ]
-        , if model.floatPanel == AddPanel && List.length model.list > 0 then
+        , if model.view.floatPanel == AddPanel && List.length model.feeds > 0 then
             div
                 [ class "subscriptions-wrap" ]
                 [ div
@@ -64,7 +64,7 @@ viewAddFeed model =
                                 [ text feed.title ]
                             ]
 
-                    ) model.list
+                    ) model.feeds
                 ]
           else
               text ""

@@ -8,6 +8,8 @@ var store = require('./store');
 
 var root  = document.getElementById('root');
 store.get(function(_model){
+    console.log('model', _model);
+
     var app = Elm.Main.embed(root, _model || null);
     var sound;
 
@@ -99,11 +101,29 @@ store.get(function(_model){
         }
     });
 
-    app.ports.storeModel.subscribe(function(storeModel){
-        // localStorage.setItem("model", JSON.stringify(storeModel));
-        store.put(storeModel);
+    // app.ports.storeModel.subscribe(function(storeModel){
+        // store.put(storeModel);
+    // });
+
+    app.ports.storeSetting.subscribe(function(setting){
+        store.set(setting, 'setting');
     });
 
+    app.ports.storeView.subscribe(function(view){
+        store.set(view, 'view');
+    });
+
+    app.ports.storeFeeds.subscribe(function(feeds){
+        store.set(feeds, 'feeds');
+    });
+
+    app.ports.storeItems.subscribe(function(items){
+        store.set(items, 'items');
+    });
+
+    app.ports.deleteFeed.subscribe(function(feed){
+        store.deleteFeed(feed);
+    });
 
     app.ports.seek.subscribe(function(value){
         if(sound){

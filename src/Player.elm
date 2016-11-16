@@ -10,6 +10,7 @@ import Models exposing (..)
 import Msgs exposing (..)
 import DateFormat exposing (formatDuration)
 import Icons
+import ListUtil exposing (findFirst)
 
 range: Float -> Float -> Float -> Float -> Bool -> (Float -> msg) -> Html msg
 range vmin vmax step val disabled msg =
@@ -64,10 +65,8 @@ setFloat msg' input =
 
 getCurrentItem : Model -> Maybe Item
 getCurrentItem model =
-    model.list
-        |> List.concatMap (\feed -> feed.items)
-        |> List.filter (\item -> isCurrent item.url model)
-        |> List.head
+    model.items
+        |> findFirst (\item -> isCurrent item.url model)
 
 
 viewPlayer : Model -> Html Msg
@@ -86,10 +85,10 @@ viewPlayer model =
                             [ class "player-control "]
                             [ div
                                 [ class "player-buttons" ]
-                                [ if model.playerState == SoundLoading then
+                                [ if model.view.playerState == SoundLoading then
                                     div [ class "btn player-btn" ]
                                         [ Icons.loadingSpin ]
-                                  else if (model.playerState == Stopped || model.playerState == Paused || model.playerState == SoundError) then
+                                  else if (model.view.playerState == Stopped || model.view.playerState == Paused || model.view.playerState == SoundError) then
                                     button
                                         [ class "btn player-btn"
                                         , onClick (Play item_)
@@ -105,7 +104,7 @@ viewPlayer model =
                             , div [ class "progress" ]
                                 [ div
                                     [ class "player-title" ]
-                                    [ if model.playerState == SoundError then
+                                    [ if model.view.playerState == SoundError then
                                         div
                                             [ class "player-title-text player-error" ]
                                             [ text "Cannot load the file! " ]
@@ -113,7 +112,7 @@ viewPlayer model =
                                         text ""
                                     , div
                                         [ class "player-title-text" ]
-                                        [ marquee item_.title (model.playerState == Playing)
+                                        [ marquee item_.title (model.view.playerState == Playing)
                                         ]
                                     ]
                                 , progressBar item_.progress item_.duration
@@ -121,13 +120,13 @@ viewPlayer model =
                                     [ class "player-item-queued-info" ]
                                     [ let
                                         currentInQueue = List.member
-                                            (Maybe.withDefault "" model.currentItemUrl)
-                                            model.playList
+                                            (Maybe.withDefault "" model.view.currentItemUrl)
+                                            model.view.playList
                                       in
-                                        if model.playerState == Playing then
+                                        if model.view.playerState == Playing then
                                             if currentInQueue  then
                                                 text "Playing queued items"
-                                            else if List.length model.playList > 0 then
+                                            else if List.length model.view.playList > 0 then
                                                 text "Queued items will be played next."
                                             else
                                                 text ""
@@ -140,14 +139,14 @@ viewPlayer model =
                                     [ class "btn"
                                     , onClick ToggleRate
                                     ]
-                                    [ text <| (toString model.playerRate) ++ "X" ]
+                                    [ text <| (toString model.view.playerRate) ++ "X" ]
                                 ]
                             , div [ class "player-vol" ]
                                 [ div
                                     [ class "player-buttons" ]
                                     [ button
                                         [ class "btn player-btn" ]
-                                        [ if model.playerVol == 0 then
+                                        [ if model.view.playerVol == 0 then
                                             Icons.volumeOff
                                           else
                                             Icons.volumeUp
@@ -155,11 +154,11 @@ viewPlayer model =
                                     ]
                                 , div
                                     [ class "player-vol-bar" ]
-                                    [ range 0 1 0.01 model.playerVol False SetVol ]
+                                    [ range 0 1 0.01 model.view.playerVol False SetVol ]
                                 ]
                             , div
                                 [ class "player-progress"
-                                , onClick (SetPlayerShowTimeLeft <| not model.playerShowTimeLeft)
+                                , onClick (SetPlayerShowTimeLeft <| not model.view.playerShowTimeLeft)
                                 ]
                                 [ text <|
                                     let
@@ -169,7 +168,7 @@ viewPlayer model =
                                             else
                                                 item_.progress
                                     in
-                                        if model.playerShowTimeLeft then
+                                        if model.view.playerShowTimeLeft then
                                             "-" ++ formatDuration (item_.duration - progress_)
                                         else
                                             formatDuration progress_

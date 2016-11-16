@@ -5,6 +5,7 @@ import Models exposing (..)
 import Feed exposing (markListenedMsg)
 import ListUtil exposing (getNext, findFirst)
 
+(=>): a -> b -> (a, b)
 (=>) = (,)
 
 shortcuts =
@@ -12,7 +13,7 @@ shortcuts =
     , ["g", "q"] => \_ -> SetListView Queued
     , ["g", "f"] =>
         \model ->
-            model.itemSelected
+            model.view.itemSelected
                 |> Maybe.map (\itemUrl ->
                     getItemByUrl model itemUrl
                         |> Maybe.map (\(feed, item) ->
@@ -39,11 +40,11 @@ shortcuts =
 
     , ["p"] =>
         \model ->
-            model.currentItemUrl
+            model.view.currentItemUrl
                 |> Maybe.map (\url ->
                     getItemByUrl model url
                         |> Maybe.map (\(feed, item) ->
-                            case model.playerState of
+                            case model.view.playerState of
                                 Playing ->
                                     Pause item
 
@@ -70,7 +71,7 @@ shortcuts =
     , ["esc"] => \_ -> HideAddPanel
     , ["u"] =>
         \model ->
-            if model.listView == Queued then
+            if model.view.listView == Queued then
                 getSelectedItem model
                     |> Maybe.map (\item ->  MoveQueuedItemUp item.url )
                     |> Maybe.withDefault  NoOp
@@ -79,7 +80,7 @@ shortcuts =
 
     , ["d"] =>
         \model ->
-            if model.listView == Queued then
+            if model.view.listView == Queued then
                 getSelectedItem model
                     |> Maybe.map (\item -> MoveQueuedItemDown item.url)
                     |> Maybe.withDefault NoOp
@@ -91,7 +92,7 @@ shortcuts =
             getSelectedItem model
                 |> Maybe.map
                     (\item ->
-                        if List.member item.url model.playList then
+                        if List.member item.url model.view.playList then
                             Dequeue item.url
                         else
                             Enqueue item.url
@@ -107,9 +108,9 @@ shortcuts =
     , ["ctrl-,"] => \_ -> SetFloatPanel (About Settings)
     , ["shift-/"] => \_ -> SetFloatPanel (About Shortcut)
     , ["r", "r"] => \model ->
-        case model.listView of
+        case model.view.listView of
             ViewFeed url ->
-                model.list
+                model.feeds
                     |> findFirst (\feed -> feed.url == url )
                     |> Maybe.map (\feed -> UpdateFeeds [] feed)
                     |> Maybe.withDefault NoOp
@@ -124,7 +125,7 @@ keyMap: Model -> String -> Msg
 keyMap model key =
     let
         a = Debug.log "key" key
-        keys = model.shortcutKeys ++ [key]
+        keys = model.view.shortcutKeys ++ [key]
     in
         getActions model shortcuts keys
 
@@ -165,10 +166,10 @@ selectNext : Model -> Maybe (Model, Cmd Msg)
 selectNext model =
     let
         (list, more) = itemList model
-        listHasUrl = List.any (\(feed, item) -> Just item.url == model.itemSelected) list
+        listHasUrl = List.any (\(feed, item) -> Just item.url == model.view.itemSelected) list
         url_ =
             if listHasUrl then
-                model.itemSelected
+                model.view.itemSelected
             else
                 Nothing
         next =
@@ -195,8 +196,8 @@ selectPrev: Model -> (Model, Cmd Msg)
 selectPrev model =
     let
         (list, more) = itemList model
-        listHasUrl = List.any (\(feed, item) -> Just item.url == model.itemSelected) list
-        url_ = if listHasUrl then model.itemSelected else Nothing
+        listHasUrl = List.any (\(feed, item) -> Just item.url == model.view.itemSelected) list
+        url_ = if listHasUrl then model.view.itemSelected else Nothing
     in
         case url_ of
             Just url ->
@@ -218,12 +219,17 @@ selectPrev model =
 
 selectItem:  Model -> Maybe (Int, Item) -> (Model, Cmd Msg)
 selectItem model item =
-    case item of
-        Just (index, item') ->
-            ({ model | itemSelected = Just item'.url }, scrollToElement ("item-" ++ toString index))
+    let
+        view = model.view
+    in
+        case item of
+            Just (index, item_) ->
+                ({ model | view = { view | itemSelected = Just item_.url }}
+                , scrollToElement ("item-" ++ toString index)
+                )
 
-        Nothing ->
-            (model, Cmd.none)
+            Nothing ->
+                (model, Cmd.none)
 
 
 port scrollToElement: String -> Cmd msg

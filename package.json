@@ -30,6 +30,7 @@
     "worker-loader": "^0.7.1"
   },
   "dependencies": {
+    "dexie":"1.5.1",
     "howler": "2.0.0",
     "keycode": "^2.1.7",
     "scrollparent": "^1.0.2"

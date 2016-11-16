@@ -52,13 +52,13 @@ viewAbout model =
         [ classList
             [ ("app-about", True)
             , ("is-show",
-                case model.floatPanel of
+                case model.view.floatPanel of
                     About _ -> True
                     _ -> False
               )
             ]
         ] <|
-        case model.floatPanel of
+        case model.view.floatPanel of
             About content ->
                 [ button
                     [ class "btn btn-icon app-about-close"
@@ -97,9 +97,9 @@ viewAbout model =
                     Settings ->
                         div
                             [ class "about-tab-content about-settings" ]
-                            [ viewSettingFallbackUrl model.fallbackRssServiceUrl
-                            , viewSettingFontSize model.fontSize
-                            , viewSettingTheme model.theme
+                            [ viewSettingFallbackUrl model.setting.fallbackRssServiceUrl
+                            , viewSettingFontSize model.setting.fontSize
+                            , viewSettingTheme model.setting.theme
                             ]
                 ]
 

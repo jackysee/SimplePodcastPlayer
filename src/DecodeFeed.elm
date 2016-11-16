@@ -10,36 +10,41 @@ import DateFormat exposing (parseDuration)
 import Regex
 
 
-decodeFeed : List String -> String -> Json.Decoder Feed
+decodeFeed : List String -> String -> Json.Decoder (Feed, List Item)
 decodeFeed paths url =
-    decode Feed
-        |> hardcoded url
+    decode
+        (\title items ->
+            ( { url = url
+              , title = title
+              , state = Normal
+              , showConfirmDelete = False
+              }
+            , items
+            )
+        )
         |> requiredAt (paths ++ ["title"]) Json.string
-        -- |> requiredAt (paths ++ ["item"]) (Json.list decodeItem)
         |> requiredAt (paths ++ ["item"])
-            (Json.list (Json.maybe decodeItem)
+            (Json.list (Json.maybe (decodeItem url))
                 `Json.andThen`
                     (\list -> list
                         |> List.filterMap identity
                         |> Json.succeed
                     )
             )
-        |> hardcoded Normal
-        |> hardcoded False
 
 
-decodeYqlFeed : String -> Json.Decoder Feed
+decodeYqlFeed : String -> Json.Decoder (Feed, List Item)
 decodeYqlFeed =
     decodeFeed ["query", "results", "rss", "channel"]
 
 
-decodeCustomFeed : String -> Json.Decoder Feed
+decodeCustomFeed : String -> Json.Decoder (Feed, List Item)
 decodeCustomFeed =
     decodeFeed []
 
 
-decodeItem : Json.Decoder Item
-decodeItem =
+decodeItem : String -> Json.Decoder Item
+decodeItem feedUrl =
     decode Item
         |> required "title" Json.string
         |> required "pubDate" jsonDate
@@ -50,6 +55,7 @@ decodeItem =
         |> hardcoded -1
         |> hardcoded 0
         |> hardcoded -1
+        |> hardcoded feedUrl
 
 
 decodeEnclosure : Json.Decoder String

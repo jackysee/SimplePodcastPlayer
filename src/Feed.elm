@@ -59,7 +59,7 @@ updateFeed fallbackRssServiceUrl feed feeds =
         )
 
 
-loadFallbackFeed : Maybe String -> String -> (Http.Error -> Task Http.Error Feed)
+loadFallbackFeed : Maybe String -> String -> (Http.Error -> Task Http.Error (Feed, List Item))
 loadFallbackFeed serviceUrl_ url =
     (\err ->
         case serviceUrl_ of
@@ -72,40 +72,42 @@ loadFallbackFeed serviceUrl_ url =
 
 updateModelFeed : Feed -> Model -> Model
 updateModelFeed feed model =
-    { model | list =
+    { model | feeds =
         List.map (\f ->
             if feed.url == f.url then
                 feed
             else
                 f
-        ) model.list
+        ) model.feeds
     }
 
 
-updateFeedItems : Model -> Feed -> Model
-updateFeedItems model newFeed =
+updateFeedItems : Model -> Feed -> List Item -> Model
+updateFeedItems model newFeed items =
     let
-        feed = model.list
-            |> List.filter (\f -> f.url == newFeed.url)
-            |> List.head
+        feed = getFeedByUrl model newFeed.url
+        urls = model.items
+            |> List.filterMap
+                (\item ->
+                    if item.feedUrl == newFeed.url then
+                        Just (item.url, True)
+                    else
+                        Nothing
+                )
+            |> Dict.fromList
     in
         case feed of
-            Just feed' ->
+            Just feed_ ->
                 let
-                    urls = feed'.items
-                        |> List.map (\item -> (item.url, True))
-                        |> Dict.fromList
-                    newItems =
-                        newFeed.items
-                            |> List.filter
-                                (\item -> not (Dict.member item.url urls))
+                    newItems = List.filter
+                        (\item -> not (Dict.member item.url urls))
+                        items
                 in
-                    updateModelFeed
-                        { feed'
-                            | items = newItems ++ feed'.items
-                            , state = Normal
-                        }
-                        model
+                    model
+                        |> updateModelFeed { feed_ | state = Normal }
+                        |> (\model_ ->
+                                { model_ | items = newItems ++ model_.items }
+                            )
 
             Nothing ->
                 model
@@ -119,7 +121,7 @@ maybeEqual a b =
 viewFeedTitle : Model -> Feed -> Html Msg
 viewFeedTitle model feed =
     let
-        items = feed.items
+        --items = feed.items
         feedState =
             case feed.state of
                 Refreshing ->
@@ -148,7 +150,7 @@ viewFeedTitle model feed =
                         ]
                         [ Icons.refresh ]
         feedTitle =
-            case model.editingFeedTitle of
+            case model.view.editingFeedTitle of
                 Just title_ ->
                     title_
                 Nothing ->
@@ -158,7 +160,7 @@ viewFeedTitle model feed =
             [ div
                 [ classList
                     [ ("feed-header-title", True)
-                    , ("is-editing", model.editingFeedTitle /= Nothing)
+                    , ("is-editing", model.view.editingFeedTitle /= Nothing)
                     ]
                 ]
                 [ input
@@ -169,8 +171,8 @@ viewFeedTitle model feed =
                     , onBlur <|
                         MsgBatch
                             [ SetFeedTitle feed <|
-                                if model.editingFeedTitle /= (Just "") then
-                                    Maybe.withDefault feed.title model.editingFeedTitle
+                                if model.view.editingFeedTitle /= (Just "") then
+                                    Maybe.withDefault feed.title model.view.editingFeedTitle
                                 else
                                     feed.title
                             , SetEditingFeedTitle Nothing
@@ -185,29 +187,6 @@ viewFeedTitle model feed =
                     [ text feedTitle ]
                 ]
 
-            -- if model.editingFeedTitle then
-            --     input
-            --         [ id "input-feed-title"
-            --         , class "input-text input-feed-title"
-            --         , value feed.title
-            --         , onBlurNotEmpty (\value ->
-            --             if value /= "" then
-            --                 MsgBatch
-            --                     [ SetFeedTitle feed value
-            --                     , SetEditingFeedTitle False
-            --                     ]
-            --             else
-            --                 SetEditingFeedTitle False
-            --           )
-            --         ]
-            --         []
-            --   else
-            --     span
-            --         [ class "feed-title"
-            --         , title feed.title
-            --         , onClick (SetEditingFeedTitle True)
-            --         ]
-            --         [ text feed.title ]
             , feedState
             , refreshBtn
             , if feed.state /= Refreshing then
@@ -263,18 +242,18 @@ viewItem model feed (index, item) =
         li
             [ classList
                 [ ("item", True)
-                , ("is-current", Just item.url == model.currentItemUrl)
+                , ("is-current", Just item.url == model.view.currentItemUrl)
                 , ("is-unplayed", item.progress == -1 && not listened)
                 , ("is-played", listened)
-                , ("is-selected", model.itemSelected == Just item.url)
-                , ("is-enqueued", List.member item.url model.playList)
+                , ("is-selected", model.view.itemSelected == Just item.url)
+                , ("is-enqueued", List.member item.url model.view.playList)
                 ]
             , toggleItem model item
             , onMouseEnter (SelectItem item)
             -- , onMouseLeave (UnselectItem item)
             , id ("item-" ++ toString index)
             ]
-            [ renderItemState item model.currentItemUrl model.playerState
+            [ renderItemState item model.view.currentItemUrl model.view.playerState
             , case feed of
                 Just feed' ->
                     div
@@ -289,13 +268,13 @@ viewItem model feed (index, item) =
                     [ class "item-title", title item.title ]
                     [ text item.title ]
                 , let
-                    description_ = 
+                    description_ =
                         item.description
                             |> Maybe.map stripHtml
                             >> Maybe.withDefault ""
                   in
                     div
-                        [ class "item-description-text" 
+                        [ class "item-description-text"
                         , title <| Unicode.unEsc description_
                         ]
                         [ description_
@@ -304,22 +283,22 @@ viewItem model feed (index, item) =
                         ]
                 ]
             , viewItemQueued model item
-            , renderQueueControl item model.listView
+            , renderQueueControl item model.view.listView
             , viewItemControl listened model item
             , div [ class "item-progress" ]
                 [ text <| formatDurationShort item.duration ]
             , div
                 [ class "item-date"
-                , title <| format item.pubDate model.currentTime True
+                , title <| format item.pubDate model.view.currentTime True
                 ]
-                [ text <| format item.pubDate model.currentTime False ]
+                [ text <| format item.pubDate model.view.currentTime False ]
             ]
 
 
 toggleItem : Model -> Item -> Html.Attribute Msg
 toggleItem model item =
-    if Just item.url == model.currentItemUrl then
-        if model.playerState == Playing then
+    if Just item.url == model.view.currentItemUrl then
+        if model.view.playerState == Playing then
             onClick (Pause item)
         else
             onClick (Play item)
@@ -381,7 +360,7 @@ renderQueueControl item listView =
 
 viewItemQueued: Model -> Item -> Html Msg
 viewItemQueued model item =
-    if List.member item.url model.playList && model.listView /= Queued then
+    if List.member item.url model.view.playList && model.view.listView /= Queued then
         div
             [ class "item-queued" ]
             [ text "queued" ]
@@ -418,7 +397,7 @@ viewItemControl listened model item =
                     [ text "Download file" ]
 
                 ]
-            , if List.member item.url model.playList then
+            , if List.member item.url model.view.playList then
                 div
                     [ class "dropdown-item"
                     , onInternalClick (Dequeue item.url)
@@ -465,7 +444,7 @@ viewItemControl listened model item =
                             )
                         ]
                         [ Icons.ellipsisV ]
-                    , case model.floatPanel of
+                    , case model.view.floatPanel of
                         ItemDropdown url ->
                             if url == item.url || Just url == item.link then
                                 div
@@ -495,23 +474,18 @@ markListenedMsg item =
         MarkPlayCount item.url markPlayCount
 
 
-markItemsListened : Dict String Bool -> List Feed -> List Feed
+markItemsListened : Dict String Bool -> List Item -> List Item
 markItemsListened toUpdate list =
     List.map
-        (\feed ->
-            { feed | items = List.map
-                (\item ->
-                    if Dict.member item.url toUpdate then
-                        { item | markPlayCount =
-                            if item.markPlayCount == -1 then
-                                item.playCount + 1
-                            else
-                                item.markPlayCount
-                        }
+        (\item ->
+            if Dict.member item.url toUpdate then
+                { item | markPlayCount =
+                    if item.markPlayCount == -1 then
+                        item.playCount + 1
                     else
-                        item
-                )
-                feed.items
-            }
+                        item.markPlayCount
+                }
+            else
+                item
         )
         list

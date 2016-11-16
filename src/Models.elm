@@ -16,13 +16,13 @@ type alias Item =
     , progress : Time
     , playCount : Int
     , markPlayCount : Int
+    , feedUrl: String
     }
 
 
 type alias Feed =
     { url : String
     , title : String
-    , items : List Item
     , state : FeedState
     , showConfirmDelete : Bool
     }
@@ -90,11 +90,17 @@ type Theme
     | Dark
 
 
-type alias Model =
+type alias Setting =
+    { fallbackRssServiceUrl : Maybe String
+    , fontSize : FontSize
+    , theme : Theme
+    }
+
+
+type alias View =
     { urlToAdd : String
     , loadFeedState : LoadFeedState
     , playerState : PlayerState
-    , list : List Feed
     , currentTime : Time
     , itemsToShow : Int
     , currentItemUrl : Maybe String
@@ -107,32 +113,49 @@ type alias Model =
     , playList: List String
     , shortcutKeys : List String
     , floatPanel : FloatPanel
-    , fallbackRssServiceUrl : Maybe String
-    , fontSize : FontSize
-    , playerShowTimeLeft : Bool
-    , theme : Theme
     , editingFeedTitle : Maybe String
+    , playerShowTimeLeft : Bool
     }
 
 
-type alias StoreModel =
-    { list : List StoreFeed
-    , currentItemUrl : Maybe String
+type alias Model =
+    { view : View
+    , setting : Setting
+    , feeds : List Feed
+    , items : List Item
+    }
+
+
+type alias StoreView =
+    -- { list : List StoreFeed
+    { currentItemUrl : Maybe String
     , playerRate : Float
     , playerVol : Float
     , listView : String
     , itemFilter : String
     , itemSortLatest : Bool
     , playList: List String
-    , fallbackRssServiceUrl : Maybe String
-    , fontSize : String
     , playerShowTimeLeft : Bool
+    }
+
+
+type alias StoreSetting =
+    { fallbackRssServiceUrl : Maybe String
+    , fontSize : String
     , theme : String
     }
+
 
 type alias StoreFeed =
     { url : String
     , title : String
+    }
+
+
+type alias StoreModel =
+    { view: StoreView
+    , setting : StoreSetting
+    , feeds : List StoreFeed
     , items : List Item
     }
 
@@ -147,46 +170,48 @@ type alias PlayLoad =
 
 isCurrent : String -> Model -> Bool
 isCurrent itemUrl model =
-    Just itemUrl == model.currentItemUrl
+    Just itemUrl == model.view.currentItemUrl
 
 
 getCurrentItem : Model -> Maybe Item
 getCurrentItem model =
-    model.list
-        |> List.concatMap (\feed -> feed.items)
-        |> List.filter (\item -> isCurrent item.url model)
-        |> List.head
+    model.items
+        |> findFirst (\item -> isCurrent item.url model)
 
 
 getSelectedItem : Model -> Maybe Item
 getSelectedItem model =
-    model.list
-        |> List.concatMap (\feed -> feed.items)
-        |> List.filter (\item -> Just item.url == model.itemSelected)
-        |> List.head
+    model.items
+        |> findFirst (\item -> Just item.url == model.view.itemSelected)
 
 
 updateCurrentItem : (Item -> Item) -> Model -> Model
 updateCurrentItem updater model =
-    updateItem updater model.currentItemUrl model
+    updateItem updater model.view.currentItemUrl model
 
 
 updateItem : (Item -> Item) -> Maybe String -> Model -> Model
 updateItem updater url model =
-    { model | list =
-        List.map (\feed ->
-            { feed | items =
-                List.map (\item ->
-                    if Just item.url == url && url /= Nothing then
-                        updater item
-                    else
-                        item
-                )
-                feed.items
-            }
-        )
-        model.list
+    { model
+        | items = List.map
+            (\item ->
+                if Just item.url == url && url /= Nothing then
+                    updater item
+                else
+                    item
+            )
+            model.items
     }
+
+
+updateView : (View -> View) -> Model -> Model
+updateView updater model =
+    { model | view = updater model.view }
+
+
+updateSetting: (Setting -> Setting) -> Model -> Model
+updateSetting updater model =
+    { model | setting = updater model.setting }
 
 
 toItemFilter : String -> ItemFilter
@@ -237,7 +262,8 @@ toFeed : StoreFeed -> Feed
 toFeed storeFeed =
     { url = storeFeed.url
     , title = storeFeed.title
-    , items = storeFeed.items
+    -- , items = storeFeed.items
+    -- , items = []
     , state = Normal
     , showConfirmDelete = False
     }
@@ -266,8 +292,13 @@ toListView str =
 
 toStoreModel : Model -> StoreModel
 toStoreModel model =
-    { list = List.map toStoreFeed model.list
-    , currentItemUrl = model.currentItemUrl
+    { view = toStoreView model.view
+    , setting = toStoreSetting model.setting
+    , feeds = List.map toStoreFeed model.feeds
+    , items = model.items
+    }
+    {-- list = List.map toStoreFeed model.list
+    { currentItemUrl = model.currentItemUrl
     , playerRate = model.playerRate
     , playerVol = model.playerVol
     , listView = listViewToStr model.listView
@@ -279,60 +310,96 @@ toStoreModel model =
     , playerShowTimeLeft = model.playerShowTimeLeft
     , theme = themeToStr model.theme
     }
+    --}
+
+
+toStoreView : View -> StoreView
+toStoreView view =
+    { currentItemUrl = view.currentItemUrl
+    , playerRate = view.playerRate
+    , playerVol = view.playerVol
+    , listView = listViewToStr view.listView
+    , itemFilter = itemFilterToStr view.itemFilter
+    , itemSortLatest = view.itemSortLatest
+    , playList = view.playList
+    , playerShowTimeLeft = view.playerShowTimeLeft
+    }
+
+
+toStoreSetting : Setting -> StoreSetting
+toStoreSetting setting =
+    { fallbackRssServiceUrl = setting.fallbackRssServiceUrl
+    , fontSize = fontSizeToStr setting.fontSize
+    , theme = themeToStr setting.theme
+    }
 
 
 toStoreFeed : Feed -> StoreFeed
 toStoreFeed feed =
     { url = feed.url
     , title = feed.title
-    , items = feed.items
+    -- , items = feed.items
     }
 
 
 defaultModel : Model
 defaultModel =
-    { urlToAdd = ""
-    , list = []
-    , loadFeedState = Empty
-    , currentTime = 0
-    , itemsToShow = 30
-    , currentItemUrl = Nothing
-    , playerState = Stopped
-    , playerRate = 1
-    , playerVol = toFloat 1
-    , listView = AllFeed
-    , itemFilter = Unlistened
-    , itemSelected = Nothing
-    , itemSortLatest = True
-    , playList = []
-    , shortcutKeys = []
-    , floatPanel = Hidden
-    , fallbackRssServiceUrl = Nothing
-    , fontSize = Medium
-    , playerShowTimeLeft = True
-    , theme = Light
-    , editingFeedTitle = Nothing
+    { view =
+        { urlToAdd = ""
+        , loadFeedState = Empty
+        , currentTime = 0
+        , itemsToShow = 30
+        , currentItemUrl = Nothing
+        , playerState = Stopped
+        , playerRate = 1
+        , playerVol = toFloat 1
+        , listView = AllFeed
+        , itemFilter = Unlistened
+        , itemSelected = Nothing
+        , itemSortLatest = True
+        , playList = []
+        , shortcutKeys = []
+        , floatPanel = Hidden
+        , editingFeedTitle = Nothing
+        , playerShowTimeLeft = True
+        }
+    , setting =
+        { fallbackRssServiceUrl = Nothing
+        , fontSize = Medium
+        , theme = Light
+        }
+    , feeds = []
+    , items = []
     }
 
 
-fromStoreModel : StoreModel -> Model
+fromStoreModel: StoreModel -> Model
 fromStoreModel m =
     let
-        feeds = List.map toFeed m.list
+        defaultSetting = defaultModel.setting
+        defaultView = defaultModel.view
+        feeds = List.map toFeed m.feeds
     in
-        { defaultModel
-            | floatPanel = initAddPanel feeds
-            , list = feeds
-            , currentItemUrl = m.currentItemUrl
-            , playerRate = m.playerRate
-            , playerVol = m.playerVol
-            , listView = toListView m.listView
-            , itemFilter = toItemFilter m.itemFilter
-            , playList = m.playList
-            , fallbackRssServiceUrl = m.fallbackRssServiceUrl
-            , fontSize = toFontSize m.fontSize
-            , playerShowTimeLeft = m.playerShowTimeLeft
-            , theme = toTheme m.theme
+        { view =
+            { defaultView
+                | floatPanel = initAddPanel feeds
+                , currentItemUrl = m.view.currentItemUrl
+                , playerRate = m.view.playerRate
+                , playerVol = m.view.playerVol
+                , listView = toListView m.view.listView
+                , itemFilter = toItemFilter m.view.itemFilter
+                , itemSortLatest = m.view.itemSortLatest
+                , playList = m.view.playList
+                , playerShowTimeLeft = m.view.playerShowTimeLeft
+            }
+        , setting =
+            { defaultSetting
+                | fallbackRssServiceUrl = m.setting.fallbackRssServiceUrl
+                , fontSize = toFontSize m.setting.fontSize
+                , theme = toTheme m.setting.theme
+            }
+        , feeds = feeds
+        , items = m.items
         }
 
 
@@ -351,67 +418,92 @@ itemList =
 
 itemListAll : Bool -> Model -> (List (Feed, Item), Bool)
 itemListAll limit model =
-    case model.listView of
-        ViewFeed url' ->
+    case model.view.listView of
+        ViewFeed url_ ->
             let
-                list = model.list
-                    |> List.filter (\f -> f.url == url' )
-                    |> itemsByDate model
+                list = itemsByDate model (getFeedByUrl model url_)
             in
                 if limit then
-                    ( List.take model.itemsToShow list
-                    , List.length list > model.itemsToShow
+                    ( List.take model.view.itemsToShow list
+                    , List.length list > model.view.itemsToShow
                     )
                 else
                     (list, False)
 
         Queued ->
             let
-                items = model.list
-                    |> List.concatMap (\feed ->
-                            List.map
-                                (\item -> (item.url, (feed, item)))
-                                feed.items
+                items = model.items
+                    |> List.filterMap
+                        (\item ->
+                            case getFeedByUrl model item.feedUrl of
+                                Just feed_ ->
+                                    Just (item.url, (feed_, item))
+
+                                Nothing ->
+                                    Nothing
                         )
                     |> Dict.fromList
-                playListItem =  model.playList
+                playListItem =  model.view.playList
                     |> List.filterMap (\url -> Dict.get url items)
             in
                 (playListItem, False)
 
         AllFeed ->
             let
-                list = itemsByDate model model.list
+                list = itemsByDate model Nothing
             in
                 if limit then
-                    ( List.take model.itemsToShow list
-                    , List.length list > model.itemsToShow
+                    ( List.take model.view.itemsToShow list
+                    , List.length list > model.view.itemsToShow
                     )
                 else
                     (list, False)
 
 
-itemsByDate: Model -> List Feed -> List (Feed, Item)
-itemsByDate model list =
+itemsByDate: Model -> Maybe Feed -> List (Feed, Item)
+itemsByDate model feed =
     let
-        list_ = list
-            |> List.concatMap (\feed ->
-                    List.map (\item -> (feed, item)) feed.items
-                )
-            |> List.filter (\(feed, item) ->
+        list_ =
+            case feed of
+                Just feed_ ->
+                    model.items
+                        |> List.filterMap
+                            (\item ->
+                                if item.feedUrl == feed_.url then
+                                    Just (feed_, item)
+                                else
+                                    Nothing
+                            )
+
+                Nothing ->
+                    model.items
+                        |> List.filterMap
+                            (\item ->
+                                case getFeedByUrl model item.feedUrl of
+                                    Just feed__ ->
+                                        Just (feed__, item)
+
+                                    Nothing ->
+                                        Nothing
+                            )
+
+
+        list__ = list_
+            |> List.filter
+                (\(feed, item) ->
                     filterByItemFilter model item
                 )
             |> List.sortBy (\(feed, item) -> item.pubDate)
     in
-        if model.itemSortLatest then
-            List.reverse list_
+        if model.view.itemSortLatest then
+            List.reverse list__
         else
-            list_
+            list__
 
 
 filterByItemFilter : Model -> Item -> Bool
 filterByItemFilter model item =
-    case model.itemFilter of
+    case model.view.itemFilter of
         All -> True
         Unlistened ->
             item.playCount == 0
@@ -419,12 +511,21 @@ filterByItemFilter model item =
 
 getItemByUrl : Model -> String -> Maybe (Feed, Item)
 getItemByUrl model url =
-    model.list
-        |> List.concatMap (\feed ->
-            List.map (\item -> (feed, item)) feed.items
-        )
-        |> findFirst (\(feed, item) -> item.url == url)
+    Maybe.andThen
+        (findFirst (\item -> item.url == url) model.items)
+        (\item ->
+            case getFeedByUrl model item.feedUrl of
+                Just feed ->
+                    Just (feed, item)
 
+                Nothing ->
+                    Nothing
+        )
+
+
+getFeedByUrl : Model -> String -> Maybe Feed
+getFeedByUrl model url =
+    findFirst (\feed -> feed.url == url) model.feeds
 
 
 getFontSizePx : FontSize -> String
