@@ -6,7 +6,7 @@ db.version(1).stores({
     view: '++',
     setting:'++',
     feeds: '&url',
-    items: '&url,feedUrl'
+    items: '[url+feedUrl],feedUrl'
 });
 
 db.open();
@@ -48,6 +48,10 @@ onmessage = function(event){
 
     if(event.data.type == 'destroy'){
         db.delete();
+    }
+
+    if(event.data.type == "empty"){
+        db[event.data.name].toCollection().delete();
     }
 
 }
