@@ -255,9 +255,7 @@ updateModel msg model cmds =
                         []
             in
                 (model_
-                , [ saveFeeds [feed]
-                  , saveItems items_
-                  ]
+                , [ saveItems items_ ]
                     ++ cmds_
                     ++ cmds
                 )
