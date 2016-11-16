@@ -15,10 +15,7 @@ creditContent : String
 creditContent = """
 Created by [@jackysee](http://github.com/jackysee/SimplePodcastPlayer) using
 [Elm](http://elm-lang.org). The RSS service is provided by [YQL](http://developer.yahoo.com/yql/console/).
-
-Icons provided by [font-awesome](http://fontawesome.io) and:
-* "Subscription" Created by Michal Beno from [the Noun Project](http://thenounproject.com)
-* "Information" Created by Gonzalo Bravo from [the Noun Project](http://thenounproject.com)
+Icons provided by [font-awesome](http://fontawesome.io).
 """
 
 shortcutContent : String

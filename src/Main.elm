@@ -247,7 +247,7 @@ updateModel msg model cmds =
 
         UpdateFeedSucceed feeds (feed, items) ->
             let
-                model_ = updateFeedItems model feed items
+                (model_, items_) = updateFeedItems model feed items
                 cmds_ =
                     if List.length feeds > 0 then
                         [ updateFeeds feeds ]
@@ -256,7 +256,7 @@ updateModel msg model cmds =
             in
                 (model_
                 , [ saveFeeds [feed]
-                  , saveItems items
+                  , saveItems items_
                   ]
                     ++ cmds_
                     ++ cmds
@@ -314,7 +314,10 @@ updateModel msg model cmds =
                     }
             in
                 ( model_
-                , [ saveView model_ ] ++ cmds
+                , [ saveView model_ 
+                  , saveItems items
+                  ] 
+                    ++ cmds
                 )
 
         HideFeed ->
@@ -479,7 +482,7 @@ updateModel msg model cmds =
             let
                 items = flushPlayCount model.items
                 model_ =
-                    { model | items = flushPlayCount model.items }
+                    { model | items = items }
                         |> updateView (\v->
                                 { v
                                     | itemFilter = filter
@@ -487,7 +490,9 @@ updateModel msg model cmds =
                                 }
                             )
             in
-                (model_ , [ saveView model_ ] ++ cmds)
+                ( model_ 
+                , [ saveView model_ , saveItems items ] ++ cmds
+                )
 
         ShowItemDropdown url  ->
             ( updateView (\v -> { v | floatPanel = ItemDropdown url }) model

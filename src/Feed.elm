@@ -82,7 +82,7 @@ updateModelFeed feed model =
     }
 
 
-updateFeedItems : Model -> Feed -> List Item -> Model
+updateFeedItems : Model -> Feed -> List Item -> ( Model, List Item)
 updateFeedItems model newFeed items =
     let
         feed = getFeedByUrl model newFeed.url
@@ -103,14 +103,16 @@ updateFeedItems model newFeed items =
                         (\item -> not (Dict.member item.url urls))
                         items
                 in
-                    model
+                    ( model
                         |> updateModelFeed { feed_ | state = Normal }
                         |> (\model_ ->
                                 { model_ | items = newItems ++ model_.items }
-                            )
+                           )
+                    , newItems
+                    )
 
             Nothing ->
-                model
+                (model , [])
 
 
 maybeEqual : Maybe a -> Maybe a -> Bool
