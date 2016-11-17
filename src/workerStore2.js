@@ -19,7 +19,6 @@ onmessage = function(event){
         var feeds = db.feeds.toArray();
 
         Dexie.Promise.all([setting, view, items, feeds]).then(function(values){
-            console.log('getting', values);
             postMessage({
                 type: 'get',
                 queryId:event.data.queryId,

@@ -8,6 +8,7 @@ import ListUtil exposing (getNext, findFirst)
 (=>): a -> b -> (a, b)
 (=>) = (,)
 
+shortcuts: List (List String, (Model -> Msg))
 shortcuts =
     [ ["g", "u"] => \_ -> SetItemFilter Unlistened
     , ["g", "q"] => \_ -> SetListView Queued
@@ -40,9 +41,9 @@ shortcuts =
 
     , ["p"] =>
         \model ->
-            model.view.currentItemUrl
-                |> Maybe.map (\url ->
-                    getItemByUrl model url
+            model.view.currentItem
+                |> Maybe.map (\currentItem ->
+                    getItemByUrl model currentItem
                         |> Maybe.map (\(feed, item) ->
                             case model.view.playerState of
                                 Playing ->
@@ -73,7 +74,7 @@ shortcuts =
         \model ->
             if model.view.listView == Queued then
                 getSelectedItem model
-                    |> Maybe.map (\item ->  MoveQueuedItemUp item.url )
+                    |> Maybe.map (\item ->  MoveQueuedItemUp item)
                     |> Maybe.withDefault  NoOp
             else
                 NoOp
@@ -82,7 +83,7 @@ shortcuts =
         \model ->
             if model.view.listView == Queued then
                 getSelectedItem model
-                    |> Maybe.map (\item -> MoveQueuedItemDown item.url)
+                    |> Maybe.map (\item -> MoveQueuedItemDown item )
                     |> Maybe.withDefault NoOp
             else
                 NoOp
@@ -92,10 +93,10 @@ shortcuts =
             getSelectedItem model
                 |> Maybe.map
                     (\item ->
-                        if List.member item.url model.view.playList then
-                            Dequeue item.url
+                        if inPlayList item model then
+                            Dequeue item
                         else
-                            Enqueue item.url
+                            Enqueue item
                     )
                 |> Maybe.withDefault NoOp
 
@@ -166,18 +167,18 @@ selectNext : Model -> Maybe (Model, Cmd Msg)
 selectNext model =
     let
         (list, more) = itemList model
-        listHasUrl = List.any (\(feed, item) -> Just item.url == model.view.itemSelected) list
-        url_ =
+        listHasUrl = List.any (\(feed, item) -> isItemEqual model.view.itemSelected item) list
+        selected =
             if listHasUrl then
                 model.view.itemSelected
             else
                 Nothing
         next =
-            case url_ of
-                Just url ->
+            case selected of
+                Just selected_ ->
                     list
                         |> List.indexedMap (,)
-                        |> getNext (\(index, (feed, item)) -> item.url == url)
+                        |> getNext (\(index, (feed, item)) -> isItemEqual (Just selected_) item)
                         |> Maybe.map (\(index, (feed, item)) -> (index, item))
 
                 Nothing ->
@@ -196,15 +197,15 @@ selectPrev: Model -> (Model, Cmd Msg)
 selectPrev model =
     let
         (list, more) = itemList model
-        listHasUrl = List.any (\(feed, item) -> Just item.url == model.view.itemSelected) list
-        url_ = if listHasUrl then model.view.itemSelected else Nothing
+        listHasUrl = List.any (\(feed, item) -> isItemEqual model.view.itemSelected item) list
+        selected = if listHasUrl then model.view.itemSelected else Nothing
     in
-        case url_ of
-            Just url ->
+        case selected of
+            Just selected_ ->
                 list
                     |> List.indexedMap (,)
                     |> List.reverse
-                    |> getNext (\(index, (feed, item)) -> item.url == url)
+                    |> getNext (\(index, (feed, item)) -> isItemEqual (Just selected_) item)
                     |> Maybe.map (\(index, (feed, item)) -> (index, item))
                     |> selectItem model
 
@@ -224,7 +225,7 @@ selectItem model item =
     in
         case item of
             Just (index, item_) ->
-                ({ model | view = { view | itemSelected = Just item_.url }}
+                ({ model | view = { view | itemSelected = Just (item_.url, item_.feedUrl) }}
                 , scrollToElement ("item-" ++ toString index)
                 )
 

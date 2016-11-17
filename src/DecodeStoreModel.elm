@@ -2,7 +2,7 @@ module DecodeStoreModel exposing (decodeStoreValue)
 
 import Result
 import Json.Decode as Json exposing (value, (:=) )
-import Json.Decode.Pipeline exposing ( decode, required, optional, nullable )
+import Json.Decode.Pipeline exposing ( decode, required, optional, nullable, hardcoded, custom )
 import Models exposing (..)
 
 
@@ -38,13 +38,14 @@ decodeStoreSetting =
 decodeStoreView: Json.Decoder StoreView
 decodeStoreView =
     decode StoreView
-        |> required "currentItemUrl" (nullable Json.string)
+        -- |> required "currentItem" (nullable Json.string)
+        |> custom (Json.at ["currentItem"] (Json.maybe decodeItemId))
         |> optional "playerRate" Json.float defaultModel.view.playerRate
         |> optional "playerVol" Json.float defaultModel.view.playerVol
         |> optional "listView" Json.string (listViewToStr defaultModel.view.listView)
         |> optional "itemFilter" Json.string (itemFilterToStr defaultModel.view.itemFilter)
         |> optional "itemSortLatest" Json.bool (defaultModel.view.itemSortLatest)
-        |> required "playList" (Json.list Json.string)
+        |> required "playList" (Json.list decodeItemId)
         |> optional "playerShowTimeLeft" Json.bool defaultModel.view.playerShowTimeLeft
 
 
@@ -69,3 +70,17 @@ decodeStoreItem =
         |> optional "playCount" Json.int 0
         |> optional "markPlayCount" Json.int -1
         |> required "feedUrl" Json.string
+
+
+decodeItemId : Json.Decoder ItemId
+decodeItemId =
+    Json.andThen
+        (Json.list Json.string)
+        (\list ->
+            case list of
+                x::y::[] ->
+                    Json.succeed (x, y)
+
+                _ ->
+                    Json.fail "not tuple"
+        )

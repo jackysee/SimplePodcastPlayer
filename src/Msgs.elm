@@ -37,7 +37,7 @@ type Msg
     | OpenNewLink String
     | SetVol Float
     | SetItemFilter ItemFilter
-    | MarkPlayCount String Int
+    | MarkPlayCount Item Int
     | MarkItemsBelowListened String
     | MarkAllItemsAsListened
     | ShowItemDropdown String
@@ -45,10 +45,10 @@ type Msg
     | SelectItem Item
     | SelectNext
     | SelectPrev
-    | Enqueue String
-    | Dequeue String
-    | MoveQueuedItemUp String
-    | MoveQueuedItemDown String
+    | Enqueue Item
+    | Dequeue Item
+    | MoveQueuedItemUp Item
+    | MoveQueuedItemDown Item
     | SetShortcutKeys (List String)
     | SetFloatPanel FloatPanel
     | MsgBatch (List Msg)

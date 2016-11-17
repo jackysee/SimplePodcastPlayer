@@ -244,18 +244,18 @@ viewItem model feed (index, item) =
         li
             [ classList
                 [ ("item", True)
-                , ("is-current", Just item.url == model.view.currentItemUrl)
+                , ("is-current", isCurrent item model)
                 , ("is-unplayed", item.progress == -1 && not listened)
                 , ("is-played", listened)
-                , ("is-selected", model.view.itemSelected == Just item.url)
-                , ("is-enqueued", List.member item.url model.view.playList)
+                , ("is-selected", isItemEqual model.view.itemSelected item)
+                , ("is-enqueued", inPlayList item model)
                 ]
             , toggleItem model item
             , onMouseEnter (SelectItem item)
             -- , onMouseLeave (UnselectItem item)
             , id ("item-" ++ toString index)
             ]
-            [ renderItemState item model.view.currentItemUrl model.view.playerState
+            [ renderItemState item model.view.currentItem model.view.playerState
             , case feed of
                 Just feed' ->
                     div
@@ -299,7 +299,7 @@ viewItem model feed (index, item) =
 
 toggleItem : Model -> Item -> Html.Attribute Msg
 toggleItem model item =
-    if Just item.url == model.view.currentItemUrl then
+    if isCurrent item model then
         if model.view.playerState == Playing then
             onClick (Pause item)
         else
@@ -308,9 +308,9 @@ toggleItem model item =
         onClick (Play item)
 
 
-renderItemState: Item -> Maybe String -> PlayerState -> Html Msg
-renderItemState item currentItemUrl playerState =
-    if Just item.url == currentItemUrl then
+renderItemState: Item -> Maybe ItemId -> PlayerState -> Html Msg
+renderItemState item currentItem playerState =
+    if Just (item.url, item.feedUrl) == currentItem then
         div
             [ class "item-state" ]
             [ if playerState == SoundLoading then
@@ -342,17 +342,17 @@ renderQueueControl item listView =
             [ class "item-reorder" ]
             [ button
                 [ class "btn btn-icon"
-                , onInternalClick (MoveQueuedItemUp item.url)
+                , onInternalClick (MoveQueuedItemUp item)
                 ]
                 [ Icons.arrowUp ]
             , button
                 [ class "btn btn-icon"
-                , onInternalClick (MoveQueuedItemDown item.url)
+                , onInternalClick (MoveQueuedItemDown item)
                 ]
                 [ Icons.arrowDown ]
             , button
                 [ class "btn btn-icon"
-                , onInternalClick (Dequeue item.url)
+                , onInternalClick (Dequeue item)
                 ]
                 [ Icons.close ]
             ]
@@ -362,7 +362,7 @@ renderQueueControl item listView =
 
 viewItemQueued: Model -> Item -> Html Msg
 viewItemQueued model item =
-    if List.member item.url model.view.playList && model.view.listView /= Queued then
+    if inPlayList item model && model.view.listView /= Queued then
         div
             [ class "item-queued" ]
             [ text "queued" ]
@@ -399,16 +399,16 @@ viewItemControl listened model item =
                     [ text "Download file" ]
 
                 ]
-            , if List.member item.url model.view.playList then
+            , if inPlayList item model then
                 div
                     [ class "dropdown-item"
-                    , onInternalClick (Dequeue item.url)
+                    , onInternalClick (Dequeue item)
                     ]
                     [ text "Dequeue" ]
               else
                 div
                     [ class "dropdown-item"
-                    , onInternalClick (Enqueue item.url)
+                    , onInternalClick (Enqueue item)
                     ]
                     [ text "Enqueue" ]
             , div
@@ -473,7 +473,7 @@ markListenedMsg item =
                 item.markPlayCount > 0
         markPlayCount = if listened then 0 else 1
     in
-        MarkPlayCount item.url markPlayCount
+        MarkPlayCount item markPlayCount
 
 
 markItemsListened : Dict String Bool -> List Item -> List Item

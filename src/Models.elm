@@ -90,6 +90,10 @@ type Theme
     | Dark
 
 
+type alias ItemId =
+    (String, String)
+
+
 type alias Setting =
     { fallbackRssServiceUrl : Maybe String
     , fontSize : FontSize
@@ -103,14 +107,14 @@ type alias View =
     , playerState : PlayerState
     , currentTime : Time
     , itemsToShow : Int
-    , currentItemUrl : Maybe String
+    , currentItem: Maybe ItemId
     , playerRate : Float
     , playerVol : Float
     , listView : ListView
     , itemFilter: ItemFilter
     , itemSortLatest: Bool
-    , itemSelected : Maybe String
-    , playList: List String
+    , itemSelected : Maybe ItemId
+    , playList: List ItemId
     , shortcutKeys : List String
     , floatPanel : FloatPanel
     , editingFeedTitle : Maybe String
@@ -128,13 +132,13 @@ type alias Model =
 
 type alias StoreView =
     -- { list : List StoreFeed
-    { currentItemUrl : Maybe String
+    { currentItem: Maybe ItemId
     , playerRate : Float
     , playerVol : Float
     , listView : String
     , itemFilter : String
     , itemSortLatest : Bool
-    , playList: List String
+    , playList: List ItemId
     , playerShowTimeLeft : Bool
     }
 
@@ -167,35 +171,39 @@ type alias PlayLoad =
     , vol : Float
     }
 
+isItemEqual : Maybe ItemId -> Item -> Bool
+isItemEqual target item =
+    Just (item.url, item.feedUrl) == target
 
-isCurrent : String -> Model -> Bool
-isCurrent itemUrl model =
-    Just itemUrl == model.view.currentItemUrl
+
+isCurrent : Item -> Model -> Bool
+isCurrent item model =
+    isItemEqual model.view.currentItem item
 
 
 getCurrentItem : Model -> Maybe Item
 getCurrentItem model =
     model.items
-        |> findFirst (\item -> isCurrent item.url model)
+        |> findFirst (\item -> isCurrent item model)
 
 
 getSelectedItem : Model -> Maybe Item
 getSelectedItem model =
     model.items
-        |> findFirst (\item -> Just item.url == model.view.itemSelected)
+        |> findFirst (isItemEqual model.view.itemSelected)
 
 
 updateCurrentItem : (Item -> Item) -> Model -> Model
 updateCurrentItem updater model =
-    updateItem updater model.view.currentItemUrl model
+    updateItem updater model.view.currentItem model
 
 
-updateItem : (Item -> Item) -> Maybe String -> Model -> Model
-updateItem updater url model =
+updateItem : (Item -> Item) -> Maybe ItemId -> Model -> Model
+updateItem updater currentItem model =
     { model
         | items = List.map
             (\item ->
-                if Just item.url == url && url /= Nothing then
+                if Just (item.url, item.feedUrl) == currentItem && currentItem /= Nothing then
                     updater item
                 else
                     item
@@ -315,7 +323,7 @@ toStoreModel model =
 
 toStoreView : View -> StoreView
 toStoreView view =
-    { currentItemUrl = view.currentItemUrl
+    { currentItem = view.currentItem
     , playerRate = view.playerRate
     , playerVol = view.playerVol
     , listView = listViewToStr view.listView
@@ -349,7 +357,7 @@ defaultModel =
         , loadFeedState = Empty
         , currentTime = 0
         , itemsToShow = 30
-        , currentItemUrl = Nothing
+        , currentItem = Nothing
         , playerState = Stopped
         , playerRate = 1
         , playerVol = toFloat 1
@@ -383,7 +391,7 @@ fromStoreModel m =
         { view =
             { defaultView
                 | floatPanel = initAddPanel feeds
-                , currentItemUrl = m.view.currentItemUrl
+                , currentItem = m.view.currentItem
                 , playerRate = m.view.playerRate
                 , playerVol = m.view.playerVol
                 , listView = toListView m.view.listView
@@ -437,14 +445,14 @@ itemListAll limit model =
                         (\item ->
                             case getFeedByUrl model item.feedUrl of
                                 Just feed_ ->
-                                    Just (item.url, (feed_, item))
+                                    Just ((item.url, item.feedUrl), (feed_, item))
 
                                 Nothing ->
                                     Nothing
                         )
                     |> Dict.fromList
                 playListItem =  model.view.playList
-                    |> List.filterMap (\url -> Dict.get url items)
+                    |> List.filterMap (\(url, feedUrl) -> Dict.get (url, feedUrl) items)
             in
                 (playListItem, False)
 
@@ -509,10 +517,10 @@ filterByItemFilter model item =
             item.playCount == 0
 
 
-getItemByUrl : Model -> String -> Maybe (Feed, Item)
-getItemByUrl model url =
+getItemByUrl : Model -> ItemId -> Maybe (Feed, Item)
+getItemByUrl model (url, feedUrl) =
     Maybe.andThen
-        (findFirst (\item -> item.url == url) model.items)
+        (findFirst (\item -> (item.url, item.feedUrl) == (url, feedUrl)) model.items)
         (\item ->
             case getFeedByUrl model item.feedUrl of
                 Just feed ->
@@ -534,3 +542,8 @@ getFontSizePx fontSize =
         Large -> "18px"
         Medium -> "16px"
         Small -> "12px"
+
+
+inPlayList: Item -> Model -> Bool
+inPlayList item model =
+    List.member (item.url, item.feedUrl) model.view.playList

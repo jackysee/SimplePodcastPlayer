@@ -170,7 +170,7 @@ updateModel msg model cmds =
                     |> updateView
                         (\view ->
                             { view
-                                | currentItemUrl = Just item.url
+                                | currentItem = Just (item.url, item.feedUrl)
                                 , playerState = SoundLoading
                             }
                         )
@@ -312,9 +312,9 @@ updateModel msg model cmds =
                     }
             in
                 ( model_
-                , [ saveView model_ 
+                , [ saveView model_
                   , saveItems items
-                  ] 
+                  ]
                     ++ cmds
                 )
 
@@ -345,20 +345,20 @@ updateModel msg model cmds =
             let
                 feeds = List.filter (\f -> f.url /= feed.url ) model.feeds
                 items = List.filter (\i -> i.feedUrl /= feed.url) model.items
-                currentItemDeleted = not (List.any (\item -> isCurrent item.url model) items)
-                currentItemUrl =
+                currentItemDeleted = not (List.any (\item -> isCurrent item model) items)
+                currentItem =
                     if currentItemDeleted then
                         Nothing
                     else
-                        model.view.currentItemUrl
+                        model.view.currentItem
                 cmds_ =
                     if currentItemDeleted then
                         [ stop "" ]
                     else
                         []
-                itemUrls = List.map (\item -> item.url) items
+                itemUrls = List.map (\item -> (item.url, item.feedUrl)) items
                 playList = List.filter
-                    (\url -> not (List.member url itemUrls))
+                    (\playListItem -> not (List.member playListItem itemUrls))
                     model.view.playList
                 model_ =
                     { model | feeds = feeds , items = items }
@@ -367,7 +367,7 @@ updateModel msg model cmds =
                                 { v
                                     | listView = AllFeed
                                     , playList = playList
-                                    , currentItemUrl = currentItemUrl
+                                    , currentItem = currentItem
                                 }
                             )
             in
@@ -386,7 +386,7 @@ updateModel msg model cmds =
                         |> updateView (\v ->
                             { v
                                 | playerState = Paused
-                                , currentItemUrl = Nothing
+                                , currentItem = Nothing
                             }
                         )
             in
@@ -409,7 +409,7 @@ updateModel msg model cmds =
                             )
                 nextInQueue =
                     Maybe.oneOf
-                        [ getNext (\url_ -> url == url_) model.view.playList
+                        [ getNext (\(url_, feedUrl) -> url == url_) model.view.playList
                         , List.head model.view.playList
                         ]
                         |> Maybe.map (getItemByUrl model)
@@ -425,17 +425,20 @@ updateModel msg model cmds =
                 case nextItem of
                     Just (feed, item_) ->
                         updateModel
-                            (MsgBatch
-                                [ Play item_
-                                , Dequeue url
-                                ]
+                            (MsgBatch <|
+                                [ Play item_ ]
+                                ++
+                                    (getCurrentItem model
+                                        |> Maybe.map (\item -> [ Dequeue item ])
+                                        |> Maybe.withDefault []
+                                    )
                             )
                             model_ cmds
 
                     Nothing ->
                         let
                             model__ = model_
-                                |> updateView (\v ->{ v | currentItemUrl = Nothing })
+                                |> updateView (\v ->{ v | currentItem = Nothing })
                         in
                             ( model__
                             , [ saveView model__ ]
@@ -488,7 +491,7 @@ updateModel msg model cmds =
                                 }
                             )
             in
-                ( model_ 
+                ( model_
                 , [ saveView model_ , saveItems items ] ++ cmds
                 )
 
@@ -501,23 +504,16 @@ updateModel msg model cmds =
             , cmds )
 
         SelectItem item ->
-            ( updateView (\v -> { v | itemSelected = Just item.url }) model
+            ( updateView (\v -> { v | itemSelected = Just (item.url, item.feedUrl) }) model
             , cmds )
 
-        MarkPlayCount url playCount ->
+        MarkPlayCount item playCount ->
             let
-                cmd_ =
-                    case getItemByUrl model url of
-                        Just (feed, item) ->
-                            [ saveItems [item] ]
-
-                        Nothing ->
-                            []
-
+                cmd_ = [ saveItems [item] ]
                 model_ = model
                     |> updateItem
                         (\item -> { item | markPlayCount = playCount })
-                        (Just url)
+                        (Just (item.url, item.feedUrl))
                     |> updateView
                         (\v -> { v | floatPanel = hideItemDropdown v.floatPanel })
             in
@@ -589,7 +585,7 @@ updateModel msg model cmds =
             in
                 (model_, [cmd] ++ cmds)
 
-        Enqueue url ->
+        Enqueue item ->
             let
                 model_ =
                     model
@@ -597,10 +593,10 @@ updateModel msg model cmds =
                             (\v ->
                                 { v
                                     | playList =
-                                        if List.member url model.view.playList then
+                                        if inPlayList item model then
                                             model.view.playList
                                         else
-                                            model.view.playList ++ [url]
+                                            model.view.playList ++ [(item.url, item.feedUrl)]
                                     , floatPanel = hideItemDropdown model.view.floatPanel
                                  }
                             )
@@ -609,9 +605,9 @@ updateModel msg model cmds =
                 , [ saveView model_ ] ++ cmds
                 )
 
-        Dequeue url ->
+        Dequeue item ->
             let
-                isDequeued = (\url_ -> url == url_)
+                isDequeued = (\item_ -> isItemEqual (Just item_) item)
                 model_ =
                     model
                         |> updateView (\v ->
@@ -633,20 +629,20 @@ updateModel msg model cmds =
                 , [ saveView model_ ] ++ cmds
                 )
 
-        MoveQueuedItemUp url ->
+        MoveQueuedItemUp item ->
             let
                 model_ = model
                     |> updateView (\v ->
-                        { v | playList = swapUp url model.view.playList }
+                        { v | playList = swapUp (item.url, item.feedUrl) model.view.playList }
                     )
             in
                 (model_, [ saveView model_ ] ++ cmds)
 
-        MoveQueuedItemDown url ->
+        MoveQueuedItemDown item ->
             let
                 model_ = model
                     |> updateView (\v ->
-                        { v | playList = swapDown url model.view.playList }
+                        { v | playList = swapDown (item.url, item.feedUrl) model.view.playList }
                     )
             in
                 (model_, [ saveView model_ ] ++ cmds)

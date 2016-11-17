@@ -10,7 +10,6 @@ worker.onmessage = function(ev){
     if(ev.data.type === 'get'){
         var callback = callbacks[ev.data.queryId];
         if(callback){
-            console.log('callback', ev.data.model)
             callback(ev.data.model)
             delete callbacks[ev.data.queryId];
         }

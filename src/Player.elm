@@ -66,7 +66,7 @@ setFloat msg' input =
 getCurrentItem : Model -> Maybe Item
 getCurrentItem model =
     model.items
-        |> findFirst (\item -> isCurrent item.url model)
+        |> findFirst (\item -> isCurrent item model)
 
 
 viewPlayer : Model -> Html Msg
@@ -119,9 +119,13 @@ viewPlayer model =
                                 , div
                                     [ class "player-item-queued-info" ]
                                     [ let
-                                        currentInQueue = List.member
-                                            (Maybe.withDefault "" model.view.currentItemUrl)
-                                            model.view.playList
+                                        currentInQueue =
+                                            case model.view.currentItem of
+                                                Just item_ ->
+                                                    List.member item_ model.view.playList
+
+                                                Nothing ->
+                                                    False
                                       in
                                         if model.view.playerState == Playing then
                                             if currentInQueue  then

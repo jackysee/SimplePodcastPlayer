@@ -24,12 +24,12 @@ decodeFeed paths url =
         )
         |> requiredAt (paths ++ ["title"]) Json.string
         |> requiredAt (paths ++ ["item"])
-            (Json.list (Json.maybe (decodeItem url))
-                `Json.andThen`
-                    (\list -> list
-                        |> List.filterMap identity
-                        |> Json.succeed
-                    )
+            (Json.andThen
+                (Json.list (Json.maybe (decodeItem url)))
+                (\list -> list
+                    |> List.filterMap identity
+                    |> Json.succeed
+                )
             )
 
 
@@ -70,9 +70,9 @@ decodeSingleEnclosureUrl : Json.Decoder String
 decodeSingleEnclosureUrl =
     Json.object2 (\url _ -> url)
         ("url" := Json.string)
-        ("type" := Json.string
-            `Json.andThen`
-             (\type_ ->
+        (Json.andThen
+            ("type" := Json.string)
+            (\type_ ->
                 if Regex.contains (Regex.regex "^audio/") type_ then
                     Json.succeed type_
                 else
@@ -83,8 +83,8 @@ decodeSingleEnclosureUrl =
 
 decodeEnclosureListUrl : Json.Decoder String
 decodeEnclosureListUrl =
-    (Json.list (Json.maybe decodeSingleEnclosureUrl))
-    `Json.andThen`
+    Json.andThen
+        (Json.list (Json.maybe decodeSingleEnclosureUrl))
         (\list ->
             list
                 |> List.filterMap identity
@@ -96,24 +96,27 @@ decodeEnclosureListUrl =
 
 jsonDate : Json.Decoder Time
 jsonDate =
-    Json.string
-        `Json.andThen`
-            \val ->
-                case Date.fromString val of
-                    Ok date ->
-                        Json.succeed (Date.toTime date)
+    Json.andThen
+        Json.string
+        (\val ->
+            case Date.fromString val of
+                Ok date ->
+                    Json.succeed (Date.toTime date)
 
-                    Err error ->
-                        Json.fail "not a correct date string"
+                Err error ->
+                    Json.fail "not a correct date string"
+        )
 
 
 decodeDuration: Json.Decoder Time
 decodeDuration =
-    Json.string `Json.andThen`
-        \val ->
+    Json.andThen
+        Json.string
+        (\val ->
             case parseDuration val of
                 Ok value ->
                     Json.succeed value
 
                 Err error ->
                     Json.fail "not a correct duration"
+        )
