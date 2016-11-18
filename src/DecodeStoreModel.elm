@@ -1,8 +1,8 @@
 module DecodeStoreModel exposing (decodeStoreValue)
 
 import Result
-import Json.Decode as Json exposing (value, (:=) )
-import Json.Decode.Pipeline exposing ( decode, required, optional, nullable, hardcoded, custom )
+import Json.Decode as Json exposing (value, nullable )
+import Json.Decode.Pipeline exposing ( decode, required, optional, hardcoded, custom )
 import Models exposing (..)
 
 
@@ -74,9 +74,8 @@ decodeStoreItem =
 
 decodeItemId : Json.Decoder ItemId
 decodeItemId =
-    Json.andThen
-        (Json.list Json.string)
-        (\list ->
+    Json.list Json.string
+        |> Json.andThen (\list ->
             case list of
                 x::y::[] ->
                     Json.succeed (x, y)

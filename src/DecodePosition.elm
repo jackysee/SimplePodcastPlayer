@@ -1,75 +1,75 @@
 module DecodePosition exposing (decodeLeft, decodeLeftPercentage, decodeBottomRight)
 
-import Json.Decode as Decode exposing ((:=), Decoder)
+import Json.Decode as Decode exposing (Decoder)
 
 target : Decoder a -> Decoder a
 target decoder =
-    "target" := decoder
+    Decode.field "target" decoder
 
 
 currentTarget : Decoder a -> Decoder a
 currentTarget decoder =
-    "currentTarget" := decoder
+    Decode.field "currentTarget" decoder
 
 
 decodeLeftPercentage : Decoder Float
 decodeLeftPercentage =
-    Decode.object2
+    Decode.map2
         (\left width -> left / width)
         decodeLeft
-        ( currentTarget ( "offsetWidth" := Decode.float ) )
+        ( currentTarget ( Decode.field "offsetWidth" Decode.float ) )
 
 
 decodeLeft : Decoder Float
 decodeLeft =
-    Decode.object2
+    Decode.map2
         (\pageX posLeft -> pageX - posLeft)
-        ( "pageX" := Decode.float )
+        (Decode.field "pageX" Decode.float )
         ( currentTarget (positionLeft 0) )
 
 
 offsetParent : a -> Decoder a -> Decoder a
 offsetParent x decoder =
     Decode.oneOf
-        [ "offsetParent" := Decode.null x
-        , "offsetParent" := decoder
+        [ Decode.field "offsetParent" (Decode.null x)
+        , Decode.field "offsetParent" decoder
         ]
 
 
 positionLeft : Float -> Decoder Float
 positionLeft x =
-    Decode.object2
+    Decode.map2
         (\scrollLeft offsetLeft ->
             x + offsetLeft - scrollLeft
         )
-        ("scrollLeft" := Decode.float)
-        ("offsetLeft" := Decode.float)
-    `Decode.andThen`
-        (\x' ->
-            offsetParent x' (positionLeft x')
-        )
+        (Decode.field "scrollLeft" Decode.float)
+        (Decode.field "offsetLeft" Decode.float)
+        |> Decode.andThen
+            (\x_ ->
+                offsetParent x_ (positionLeft x_)
+            )
 
 positionTop: Float -> Decoder Float
 positionTop y =
-    Decode.object2
+    Decode.map2
         (\scrollTop offsetTop ->
             y + offsetTop - scrollTop
         )
-        ("scrollTop" := Decode.float)
-        ("offsetTop" := Decode.float)
-    `Decode.andThen`
-        (\y' ->
-            offsetParent y' (positionTop y')
-        )
+        (Decode.field "scrollTop" Decode.float)
+        (Decode.field "offsetTop" Decode.float)
+        |> Decode.andThen
+            (\y_ ->
+                offsetParent y_ (positionTop y_)
+            )
 
 
 decodeBottomRight: Decoder (Float, Float)
 decodeBottomRight =
-    Decode.object4
+    Decode.map4
         (\posLeft posTop w h ->
             (posLeft + w, posTop + h)
         )
         ( currentTarget (positionLeft 0) )
         ( currentTarget (positionTop 0) )
-        ( currentTarget ("offsetWidth" := Decode.float) )
-        ( currentTarget ("offsetHeight" := Decode.float) )
+        ( currentTarget (Decode.field "offsetWidth" Decode.float) )
+        ( currentTarget (Decode.field "offsetHeight" Decode.float) )

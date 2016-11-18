@@ -1,6 +1,6 @@
 port module Main exposing (..)
 
-import Html.App as App
+import Html as App
 import Task exposing (Task)
 import Time
 import ListUtil exposing (dropWhile, swapDown, swapUp, getNext, getPrev)
@@ -18,7 +18,7 @@ import FloatPlanel exposing (hideItemDropdown)
 import DecodeStoreModel exposing (decodeStoreValue)
 
 
-main : Program (Maybe Json.Decode.Value)
+main : Program (Maybe Json.Decode.Value) Model Msg
 main =
     App.programWithFlags
         { init = init
@@ -48,7 +48,7 @@ init storeValue =
 
 updateCurrentTime : Cmd Msg
 updateCurrentTime =
-    Task.perform (\_ -> NoOp) UpdateCurrentTime Time.now
+    Task.perform UpdateCurrentTime Time.now
 
 
 updateFeeds : List Feed -> Cmd Msg
@@ -58,9 +58,14 @@ updateFeeds feeds =
             Cmd.none
 
         feed :: feeds ->
-            Task.perform
-                (\_ -> NoOp)
-                (UpdateFeeds feeds)
+            Task.attempt
+                (\result ->
+                    case result of
+                        Ok feed ->
+                            UpdateFeeds feeds feed
+                        Err err ->
+                            NoOp
+                )
                 (Task.succeed feed)
 
 
@@ -223,9 +228,9 @@ updateModel msg model cmds =
 
         UpdateFeeds feeds feed ->
             let
-                model' = updateModelFeed { feed | state = Refreshing } model
+                model_ = updateModelFeed { feed | state = Refreshing } model
             in
-                (model'
+                (model_
                 , [ updateFeed
                         model.setting.fallbackRssServiceUrl
                         feed
@@ -408,17 +413,17 @@ updateModel msg model cmds =
                                 }
                             )
                 nextInQueue =
-                    Maybe.oneOf
+                    oneOfMaybe
                         [ getNext (\(url_, feedUrl) -> url == url_) model.view.playList
                         , List.head model.view.playList
                         ]
                         |> Maybe.map (getItemByUrl model)
                         |> Maybe.withDefault Nothing
                 nextItem =
-                    Maybe.oneOf
+                    oneOfMaybe
                         [ nextInQueue
                         , itemList model
-                            |> fst
+                            |> Tuple.first
                             |> getNext (\(feed, item) -> item.url == url)
                         ]
             in
@@ -528,7 +533,7 @@ updateModel msg model cmds =
                 toUpdate =
                     Dict.fromList
                         (itemListAll False model
-                            |> fst
+                            |> Tuple.first
                             |> dropWhile (\(feed, item) -> item.url /= url)
                             |> List.map (\(feed, item) -> (item.url, True))
                         )
@@ -554,7 +559,7 @@ updateModel msg model cmds =
                 toUpdate =
                     Dict.fromList
                         (itemListAll False model
-                            |> fst
+                            |> Tuple.first
                             |> List.map (\(feed, item) -> (item.url, True))
                         )
                 model_ = { model | items = markItemsListened toUpdate model.items }
@@ -616,7 +621,7 @@ updateModel msg model cmds =
                                 , floatPanel = hideItemDropdown model.view.floatPanel
                                 , itemSelected =
                                     if model.view.listView == Queued then
-                                        Maybe.oneOf
+                                        oneOfMaybe
                                             [ getNext isDequeued model.view.playList
                                             , getPrev isDequeued model.view.playList
                                             ]
@@ -736,6 +741,22 @@ updateModel msg model cmds =
                 (model_, [ saveFeeds [feed_] ] ++ cmds)
 
 
+oneOfMaybe : List (Maybe a) -> Maybe a
+oneOfMaybe list =
+    case list of
+        [] ->
+            Nothing
+
+        x::xs ->
+            case x of
+                Just x_ ->
+                    Just x_
+
+                Nothing ->
+                    oneOfMaybe xs
+
+
+
 flushPlayCount : List Item -> List Item
 flushPlayCount list =
     List.map
@@ -753,7 +774,7 @@ flushPlayCount list =
 
 noOpTask : Task x a -> Cmd Msg
 noOpTask task =
-    Task.perform (\_ -> NoOp) (\_ -> NoOp) task
+    Task.attempt (\_ -> NoOp) task
 
 
 saveSetting : Model -> Cmd Msg

@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Html exposing (div, text, input, Html, span, ul, li, button, img, node)
 import Html.Events exposing (onClick)
-import Html.Attributes exposing (class, src, style, classList, type', checked, title, property)
+import Html.Attributes exposing (class, src, style, classList, checked, title, property)
 import Json.Encode
 import String
 
@@ -90,8 +90,8 @@ viewLeftBtn listView =
 
 
 viewTitle : Model -> Maybe Feed -> Html Msg
-viewTitle model feed' =
-    case feed' of
+viewTitle model feed_ =
+    case feed_ of
         Just feed ->
             viewFeedTitle model feed
 
@@ -208,7 +208,7 @@ viewItemList model feed_ =
                             ul
                                 [ class "item-list" ]
                                 (list
-                                    |> List.map snd
+                                    |> List.map Tuple.second
                                     |> List.indexedMap (,)
                                     |> List.map list_
                                 )

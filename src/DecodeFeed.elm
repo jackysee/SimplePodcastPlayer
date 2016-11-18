@@ -1,6 +1,6 @@
 module DecodeFeed exposing (decodeYqlFeed, decodeCustomFeed)
 
-import Json.Decode as Json exposing ((:=))
+import Json.Decode as Json
 import Json.Decode.Pipeline exposing
     ( decode, required, hardcoded, requiredAt, custom, optional )
 import Models exposing (..)
@@ -24,9 +24,8 @@ decodeFeed paths url =
         )
         |> requiredAt (paths ++ ["title"]) Json.string
         |> requiredAt (paths ++ ["item"])
-            (Json.andThen
-                (Json.list (Json.maybe (decodeItem url)))
-                (\list -> list
+            (Json.list (Json.maybe (decodeItem url))
+                |> Json.andThen (\list -> list
                     |> List.filterMap identity
                     |> Json.succeed
                 )
@@ -48,9 +47,9 @@ decodeItem feedUrl =
     decode Item
         |> required "title" Json.string
         |> required "pubDate" jsonDate
-        |> custom (Json.maybe ("link" := Json.string))
+        |> custom (Json.maybe (Json.field "link" Json.string))
         |> custom decodeEnclosure
-        |> custom (Json.maybe ("description" := Json.string))
+        |> custom (Json.maybe (Json.field "description" Json.string))
         |> optional "duration" decodeDuration -1
         |> hardcoded -1
         |> hardcoded 0
@@ -61,18 +60,17 @@ decodeItem feedUrl =
 decodeEnclosure : Json.Decoder String
 decodeEnclosure =
     Json.oneOf
-        [ "enclosure" := decodeSingleEnclosureUrl
-        , "enclosure" := decodeEnclosureListUrl
+        [ Json.field "enclosure" decodeSingleEnclosureUrl
+        , Json.field "enclosure" decodeEnclosureListUrl
         ]
 
 
 decodeSingleEnclosureUrl : Json.Decoder String
 decodeSingleEnclosureUrl =
-    Json.object2 (\url _ -> url)
-        ("url" := Json.string)
-        (Json.andThen
-            ("type" := Json.string)
-            (\type_ ->
+    Json.map2 (\url _ -> url)
+        (Json.field "url" Json.string)
+        (Json.field "type" Json.string
+            |> Json.andThen (\type_ ->
                 if Regex.contains (Regex.regex "^audio/") type_ then
                     Json.succeed type_
                 else
@@ -83,9 +81,8 @@ decodeSingleEnclosureUrl =
 
 decodeEnclosureListUrl : Json.Decoder String
 decodeEnclosureListUrl =
-    Json.andThen
-        (Json.list (Json.maybe decodeSingleEnclosureUrl))
-        (\list ->
+    Json.list (Json.maybe decodeSingleEnclosureUrl)
+        |> Json.andThen (\list ->
             list
                 |> List.filterMap identity
                 |> List.head
@@ -96,9 +93,8 @@ decodeEnclosureListUrl =
 
 jsonDate : Json.Decoder Time
 jsonDate =
-    Json.andThen
-        Json.string
-        (\val ->
+    Json.string
+        |> Json.andThen (\val ->
             case Date.fromString val of
                 Ok date ->
                     Json.succeed (Date.toTime date)
@@ -110,9 +106,8 @@ jsonDate =
 
 decodeDuration: Json.Decoder Time
 decodeDuration =
-    Json.andThen
-        Json.string
-        (\val ->
+    Json.string
+        |> Json.andThen (\val ->
             case parseDuration val of
                 Ok value ->
                     Json.succeed value

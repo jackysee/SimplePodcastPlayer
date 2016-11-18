@@ -519,9 +519,9 @@ filterByItemFilter model item =
 
 getItemByUrl : Model -> ItemId -> Maybe (Feed, Item)
 getItemByUrl model (url, feedUrl) =
-    Maybe.andThen
-        (findFirst (\item -> (item.url, item.feedUrl) == (url, feedUrl)) model.items)
-        (\item ->
+    model.items
+        |> findFirst (\item -> (item.url, item.feedUrl) == (url, feedUrl))
+        |> Maybe.andThen (\item ->
             case getFeedByUrl model item.feedUrl of
                 Just feed ->
                     Just (feed, item)

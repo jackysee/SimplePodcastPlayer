@@ -40,7 +40,7 @@ formatDurationShort time =
 roundDp: Int -> Float -> String
 roundDp dp num =
     let
-        factor = 10 ^ dp
+        factor = 10 ^ dp |> toFloat
     in
         toFloat (round (num * factor)) / factor
             |> toString
@@ -55,8 +55,8 @@ parseDuration str =
             |> List.map2
                 (\seconds part -> Result.map2 (*) seconds part)
                 [Ok 1, Ok 60, Ok 3600]
-        sum = (\list' ->
-            case list' of
+        sum = (\list_ ->
+            case list_ of
                 [] -> Ok 0
                 x::xs -> Result.map2 (+) x (sum xs)
         )

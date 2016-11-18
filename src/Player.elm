@@ -1,7 +1,7 @@
 module Player exposing (viewPlayer)
 
 import Html exposing (Html, text, div, img, button, input)
-import Html.Attributes exposing (class, style, src, classList, type', value)
+import Html.Attributes exposing (class, style, src, classList, type_, value)
 import Html.Events exposing (on, onClick, onInput)
 import String
 import Time exposing (Time)
@@ -21,7 +21,7 @@ range vmin vmax step val disabled msg =
             [ class "range-wrap" ]
             [ if not disabled then
                 input
-                    [ type' "range"
+                    [ type_ "range"
                     , Html.Attributes.min (toString vmin)
                     , Html.Attributes.max (toString vmax)
                     , Html.Attributes.step (toString step)
@@ -56,11 +56,11 @@ progressBar progress duration =
 
 
 setFloat: (Float -> msg) -> String -> msg
-setFloat msg' input =
+setFloat msg_ input =
     input
         |> String.toFloat
         |> Result.withDefault 0
-        |> msg'
+        |> msg_
 
 
 getCurrentItem : Model -> Maybe Item

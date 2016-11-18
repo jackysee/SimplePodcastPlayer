@@ -11,7 +11,6 @@ import Html.Attributes exposing (class, title, src, classList, id, href, target,
 import Dict exposing (Dict)
 import Regex
 import String
-import Unicode
 
 import Models exposing (..)
 import Msgs exposing (..)
@@ -19,12 +18,13 @@ import DecodeFeed exposing (decodeYqlFeed, decodeCustomFeed)
 import DateFormat exposing (formatDuration, formatDurationShort, format)
 import Events exposing (onInternalClick, onClickPosBottomRight, onBlurNotEmpty)
 import Icons
+import Escape
 
 yqlUrl: String -> String
 yqlUrl url =
     String.join ""
         [ "//query.yahooapis.com/v1/public/yql?q="
-        , Http.uriEncode ("select * from xml where url = \"" ++ url ++ "\" ")
+        , Http.encodeUri ("select * from xml where url = \"" ++ url ++ "\" ")
         , "&format=json"
         ]
 
@@ -33,38 +33,54 @@ customUrl : String -> String -> String
 customUrl serviceUrl url =
     String.join ""
         [ serviceUrl ++ "?url="
-        , Http.uriEncode url
+        , Http.encodeUri url
         ]
 
 
 loadFeed : Maybe String -> String -> Cmd Msg
 loadFeed fallbackRssServiceUrl url =
-    Task.perform
-        FetchFeedFail
-        FetchFeedSucceed
-        (Http.get (decodeYqlFeed url) (yqlUrl url)
-            `Task.onError`
-            loadFallbackFeed fallbackRssServiceUrl url
+    Task.attempt
+        (\result ->
+            case result of
+                Ok feed ->
+                    FetchFeedSucceed feed
+
+                Err err ->
+                    FetchFeedFail err
+        )
+        (Http.get (yqlUrl url) (decodeYqlFeed url)
+            |> Http.toTask
+            |> Task.onError (loadFallbackFeed fallbackRssServiceUrl url)
         )
 
 
 updateFeed : Maybe String -> Feed -> List Feed -> Cmd Msg
 updateFeed fallbackRssServiceUrl feed feeds =
-    Task.perform
-        (UpdateFeedFail feeds feed)
-        (UpdateFeedSucceed feeds)
-        (Http.get (decodeYqlFeed feed.url) (yqlUrl feed.url)
-            `Task.onError`
-            loadFallbackFeed fallbackRssServiceUrl feed.url
+    Task.attempt
+        (\result ->
+            case result of
+                Ok feed ->
+                    UpdateFeedSucceed feeds feed
+
+                Err err ->
+                    UpdateFeedFail feeds feed err
+        )
+        (Http.get (yqlUrl feed.url) (decodeYqlFeed feed.url)
+            |> Http.toTask
+            |> Task.onError (loadFallbackFeed fallbackRssServiceUrl feed.url)
         )
 
 
+
+-- loadFallbackFeed : Maybe String -> String -> (Http.Request (Feed, List Item))
 loadFallbackFeed : Maybe String -> String -> (Http.Error -> Task Http.Error (Feed, List Item))
 loadFallbackFeed serviceUrl_ url =
     (\err ->
         case serviceUrl_ of
             Just serviceUrl ->
-                Http.get (decodeCustomFeed url) (customUrl serviceUrl url)
+                Http.get (customUrl serviceUrl url) (decodeCustomFeed url)
+                    |> Http.toTask
+
             Nothing ->
                 Task.fail err
     )
@@ -257,12 +273,12 @@ viewItem model feed (index, item) =
             ]
             [ renderItemState item model.view.currentItem model.view.playerState
             , case feed of
-                Just feed' ->
+                Just feed_ ->
                     div
                         [ class "item-feed-title"
-                        , onInternalClick (SetListView <| ViewFeed feed'.url)
+                        , onInternalClick (SetListView <| ViewFeed feed_.url)
                         ]
-                        [ text feed'.title ]
+                        [ text feed_.title ]
                 Nothing ->
                     text ""
             , div [ class "item-desp" ]
@@ -274,14 +290,15 @@ viewItem model feed (index, item) =
                         item.description
                             |> Maybe.map stripHtml
                             >> Maybe.withDefault ""
+                            >> String.slice 0 300
                   in
                     div
                         [ class "item-description-text"
-                        , title <| Unicode.unEsc description_
+                        , title <| Escape.unEsc description_
                         ]
                         [ description_
                             |> String.slice 0 300
-                            >> Unicode.text'
+                            >> Escape.text_
                         ]
                 ]
             , viewItemQueued model item
@@ -438,12 +455,7 @@ viewItemControl listened model item =
                     [ button
                         [ class "btn btn-icon btn-more"
                         , onInternalClick
-                            (ShowItemDropdown
-                                ( [ Just item.url, item.link ]
-                                     |> Maybe.oneOf
-                                     |> Maybe.withDefault ""
-                                )
-                            )
+                            (ShowItemDropdown item.url)
                         ]
                         [ Icons.ellipsisV ]
                     , case model.view.floatPanel of
