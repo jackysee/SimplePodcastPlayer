@@ -3,7 +3,6 @@ require('./styles/main.scss')
 require('howler'); //Howl
 var Elm = require('./Main.elm');
 var keycode = require('keycode');
-var scrollIntoViewIfNeeded = require('./scrollIntoViewIfNeeded');
 var store = require('./store');
 
 var root  = document.getElementById('root');
@@ -175,7 +174,18 @@ store.get(function(_model){
     app.ports.scrollToElement.subscribe(function(id){
         var el = document.getElementById(id);
         if(el){
-            scrollIntoViewIfNeeded(el);
+            var parent = el.offsetParent;
+            var parentScrollTop = parent.scrollTop;
+            var elOffsetTop = el.offsetTop;
+            if(parentScrollTop > elOffsetTop){
+                parentScrollTop = elOffsetTop;
+                return;
+            }
+            var parentOffsetHeight = parent.offsetHeight;
+            var elOffsetHeight = el.offsetHeight;
+            if(elOffsetTop + elOffsetHeight > parentScrollTop + parentOffsetHeight ){
+                parentScrollTop = elOffsetTop + elOffsetHeight - parentOffsetHeight;
+            }
         }
     });
 });

@@ -308,6 +308,7 @@ updateModel msg model cmds =
                         | listView = listView
                         , floatPanel = Hidden
                         , itemsToShow = defaultModel.view.itemsToShow
+                        , itemSelected = Nothing
                     }
                 items = flushPlayCount model.items
                 model_ =
@@ -493,6 +494,7 @@ updateModel msg model cmds =
                                 { v
                                     | itemFilter = filter
                                     , itemsToShow = defaultModel.view.itemsToShow
+                                    , itemSelected = Nothing
                                 }
                             )
             in
