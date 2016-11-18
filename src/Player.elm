@@ -108,6 +108,11 @@ viewPlayer model =
                                         , onClick (Pause item_)
                                         ]
                                         [ Icons.pause ]
+                                , div
+                                    [ class "btn player-btn "
+                                    , onClick (SetProgress 0)
+                                    ]
+                                    [ Icons.angleDoubleLeft ]
                                 ]
                             , div [ class "progress" ]
                                 [ div
