@@ -80,10 +80,6 @@ updateFeed fallbackRssServiceUrl feed feeds =
         )
 
 
-
--- loadFallbackFeed : Maybe String -> String -> (Http.Request (Feed, List Item))
-
-
 loadFallbackFeed : Maybe String -> String -> (Http.Error -> Task Http.Error ( Feed, List Item ))
 loadFallbackFeed serviceUrl_ url =
     (\err ->
