@@ -3,7 +3,6 @@ module AddFeed exposing (viewAddFeed, addFeedButton)
 import Html exposing (Html, div, button, img, span, input, text, ul, li)
 import Html.Attributes exposing (classList, class, src, id, class, value, placeholder, disabled)
 import Html.Events exposing (onClick, onInput, on, keyCode, onWithOptions)
-
 import Models exposing (..)
 import Msgs exposing (..)
 import Events exposing (onInternalClick, onKeyup)
@@ -14,8 +13,8 @@ viewAddFeed : Model -> Html Msg
 viewAddFeed model =
     div
         [ classList
-            [ ("add-panel", True)
-            , ("is-show", model.view.floatPanel == AddPanel)
+            [ ( "add-panel", True )
+            , ( "is-show", model.view.floatPanel == AddPanel )
             ]
         ]
         [ div
@@ -30,13 +29,14 @@ viewAddFeed model =
                 [ id "add-feed"
                 , class "add-feed input-text"
                 , onKeyup
-                    [ (13, \code ->
-                        if model.view.urlToAdd == "" then
-                            NoOp
-                        else
-                            AddFeed
+                    [ ( 13
+                      , \code ->
+                            if model.view.urlToAdd == "" then
+                                NoOp
+                            else
+                                AddFeed
                       )
-                    , (27, \_ -> HideAddPanel)
+                    , ( 27, \_ -> HideAddPanel )
                     ]
                 , onInput SetUrl
                 , value model.view.urlToAdd
@@ -53,21 +53,23 @@ viewAddFeed model =
                     [ class "subscription-title" ]
                     [ text "Subscribed: " ]
                 , div
-                    [ class "subscriptions" ] <|
-                    List.map (\feed ->
-                        span
-                            [ class "subscription-item" ]
-                            [ span
-                                [ class "add-feed-title"
-                                , onInternalClick (SetListView (ViewFeed feed.url))
+                    [ class "subscriptions" ]
+                  <|
+                    List.map
+                        (\feed ->
+                            span
+                                [ class "subscription-item" ]
+                                [ span
+                                    [ class "add-feed-title"
+                                    , onInternalClick (SetListView (ViewFeed feed.url))
+                                    ]
+                                    [ text feed.title ]
                                 ]
-                                [ text feed.title ]
-                            ]
-
-                    ) model.feeds
+                        )
+                        model.feeds
                 ]
           else
-              text ""
+            text ""
         ]
 
 
@@ -83,7 +85,6 @@ viewLoadFeedState state =
           else
             text ""
         ]
-
 
 
 addFeedButton : Html Msg

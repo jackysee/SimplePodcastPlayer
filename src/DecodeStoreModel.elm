@@ -1,8 +1,8 @@
 module DecodeStoreModel exposing (decodeStoreValue)
 
 import Result
-import Json.Decode as Json exposing (value, nullable )
-import Json.Decode.Pipeline exposing ( decode, required, optional, hardcoded, custom )
+import Json.Decode as Json exposing (value, nullable)
+import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded, custom)
 import Models exposing (..)
 
 
@@ -18,7 +18,7 @@ decodeStoreValue value =
             Nothing
 
 
-decodeStoreModel: Json.Decoder StoreModel
+decodeStoreModel : Json.Decoder StoreModel
 decodeStoreModel =
     decode StoreModel
         |> required "view" decodeStoreView
@@ -35,11 +35,12 @@ decodeStoreSetting =
         |> optional "theme" Json.string (themeToStr defaultModel.setting.theme)
 
 
-decodeStoreView: Json.Decoder StoreView
+decodeStoreView : Json.Decoder StoreView
 decodeStoreView =
     decode StoreView
         -- |> required "currentItem" (nullable Json.string)
-        |> custom (Json.at ["currentItem"] (Json.maybe decodeItemId))
+        |>
+            custom (Json.at [ "currentItem" ] (Json.maybe decodeItemId))
         |> optional "playerRate" Json.float defaultModel.view.playerRate
         |> optional "playerVol" Json.float defaultModel.view.playerVol
         |> optional "listView" Json.string (listViewToStr defaultModel.view.listView)
@@ -54,7 +55,10 @@ decodeStoreFeed =
     decode StoreFeed
         |> required "url" Json.string
         |> required "title" Json.string
-        -- |> required "items" (Json.list decodeStoreItem)
+
+
+
+-- |> required "items" (Json.list decodeStoreItem)
 
 
 decodeStoreItem : Json.Decoder Item
@@ -75,11 +79,12 @@ decodeStoreItem =
 decodeItemId : Json.Decoder ItemId
 decodeItemId =
     Json.list Json.string
-        |> Json.andThen (\list ->
-            case list of
-                x::y::[] ->
-                    Json.succeed (x, y)
+        |> Json.andThen
+            (\list ->
+                case list of
+                    x :: y :: [] ->
+                        Json.succeed ( x, y )
 
-                _ ->
-                    Json.fail "not tuple"
-        )
+                    _ ->
+                        Json.fail "not tuple"
+            )

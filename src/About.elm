@@ -11,15 +11,19 @@ import Icons
 import String
 import Regex
 
+
 creditContent : String
-creditContent = """
+creditContent =
+    """
 Created by [@jackysee](http://github.com/jackysee/SimplePodcastPlayer) using
 [Elm](http://elm-lang.org). The RSS service is provided by [YQL](http://developer.yahoo.com/yql/console/).
 Icons provided by [font-awesome](http://fontawesome.io).
 """
 
+
 shortcutContent : String
-shortcutContent = """
+shortcutContent =
+    """
 - Navigation
     - Go to Unlistened : **g u**
     - Go to Queued : **g q**
@@ -43,18 +47,23 @@ shortcutContent = """
     - move sleected item Down : **d**
 """
 
+
 viewAbout : Model -> Html Msg
 viewAbout model =
     div
         [ classList
-            [ ("app-about", True)
-            , ("is-show",
-                case model.view.floatPanel of
-                    About _ -> True
-                    _ -> False
+            [ ( "app-about", True )
+            , ( "is-show"
+              , case model.view.floatPanel of
+                    About _ ->
+                        True
+
+                    _ ->
+                        False
               )
             ]
-        ] <|
+        ]
+    <|
         case model.view.floatPanel of
             About content ->
                 [ button
@@ -63,22 +72,23 @@ viewAbout model =
                     ]
                     [ Icons.close ]
                 , div
-                    [ class "about-tabs" ] <|
-                        List.map
-                            (\(content_, label) ->
-                                div
-                                    [ classList
-                                        [ ("about-tab", True)
-                                        , ("is-selected", content == content_)
-                                        ]
-                                    , onClick (SetFloatPanel (About content_))
+                    [ class "about-tabs" ]
+                  <|
+                    List.map
+                        (\( content_, label ) ->
+                            div
+                                [ classList
+                                    [ ( "about-tab", True )
+                                    , ( "is-selected", content == content_ )
                                     ]
-                                    [ text label ]
-                            )
-                            [ (Settings, "Settings")
-                            , (Shortcut, "Shortcuts")
-                            , (Credit, "Credits")
-                            ]
+                                , onClick (SetFloatPanel (About content_))
+                                ]
+                                [ text label ]
+                        )
+                        [ ( Settings, "Settings" )
+                        , ( Shortcut, "Shortcuts" )
+                        , ( Credit, "Credits" )
+                        ]
                 , case content of
                     Credit ->
                         div []
@@ -87,10 +97,13 @@ viewAbout model =
                                 [ class "about-tab-content app-about-content" ]
                                 creditContent
                             ]
+
                     Shortcut ->
                         Markdown.toHtml
-                            [ class "about-tab-content about-shortcut"]
-                            <| decorateKeys shortcutContent
+                            [ class "about-tab-content about-shortcut" ]
+                        <|
+                            decorateKeys shortcutContent
+
                     Settings ->
                         div
                             [ class "about-tab-content about-settings" ]
@@ -109,42 +122,44 @@ decorateKeys content =
     Regex.replace
         Regex.All
         (Regex.regex (": \\*\\*(.*)\\*\\*"))
-        (\{match, submatches}->
+        (\{ match, submatches } ->
             let
-                keys = submatches
-                    |> List.filterMap identity
-                    |> List.map
-                        (splitAndJoin
-                            [ ("|", " or ")
-                            , (" ", " ")
-                            , ("+", " + ")
-                            ]
-                            (\key ->
-                                "<div class=\"about-key\">"++ key ++"</div>"
+                keys =
+                    submatches
+                        |> List.filterMap identity
+                        |> List.map
+                            (splitAndJoin
+                                [ ( "|", " or " )
+                                , ( " ", " " )
+                                , ( "+", " + " )
+                                ]
+                                (\key ->
+                                    "<div class=\"about-key\">" ++ key ++ "</div>"
+                                )
                             )
-                        )
-                    |> String.concat
+                        |> String.concat
             in
                 "- ** " ++ keys ++ "**"
         )
         content
 
 
-splitAndJoin : List (String, String) -> (String -> String) -> String -> String
+splitAndJoin : List ( String, String ) -> (String -> String) -> String -> String
 splitAndJoin list transform str =
     case list of
         [] ->
             str
 
-        (spliter, joiner)::xs ->
+        ( spliter, joiner ) :: xs ->
             str
                 |> String.split spliter
-                |> List.map (\part ->
+                |> List.map
+                    (\part ->
                         if List.length xs == 0 then
                             transform part
                         else
                             splitAndJoin xs transform part
-                   )
+                    )
                 |> String.join joiner
 
 
@@ -188,15 +203,16 @@ viewSettingFontSize fontSize =
             [ text "Font Size" ]
         , div
             [ class "input-boxes about-setting-input-wrap" ]
-            <| List.map
-                (\(fontSize_) ->
+          <|
+            List.map
+                (\fontSize_ ->
                     div
                         [ classList
-                            [ ("font-size-box", True)
-                            , ("is-selected", fontSize == fontSize_)
+                            [ ( "font-size-box", True )
+                            , ( "is-selected", fontSize == fontSize_ )
                             ]
                         , style
-                            [ ("font-size", getFontSizePx fontSize_) ]
+                            [ ( "font-size", getFontSizePx fontSize_ ) ]
                         , onClick (SetFontSize fontSize_)
                         ]
                         [ text "aA" ]
@@ -217,17 +233,18 @@ viewSettingTheme theme =
             [ text "Theme" ]
         , div
             [ class "input-boxes about-setting-input-wrap" ]
-            <| List.map
+          <|
+            List.map
                 (\theme_ ->
                     div
-                        [ classList [ ("is-selected", theme == theme_) ]
+                        [ classList [ ( "is-selected", theme == theme_ ) ]
                         , onClick (SetTheme theme_)
                         ]
                         [ div
                             [ class <| "theme-box theme-" ++ (themeToStr theme_ |> String.toLower)
                             , style
-                                [ ("color",  "var(--body-color)")
-                                , ("background-color", "var(--body-bg)")
+                                [ ( "color", "var(--body-color)" )
+                                , ( "background-color", "var(--body-bg)" )
                                 ]
                             ]
                             [ text <| themeToStr theme_ ]
@@ -236,7 +253,6 @@ viewSettingTheme theme =
                 [ Light
                 , Dark
                 ]
-
         ]
 
 

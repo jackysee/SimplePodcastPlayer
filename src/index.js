@@ -2,12 +2,11 @@ require('./styles/main.scss')
 
 require('howler'); //Howl
 var Elm = require('./Main.elm');
-var keycode = require('keycode');
+var keycode = require('./keycode');
 var store = require('./store');
 
 var root  = document.getElementById('root');
 store.get(function(_model){
-    console.log('model', _model);
 
     var app = Elm.Main.embed(root, _model || null);
     var sound;
@@ -150,22 +149,16 @@ store.get(function(_model){
         }
     });
 
-    document.onkeyup = function(ev){
+    document.onkeypress = function(ev){
         var target = document.activeElement || ev.target;
         if(target){
             var tagName = target.tagName.toLowerCase();
             if(tagName !== "input" && tagName !== "textarea"){
-                var key = keycode(ev) || "";
-                if(ev.ctrlKey){
-                    key = "ctrl-"+key;
-                }
-                if(ev.shiftKey){
-                    key = "shift-"+key;
-                }
-                app.ports.keyUp.send(key);
+                app.ports.keyUp.send(keycode(ev));
             }
         }
     };
+
 
     document.body.addEventListener('PlayPause', function(){
         app.ports.keyUp.send('p');
@@ -178,13 +171,13 @@ store.get(function(_model){
             var parentScrollTop = parent.scrollTop;
             var elOffsetTop = el.offsetTop;
             if(parentScrollTop > elOffsetTop){
-                parentScrollTop = elOffsetTop;
+                parent.scrollTop = elOffsetTop;
                 return;
             }
             var parentOffsetHeight = parent.offsetHeight;
             var elOffsetHeight = el.offsetHeight;
             if(elOffsetTop + elOffsetHeight > parentScrollTop + parentOffsetHeight ){
-                parentScrollTop = elOffsetTop + elOffsetHeight - parentOffsetHeight;
+                parent.scrollTop = elOffsetTop + elOffsetHeight - parentOffsetHeight;
             }
         }
     });

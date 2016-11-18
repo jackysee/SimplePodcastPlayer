@@ -3,7 +3,7 @@ module Msgs exposing (..)
 import Models exposing (..)
 import Http
 import Time exposing (Time)
--- import Keyboard exposing (KeyCode)
+
 
 type Msg
     = NoOp
@@ -11,7 +11,7 @@ type Msg
     | HideAddPanel
     | SetUrl String
     | AddFeed
-    | FetchFeedSucceed (Feed, List Item)
+    | FetchFeedSucceed ( Feed, List Item )
     | FetchFeedFail Http.Error
     | UpdateCurrentTime Time
     | ShowMoreItem
@@ -23,7 +23,7 @@ type Msg
     | UpdateAllFeed
     | UpdateFeeds (List Feed) Feed
     | UpdateFeedFail (List Feed) Feed Http.Error
-    | UpdateFeedSucceed (List Feed) (Feed, List Item)
+    | UpdateFeedSucceed (List Feed) ( Feed, List Item )
     | SetProgress Float
     | SetListView ListView
     | HideFeed

@@ -6,13 +6,14 @@ import Regex exposing (replace, Regex, HowMany, Match, regex, find)
 import String exposing (foldl, toLower, toInt, fromChar, join, map, split)
 import Char exposing (fromCode, toCode)
 
+
 {--
 modified from https://github.com/gilesbowkett/html-escape-sequences/
 to adapt to 0.18
 --}
 
 
-unEsc: String -> String
+unEsc : String -> String
 unEsc =
     handleEscapes
 

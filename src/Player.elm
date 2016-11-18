@@ -5,17 +5,18 @@ import Html.Attributes exposing (class, style, src, classList, type_, value)
 import Html.Events exposing (on, onClick, onInput)
 import String
 import Time exposing (Time)
-
 import Models exposing (..)
 import Msgs exposing (..)
 import DateFormat exposing (formatDuration)
 import Icons
 import ListUtil exposing (findFirst)
 
-range: Float -> Float -> Float -> Float -> Bool -> (Float -> msg) -> Html msg
+
+range : Float -> Float -> Float -> Float -> Bool -> (Float -> msg) -> Html msg
 range vmin vmax step val disabled msg =
     let
-        fraction = val / vmax
+        fraction =
+            val / vmax
     in
         div
             [ class "range-wrap" ]
@@ -35,12 +36,12 @@ range vmin vmax step val disabled msg =
                 [ class "range-progress" ]
                 [ div
                     [ class "range-progress-left"
-                    , style [("flex" , (toString fraction) ++ " 1 0%")]
+                    , style [ ( "flex", (toString fraction) ++ " 1 0%" ) ]
                     ]
                     []
                 , div
                     [ class "range-progress-right"
-                    , style [("flex" , (toString (1 - fraction)) ++ " 1 0%")]
+                    , style [ ( "flex", (toString (1 - fraction)) ++ " 1 0%" ) ]
                     ]
                     []
                 ]
@@ -55,7 +56,7 @@ progressBar progress duration =
         range 0 duration 1 progress False SetProgress
 
 
-setFloat: (Float -> msg) -> String -> msg
+setFloat : (Float -> msg) -> String -> msg
 setFloat msg_ input =
     input
         |> String.toFloat
@@ -72,17 +73,24 @@ getCurrentItem model =
 viewPlayer : Model -> Html Msg
 viewPlayer model =
     let
-        item = getCurrentItem model
-        playerClass = if item /= Nothing then "is-show" else ""
+        item =
+            getCurrentItem model
+
+        playerClass =
+            if item /= Nothing then
+                "is-show"
+            else
+                ""
     in
         div
-            [ class <| "player-wrap "  ++ playerClass ]
+            [ class <| "player-wrap " ++ playerClass ]
             [ div
-                [ class "player" ] <|
+                [ class "player" ]
+              <|
                 case item of
                     Just item_ ->
                         [ div
-                            [ class "player-control "]
+                            [ class "player-control " ]
                             [ div
                                 [ class "player-buttons" ]
                                 [ if model.view.playerState == SoundLoading then
@@ -128,7 +136,7 @@ viewPlayer model =
                                                     False
                                       in
                                         if model.view.playerState == Playing then
-                                            if currentInQueue  then
+                                            if currentInQueue then
                                                 text "Playing queued items"
                                             else if List.length model.view.playList > 0 then
                                                 text "Queued items will be played next."
@@ -185,14 +193,14 @@ viewPlayer model =
                                     ]
                                     [ Icons.close ]
                                 ]
-                            -- , div
-                            --     [ class "player-title "]
-                            --     [ text item_.title ]
+                              -- , div
+                              --     [ class "player-title "]
+                              --     [ text item_.title ]
                             ]
                         ]
+
                     Nothing ->
                         [ text "" ]
-
             ]
 
 
@@ -200,7 +208,8 @@ marquee : String -> Bool -> Html Msg
 marquee txt isPlaying =
     div
         [ classList
-            [ ("marquee-text", True)
-            , ("is-playing", isPlaying) ]
+            [ ( "marquee-text", True )
+            , ( "is-playing", isPlaying )
+            ]
         ]
         [ text txt ]

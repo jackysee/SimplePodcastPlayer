@@ -2,6 +2,7 @@ module DecodePosition exposing (decodeLeft, decodeLeftPercentage, decodeBottomRi
 
 import Json.Decode as Decode exposing (Decoder)
 
+
 target : Decoder a -> Decoder a
 target decoder =
     Decode.field "target" decoder
@@ -17,15 +18,15 @@ decodeLeftPercentage =
     Decode.map2
         (\left width -> left / width)
         decodeLeft
-        ( currentTarget ( Decode.field "offsetWidth" Decode.float ) )
+        (currentTarget (Decode.field "offsetWidth" Decode.float))
 
 
 decodeLeft : Decoder Float
 decodeLeft =
     Decode.map2
         (\pageX posLeft -> pageX - posLeft)
-        (Decode.field "pageX" Decode.float )
-        ( currentTarget (positionLeft 0) )
+        (Decode.field "pageX" Decode.float)
+        (currentTarget (positionLeft 0))
 
 
 offsetParent : a -> Decoder a -> Decoder a
@@ -49,7 +50,8 @@ positionLeft x =
                 offsetParent x_ (positionLeft x_)
             )
 
-positionTop: Float -> Decoder Float
+
+positionTop : Float -> Decoder Float
 positionTop y =
     Decode.map2
         (\scrollTop offsetTop ->
@@ -63,13 +65,13 @@ positionTop y =
             )
 
 
-decodeBottomRight: Decoder (Float, Float)
+decodeBottomRight : Decoder ( Float, Float )
 decodeBottomRight =
     Decode.map4
         (\posLeft posTop w h ->
-            (posLeft + w, posTop + h)
+            ( posLeft + w, posTop + h )
         )
-        ( currentTarget (positionLeft 0) )
-        ( currentTarget (positionTop 0) )
-        ( currentTarget (Decode.field "offsetWidth" Decode.float) )
-        ( currentTarget (Decode.field "offsetHeight" Decode.float) )
+        (currentTarget (positionLeft 0))
+        (currentTarget (positionTop 0))
+        (currentTarget (Decode.field "offsetWidth" Decode.float))
+        (currentTarget (Decode.field "offsetHeight" Decode.float))

@@ -5,24 +5,31 @@ import Time exposing (Time)
 import String
 import Result
 
-formatDuration: Time -> String
+
+formatDuration : Time -> String
 formatDuration time =
     if time < 0 then
         "--"
     else
         let
-            hour = floor (time / (60*60))
-            min = floor ((time - (toFloat hour*60*60)) / 60)
-            sec = floor (time - (toFloat hour*60*60) - (toFloat min*60))
+            hour =
+                floor (time / (60 * 60))
+
+            min =
+                floor ((time - (toFloat hour * 60 * 60)) / 60)
+
+            sec =
+                floor (time - (toFloat hour * 60 * 60) - (toFloat min * 60))
         in
             (if hour > 0 then
                 -- (String.padLeft 2 '0' (toString hour)) ++ ":"
                 toString hour ++ ":"
-            else
+             else
                 ""
             )
-            ++ (String.padLeft 2 '0' (toString min)) ++ ":"
-            ++ (String.padLeft 2 '0' (toString sec))
+                ++ (String.padLeft 2 '0' (toString min))
+                ++ ":"
+                ++ (String.padLeft 2 '0' (toString sec))
 
 
 formatDurationShort : Time -> String
@@ -31,35 +38,43 @@ formatDurationShort time =
         "--"
     else if time < 60 then
         toString time ++ "s"
-    else if time < 60*60 then
+    else if time < 60 * 60 then
         roundDp 1 (time / 60) ++ "m"
     else
-        roundDp 1 (time / (60*60)) ++ "h"
+        roundDp 1 (time / (60 * 60)) ++ "h"
 
 
-roundDp: Int -> Float -> String
+roundDp : Int -> Float -> String
 roundDp dp num =
     let
-        factor = 10 ^ dp |> toFloat
+        factor =
+            10 ^ dp |> toFloat
     in
-        toFloat (round (num * factor)) / factor
+        toFloat (round (num * factor))
+            / factor
             |> toString
 
 
 parseDuration : String -> Result String Time
 parseDuration str =
     let
-        list = String.split ":" str
-            |> List.map String.toFloat
-            |> List.reverse
-            |> List.map2
-                (\seconds part -> Result.map2 (*) seconds part)
-                [Ok 1, Ok 60, Ok 3600]
-        sum = (\list_ ->
-            case list_ of
-                [] -> Ok 0
-                x::xs -> Result.map2 (+) x (sum xs)
-        )
+        list =
+            String.split ":" str
+                |> List.map String.toFloat
+                |> List.reverse
+                |> List.map2
+                    (\seconds part -> Result.map2 (*) seconds part)
+                    [ Ok 1, Ok 60, Ok 3600 ]
+
+        sum =
+            (\list_ ->
+                case list_ of
+                    [] ->
+                        Ok 0
+
+                    x :: xs ->
+                        Result.map2 (+) x (sum xs)
+            )
     in
         sum list
 

@@ -2,10 +2,27 @@ module Icons exposing (..)
 
 import Html exposing (Html)
 import Svg exposing (svg, path, node, rect, animate, g, animateTransform)
-import Svg.Attributes exposing
-    ( viewBox, d, transform, attributeName, width, height, x, y, from, to
-    , dur, begin, values, keyTimes, repeatCount, opacity, type_, fill
-    )
+import Svg.Attributes
+    exposing
+        ( viewBox
+        , d
+        , transform
+        , attributeName
+        , width
+        , height
+        , x
+        , y
+        , from
+        , to
+        , dur
+        , begin
+        , values
+        , keyTimes
+        , repeatCount
+        , opacity
+        , type_
+        , fill
+        )
 
 
 subscription : Html msg
@@ -16,6 +33,7 @@ subscription =
             [ d "M1696 384q40 0 68 28t28 68v1216q0 40-28 68t-68 28h-960q-40 0-68-28t-28-68v-288h-544q-40 0-68-28t-28-68v-672q0-40 20-88t48-76l408-408q28-28 76-48t88-20h416q40 0 68 28t28 68v328q68-40 128-40h416zm-544 213l-299 299h299v-299zm-640-384l-299 299h299v-299zm196 647l316-316v-416h-384v416q0 40-28 68t-68 28h-416v640h512v-256q0-40 20-88t48-76zm956 804v-1152h-384v416q0 40-28 68t-68 28h-416v640h896z" ]
             []
         ]
+
 
 arrowDown : Html msg
 arrowDown =
@@ -74,33 +92,42 @@ equalizerPlaying =
         [ g
             [ transform "rotate(180 12 12)" ]
             [ rect
-                [ x "0", y "0", width "6", height "15"]
+                [ x "0", y "0", width "6", height "15" ]
                 [ animate
                     [ attributeName "height"
-                    , from "2", to "2", dur "0.8s"
-                    , begin "0s", values "2; 24; 2"
+                    , from "2"
+                    , to "2"
+                    , dur "0.8s"
+                    , begin "0s"
+                    , values "2; 24; 2"
                     , keyTimes "0; 0.5; 1"
                     , repeatCount "indefinite"
                     ]
                     []
                 ]
             , rect
-                [ x "9", y "0", width "6", height "20"]
+                [ x "9", y "0", width "6", height "20" ]
                 [ animate
                     [ attributeName "height"
-                    , from "2", to "2", dur "0.8s"
-                    , begin "0.2s", values "2; 24; 2"
+                    , from "2"
+                    , to "2"
+                    , dur "0.8s"
+                    , begin "0.2s"
+                    , values "2; 24; 2"
                     , keyTimes "0; 0.5; 1"
                     , repeatCount "indefinite"
                     ]
                     []
                 ]
             , rect
-                [ x "18", y "0", width "6", height "15"]
+                [ x "18", y "0", width "6", height "15" ]
                 [ animate
                     [ attributeName "height"
-                    , from "2", to "2", dur "0.8s"
-                    , begin "0.3s", values "2; 24; 2"
+                    , from "2"
+                    , to "2"
+                    , dur "0.8s"
+                    , begin "0.3s"
+                    , values "2; 24; 2"
                     , keyTimes "0; 0.5; 1"
                     , repeatCount "indefinite"
                     ]
@@ -117,13 +144,13 @@ equalizerStop =
         [ g
             [ transform "rotate(180 12 12)" ]
             [ rect
-                [ x "0", y "0", width "6", height"4" ]
+                [ x "0", y "0", width "6", height "4" ]
                 []
             , rect
-                [ x "9", y "0", width "6", height"4" ]
+                [ x "9", y "0", width "6", height "4" ]
                 []
             , rect
-                [ x "18", y "0", width "6", height"4" ]
+                [ x "18", y "0", width "6", height "4" ]
                 []
             ]
         ]
@@ -158,6 +185,7 @@ infoCircle =
             []
         ]
 
+
 loadingSpin : Html msg
 loadingSpin =
     svg
@@ -172,12 +200,14 @@ loadingSpin =
         , path
             [ d "M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z" ]
             [ animateTransform
-                [ attributeName "transform", type_ "rotate"
-                , from "0 16 16", to "360 16 16", dur "0.8s"
+                [ attributeName "transform"
+                , type_ "rotate"
+                , from "0 16 16"
+                , to "360 16 16"
+                , dur "0.8s"
                 , repeatCount "indefinite"
                 ]
                 []
-
             ]
         ]
 
@@ -231,6 +261,7 @@ stop =
             []
         ]
 
+
 trash : Html msg
 trash =
     svg
@@ -241,7 +272,7 @@ trash =
         ]
 
 
-volumeOff: Html msg
+volumeOff : Html msg
 volumeOff =
     svg
         [ viewBox "0 0 1792 1792" ]
@@ -249,6 +280,7 @@ volumeOff =
             [ d "M1280 352v1088q0 26-19 45t-45 19-45-19l-333-333h-262q-26 0-45-19t-19-45v-384q0-26 19-45t45-19h262l333-333q19-19 45-19t45 19 19 45z" ]
             []
         ]
+
 
 volumeUp : Html msg
 volumeUp =
@@ -259,7 +291,8 @@ volumeUp =
             []
         ]
 
-list: Html msg
+
+list : Html msg
 list =
     svg
         [ viewBox "0 0 1792 1792" ]

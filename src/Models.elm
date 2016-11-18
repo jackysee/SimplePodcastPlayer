@@ -10,13 +10,13 @@ type alias Item =
     { title : String
     , pubDate : Time
     , link : Maybe String
-    , url: String
-    , description: Maybe String
+    , url : String
+    , description : Maybe String
     , duration : Time
     , progress : Time
     , playCount : Int
     , markPlayCount : Int
-    , feedUrl: String
+    , feedUrl : String
     }
 
 
@@ -91,7 +91,7 @@ type Theme
 
 
 type alias ItemId =
-    (String, String)
+    ( String, String )
 
 
 type alias Setting =
@@ -107,14 +107,14 @@ type alias View =
     , playerState : PlayerState
     , currentTime : Time
     , itemsToShow : Int
-    , currentItem: Maybe ItemId
+    , currentItem : Maybe ItemId
     , playerRate : Float
     , playerVol : Float
     , listView : ListView
-    , itemFilter: ItemFilter
-    , itemSortLatest: Bool
+    , itemFilter : ItemFilter
+    , itemSortLatest : Bool
     , itemSelected : Maybe ItemId
-    , playList: List ItemId
+    , playList : List ItemId
     , shortcutKeys : List String
     , floatPanel : FloatPanel
     , editingFeedTitle : Maybe String
@@ -132,13 +132,13 @@ type alias Model =
 
 type alias StoreView =
     -- { list : List StoreFeed
-    { currentItem: Maybe ItemId
+    { currentItem : Maybe ItemId
     , playerRate : Float
     , playerVol : Float
     , listView : String
     , itemFilter : String
     , itemSortLatest : Bool
-    , playList: List ItemId
+    , playList : List ItemId
     , playerShowTimeLeft : Bool
     }
 
@@ -157,7 +157,7 @@ type alias StoreFeed =
 
 
 type alias StoreModel =
-    { view: StoreView
+    { view : StoreView
     , setting : StoreSetting
     , feeds : List StoreFeed
     , items : List Item
@@ -171,9 +171,10 @@ type alias PlayLoad =
     , vol : Float
     }
 
+
 isItemEqual : Maybe ItemId -> Item -> Bool
 isItemEqual target item =
-    Just (item.url, item.feedUrl) == target
+    Just ( item.url, item.feedUrl ) == target
 
 
 isCurrent : Item -> Model -> Bool
@@ -201,14 +202,15 @@ updateCurrentItem updater model =
 updateItem : (Item -> Item) -> Maybe ItemId -> Model -> Model
 updateItem updater currentItem model =
     { model
-        | items = List.map
-            (\item ->
-                if Just (item.url, item.feedUrl) == currentItem && currentItem /= Nothing then
-                    updater item
-                else
-                    item
-            )
-            model.items
+        | items =
+            List.map
+                (\item ->
+                    if Just ( item.url, item.feedUrl ) == currentItem && currentItem /= Nothing then
+                        updater item
+                    else
+                        item
+                )
+                model.items
     }
 
 
@@ -217,7 +219,7 @@ updateView updater model =
     { model | view = updater model.view }
 
 
-updateSetting: (Setting -> Setting) -> Model -> Model
+updateSetting : (Setting -> Setting) -> Model -> Model
 updateSetting updater model =
     { model | setting = updater model.setting }
 
@@ -225,53 +227,76 @@ updateSetting updater model =
 toItemFilter : String -> ItemFilter
 toItemFilter str =
     case str of
-        "Unlistened" -> Unlistened
-        _ -> All
+        "Unlistened" ->
+            Unlistened
+
+        _ ->
+            All
 
 
 itemFilterToStr : ItemFilter -> String
 itemFilterToStr filter =
     case filter of
-        Unlistened -> "Unlistened"
-        All -> "All"
+        Unlistened ->
+            "Unlistened"
+
+        All ->
+            "All"
 
 
 fontSizeToStr : FontSize -> String
 fontSizeToStr fontSize =
     case fontSize of
-        Small -> "Small"
-        Medium -> "Medium"
-        Large -> "Large"
+        Small ->
+            "Small"
+
+        Medium ->
+            "Medium"
+
+        Large ->
+            "Large"
 
 
 toFontSize : String -> FontSize
 toFontSize str =
     case str of
-        "Small" -> Small
-        "Large" -> Large
-        _ -> Medium
+        "Small" ->
+            Small
+
+        "Large" ->
+            Large
+
+        _ ->
+            Medium
 
 
 themeToStr : Theme -> String
 themeToStr theme =
     case theme of
-        Light -> "Light"
-        Dark -> "Dark"
+        Light ->
+            "Light"
+
+        Dark ->
+            "Dark"
 
 
 toTheme : String -> Theme
 toTheme str =
     case str of
-        "Dark" -> Dark
-        _ -> Light
+        "Dark" ->
+            Dark
+
+        _ ->
+            Light
 
 
 toFeed : StoreFeed -> Feed
 toFeed storeFeed =
     { url = storeFeed.url
-    , title = storeFeed.title
-    -- , items = storeFeed.items
-    -- , items = []
+    , title =
+        storeFeed.title
+        -- , items = storeFeed.items
+        -- , items = []
     , state = Normal
     , showConfirmDelete = False
     }
@@ -280,22 +305,28 @@ toFeed storeFeed =
 listViewToStr : ListView -> String
 listViewToStr listView =
     case listView of
-        AllFeed -> "AllFeed"
-        Queued -> "Queued"
-        ViewFeed url -> "ViewFeed::" ++ url
+        AllFeed ->
+            "AllFeed"
+
+        Queued ->
+            "Queued"
+
+        ViewFeed url ->
+            "ViewFeed::" ++ url
 
 
 toListView : String -> ListView
 toListView str =
     let
-        regex = Regex.regex "^ViewFeed::"
+        regex =
+            Regex.regex "^ViewFeed::"
     in
-    if Regex.contains regex str then
-        ViewFeed <| Regex.replace Regex.All regex (\_ -> "") str
-    else if str == "Queued" then
-        Queued
-    else
-        AllFeed
+        if Regex.contains regex str then
+            ViewFeed <| Regex.replace Regex.All regex (\_ -> "") str
+        else if str == "Queued" then
+            Queued
+        else
+            AllFeed
 
 
 toStoreModel : Model -> StoreModel
@@ -305,7 +336,10 @@ toStoreModel model =
     , feeds = List.map toStoreFeed model.feeds
     , items = model.items
     }
-    {-- list = List.map toStoreFeed model.list
+
+
+
+{--list = List.map toStoreFeed model.list
     { currentItemUrl = model.currentItemUrl
     , playerRate = model.playerRate
     , playerVol = model.playerVol
@@ -345,8 +379,9 @@ toStoreSetting setting =
 toStoreFeed : Feed -> StoreFeed
 toStoreFeed feed =
     { url = feed.url
-    , title = feed.title
-    -- , items = feed.items
+    , title =
+        feed.title
+        -- , items = feed.items
     }
 
 
@@ -381,12 +416,17 @@ defaultModel =
     }
 
 
-fromStoreModel: StoreModel -> Model
+fromStoreModel : StoreModel -> Model
 fromStoreModel m =
     let
-        defaultSetting = defaultModel.setting
-        defaultView = defaultModel.view
-        feeds = List.map toFeed m.feeds
+        defaultSetting =
+            defaultModel.setting
+
+        defaultView =
+            defaultModel.view
+
+        feeds =
+            List.map toFeed m.feeds
     in
         { view =
             { defaultView
@@ -413,62 +453,67 @@ fromStoreModel m =
 
 initAddPanel : List feed -> FloatPanel
 initAddPanel feeds =
-    if List.length feeds  == 0 then
+    if List.length feeds == 0 then
         AddPanel
     else
         Hidden
 
 
-itemList: Model -> (List (Feed, Item), Bool)
+itemList : Model -> ( List ( Feed, Item ), Bool )
 itemList =
     itemListAll True
 
 
-itemListAll : Bool -> Model -> (List (Feed, Item), Bool)
+itemListAll : Bool -> Model -> ( List ( Feed, Item ), Bool )
 itemListAll limit model =
     case model.view.listView of
         ViewFeed url_ ->
             let
-                list = itemsByDate model (getFeedByUrl model url_)
+                list =
+                    itemsByDate model (getFeedByUrl model url_)
             in
                 if limit then
                     ( List.take model.view.itemsToShow list
                     , List.length list > model.view.itemsToShow
                     )
                 else
-                    (list, False)
+                    ( list, False )
 
         Queued ->
             let
-                items = model.items
-                    |> List.filterMap
-                        (\item ->
-                            case getFeedByUrl model item.feedUrl of
-                                Just feed_ ->
-                                    Just ((item.url, item.feedUrl), (feed_, item))
+                items =
+                    model.items
+                        |> List.filterMap
+                            (\item ->
+                                case getFeedByUrl model item.feedUrl of
+                                    Just feed_ ->
+                                        Just ( ( item.url, item.feedUrl ), ( feed_, item ) )
 
-                                Nothing ->
-                                    Nothing
-                        )
-                    |> Dict.fromList
-                playListItem =  model.view.playList
-                    |> List.filterMap (\(url, feedUrl) -> Dict.get (url, feedUrl) items)
+                                    Nothing ->
+                                        Nothing
+                            )
+                        |> Dict.fromList
+
+                playListItem =
+                    model.view.playList
+                        |> List.filterMap (\( url, feedUrl ) -> Dict.get ( url, feedUrl ) items)
             in
-                (playListItem, False)
+                ( playListItem, False )
 
         AllFeed ->
             let
-                list = itemsByDate model Nothing
+                list =
+                    itemsByDate model Nothing
             in
                 if limit then
                     ( List.take model.view.itemsToShow list
                     , List.length list > model.view.itemsToShow
                     )
                 else
-                    (list, False)
+                    ( list, False )
 
 
-itemsByDate: Model -> Maybe Feed -> List (Feed, Item)
+itemsByDate : Model -> Maybe Feed -> List ( Feed, Item )
 itemsByDate model feed =
     let
         list_ =
@@ -478,7 +523,7 @@ itemsByDate model feed =
                         |> List.filterMap
                             (\item ->
                                 if item.feedUrl == feed_.url then
-                                    Just (feed_, item)
+                                    Just ( feed_, item )
                                 else
                                     Nothing
                             )
@@ -489,19 +534,19 @@ itemsByDate model feed =
                             (\item ->
                                 case getFeedByUrl model item.feedUrl of
                                     Just feed__ ->
-                                        Just (feed__, item)
+                                        Just ( feed__, item )
 
                                     Nothing ->
                                         Nothing
                             )
 
-
-        list__ = list_
-            |> List.filter
-                (\(feed, item) ->
-                    filterByItemFilter model item
-                )
-            |> List.sortBy (\(feed, item) -> item.pubDate)
+        list__ =
+            list_
+                |> List.filter
+                    (\( feed, item ) ->
+                        filterByItemFilter model item
+                    )
+                |> List.sortBy (\( feed, item ) -> item.pubDate)
     in
         if model.view.itemSortLatest then
             List.reverse list__
@@ -512,23 +557,26 @@ itemsByDate model feed =
 filterByItemFilter : Model -> Item -> Bool
 filterByItemFilter model item =
     case model.view.itemFilter of
-        All -> True
+        All ->
+            True
+
         Unlistened ->
             item.playCount == 0
 
 
-getItemByUrl : Model -> ItemId -> Maybe (Feed, Item)
-getItemByUrl model (url, feedUrl) =
+getItemByUrl : Model -> ItemId -> Maybe ( Feed, Item )
+getItemByUrl model ( url, feedUrl ) =
     model.items
-        |> findFirst (\item -> (item.url, item.feedUrl) == (url, feedUrl))
-        |> Maybe.andThen (\item ->
-            case getFeedByUrl model item.feedUrl of
-                Just feed ->
-                    Just (feed, item)
+        |> findFirst (\item -> ( item.url, item.feedUrl ) == ( url, feedUrl ))
+        |> Maybe.andThen
+            (\item ->
+                case getFeedByUrl model item.feedUrl of
+                    Just feed ->
+                        Just ( feed, item )
 
-                Nothing ->
-                    Nothing
-        )
+                    Nothing ->
+                        Nothing
+            )
 
 
 getFeedByUrl : Model -> String -> Maybe Feed
@@ -539,11 +587,16 @@ getFeedByUrl model url =
 getFontSizePx : FontSize -> String
 getFontSizePx fontSize =
     case fontSize of
-        Large -> "18px"
-        Medium -> "16px"
-        Small -> "12px"
+        Large ->
+            "18px"
+
+        Medium ->
+            "16px"
+
+        Small ->
+            "12px"
 
 
-inPlayList: Item -> Model -> Bool
+inPlayList : Item -> Model -> Bool
 inPlayList item model =
-    List.member (item.url, item.feedUrl) model.view.playList
+    List.member ( item.url, item.feedUrl ) model.view.playList

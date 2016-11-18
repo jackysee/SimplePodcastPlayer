@@ -5,7 +5,6 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, src, style, classList, checked, title, property)
 import Json.Encode
 import String
-
 import Models exposing (..)
 import Msgs exposing (..)
 import Feed exposing (viewFeedTitle, viewItem)
@@ -15,19 +14,23 @@ import About exposing (viewAbout, viewAboutButton)
 import Events exposing (onScroll)
 import Icons
 
+
 view : Model -> Html Msg
 view model =
     let
-        feed_ = model.feeds
-            |> List.filter
-                (\f ->
-                    case model.view.listView of
-                        ViewFeed url ->
-                            f.url == url
-                        _ ->
-                            False
-                )
-            |> List.head
+        feed_ =
+            model.feeds
+                |> List.filter
+                    (\f ->
+                        case model.view.listView of
+                            ViewFeed url ->
+                                f.url == url
+
+                            _ ->
+                                False
+                    )
+                |> List.head
+
         filterBar =
             if List.length model.feeds > 0 && model.view.listView /= Queued then
                 div
@@ -38,9 +41,10 @@ view model =
             else
                 text ""
     in
-        div [ classList
-                [ ("app-wrap", True)
-                , ("theme-" ++ (themeToStr model.setting.theme |> String.toLower) , True)
+        div
+            [ classList
+                [ ( "app-wrap", True )
+                , ( "theme-" ++ (themeToStr model.setting.theme |> String.toLower), True )
                 ]
             ]
             [ viewFontSizeStyle model.setting.fontSize
@@ -50,18 +54,18 @@ view model =
                 [ class "wrap"
                 , onClick (SetFloatPanel Hidden)
                 ]
-                <|
+              <|
+                [ div
+                    [ class "top-bar-wrap" ]
                     [ div
-                        [ class "top-bar-wrap" ]
-                        [ div
-                            [ class "top-bar" ]
-                            [ viewLeftBtn model.view.listView
-                            , viewTitle model feed_
-                            , viewTopLeftBar model
-                            ]
-                        , filterBar
+                        [ class "top-bar" ]
+                        [ viewLeftBtn model.view.listView
+                        , viewTitle model feed_
+                        , viewTopLeftBar model
                         ]
+                    , filterBar
                     ]
+                ]
                     ++ (viewItemList model feed_)
                     ++ [ viewPlayer model ]
             ]
@@ -81,7 +85,7 @@ viewLeftBtn : ListView -> Html Msg
 viewLeftBtn listView =
     if listView == AllFeed then
         addFeedButton
-      else
+    else
         button
             [ class "btn add-btn btn-icon top-bar-outset-btn"
             , onClick (SetListView AllFeed)
@@ -97,10 +101,11 @@ viewTitle model feed_ =
 
         Nothing ->
             let
-                isRefreshing = model.feeds
-                    |> List.filter (\feed -> feed.state == Refreshing )
-                    |> List.length
-                    |> (<) 0
+                isRefreshing =
+                    model.feeds
+                        |> List.filter (\feed -> feed.state == Refreshing)
+                        |> List.length
+                        |> (<) 0
             in
                 div
                     [ class "feed-header" ]
@@ -111,11 +116,12 @@ viewTitle model feed_ =
                                 [ class "feed-empty" ]
                                 [ text "← Click to add feed" ]
                           else
-                              case model.view.listView of
-                                  Queued ->
-                                      text "Queued"
-                                  _ ->
-                                      text "All Podcasts"
+                            case model.view.listView of
+                                Queued ->
+                                    text "Queued"
+
+                                _ ->
+                                    text "All Podcasts"
                         ]
                     , if isRefreshing then
                         div
@@ -125,7 +131,6 @@ viewTitle model feed_ =
                             ]
                       else
                         text ""
-
                     , if not isRefreshing && List.length model.feeds > 0 && model.view.listView /= Queued then
                         button
                             [ class "btn btn-icon feed-control feed-refresh"
@@ -134,42 +139,42 @@ viewTitle model feed_ =
                             ]
                             [ Icons.refresh ]
                       else
-                          text ""
+                        text ""
                     ]
 
 
 viewTopLeftBar : Model -> Html Msg
 viewTopLeftBar model =
-        div
-            [ class "top-left-bar" ]
-            [ if List.length model.feeds > 0 then
-                button
-                    [ classList
-                        [ ("btn btn-icon queued-btn", True)
-                        , ("is-selected", model.view.listView == Queued)
-                        ]
-                    , onClick (SetListView Queued)
+    div
+        [ class "top-left-bar" ]
+        [ if List.length model.feeds > 0 then
+            button
+                [ classList
+                    [ ( "btn btn-icon queued-btn", True )
+                    , ( "is-selected", model.view.listView == Queued )
                     ]
-                    [ Icons.list
-                    , if List.length model.view.playList > 0 then
-                        span
-                            [ class "queued-count" ]
-                            [ List.length model.view.playList |> toString |> text ]
-                      else
-                        text ""
-                    ]
-            else
-                text ""
-            , viewAboutButton
-            ]
+                , onClick (SetListView Queued)
+                ]
+                [ Icons.list
+                , if List.length model.view.playList > 0 then
+                    span
+                        [ class "queued-count" ]
+                        [ List.length model.view.playList |> toString |> text ]
+                  else
+                    text ""
+                ]
+          else
+            text ""
+        , viewAboutButton
+        ]
 
 
 filterButton : String -> ItemFilter -> ItemFilter -> Html Msg
 filterButton label filter modelItemFilter =
     button
         [ classList
-            [ ("btn btn-text" , True)
-            , ("is-active", modelItemFilter == filter)
+            [ ( "btn btn-text", True )
+            , ( "is-active", modelItemFilter == filter )
             ]
         , onClick (SetItemFilter filter)
         ]
@@ -179,11 +184,12 @@ filterButton label filter modelItemFilter =
 viewStatus : Model -> Html Msg
 viewStatus model =
     let
-        txt = model.feeds
-            |> List.filter (\f -> f.state == Refreshing)
-            |> List.map (\f -> "Refreshing " ++ f.title ++ "...")
-            |> List.head
-            |> Maybe.withDefault ""
+        txt =
+            model.feeds
+                |> List.filter (\f -> f.state == Refreshing)
+                |> List.map (\f -> "Refreshing " ++ f.title ++ "...")
+                |> List.head
+                |> Maybe.withDefault ""
     in
         div
             [ class "feed-status" ]
@@ -193,12 +199,15 @@ viewStatus model =
 viewItemList : Model -> Maybe Feed -> List (Html Msg)
 viewItemList model feed_ =
     let
-        (list, hasMoreItem) = itemList model
+        ( list, hasMoreItem ) =
+            itemList model
+
         itemList_ =
             case feed_ of
                 Just feed ->
                     let
-                        list_ = viewItem model Nothing
+                        list_ =
+                            viewItem model Nothing
                     in
                         if List.length list == 0 then
                             div
@@ -212,6 +221,7 @@ viewItemList model feed_ =
                                     |> List.indexedMap (,)
                                     |> List.map list_
                                 )
+
                 Nothing ->
                     if List.length list == 0 && List.length model.feeds > 0 then
                         div
@@ -219,12 +229,13 @@ viewItemList model feed_ =
                             [ text "This list is empty." ]
                     else
                         ul
-                            [ class "item-list"]
-                            ( list
+                            [ class "item-list" ]
+                            (list
                                 |> List.indexedMap (,)
-                                |> List.map (\(index, (feed, item)) ->
-                                     viewItem model (Just feed) (index, item)
-                                  )
+                                |> List.map
+                                    (\( index, ( feed, item ) ) ->
+                                        viewItem model (Just feed) ( index, item )
+                                    )
                             )
 
         sortBar =
@@ -241,7 +252,7 @@ viewItemList model feed_ =
                         [ class "btn btn-text"
                         , onClick ShowMoreItem
                         ]
-                        [ text "show more"]
+                        [ text "show more" ]
                     ]
             else
                 text ""
@@ -249,8 +260,8 @@ viewItemList model feed_ =
         [ sortBar |> Maybe.withDefault (text "")
         , div
             [ classList
-                [ ("item-list-wrap", True)
-                , ("has-sort", sortBar /= Nothing)
+                [ ( "item-list-wrap", True )
+                , ( "has-sort", sortBar /= Nothing )
                 ]
             , onScroll HideItemDropdown
             ]
@@ -258,7 +269,6 @@ viewItemList model feed_ =
             , showMore
             ]
         ]
-
 
 
 viewItemSortLatest : Model -> Maybe (Html Msg)
