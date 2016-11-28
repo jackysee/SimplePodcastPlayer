@@ -101,7 +101,7 @@ shortcuts =
             getSelectedItem model
                 |> Maybe.map (\item -> markListenedMsg item)
                 |> Maybe.withDefault NoOp
-    , [ "ctrl-," ] => \_ -> SetFloatPanel (About Settings)
+    , [ "shift-<" ] => \_ -> SetFloatPanel (About Settings)
     , [ "shift-?" ] => \_ -> SetFloatPanel (About Shortcut)
     , [ "r", "r" ]
         => \model ->

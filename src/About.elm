@@ -29,7 +29,7 @@ shortcutContent =
     - Go to Queued : **g q**
     - Go to Feed of the selected item : **g f**
     - Go to All Podcasts : **g a**
-    - show settings : **ctrl+,**
+    - show settings : **shift+,**
     - show shortcuts : **shift+/**
     - show Add feed panel : **n**
 - Selection
