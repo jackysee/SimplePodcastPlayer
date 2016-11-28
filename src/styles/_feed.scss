@@ -158,12 +158,13 @@
 }
 
 .item.is-played{
-    //color: var(--state-played-color);
-    opacity: 0.5;
+    color: var(--state-played-color);
+    //opacity: 0.5;
 
-    .btn-icon > img, .item-state > img{
-        opacity: 0.3;
+    .btn-icon svg{
+        fill: var(--state-played-color);
     }
+
 }
 
 .item.is-selected:not(.item-more){
@@ -245,6 +246,10 @@
     overflow: hidden;
     white-space: nowrap;
     font-size: 0.8rem;
+
+    .is-played &{
+        color: var(--state-played-color);
+    }
 }
 
 .item-feed-title{
