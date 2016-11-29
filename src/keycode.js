@@ -49,7 +49,9 @@ var codes = {
     '27':'esc',
     '13':'enter',
     '40':'down',
-    '38':'up'
+    '38':'up',
+    '188':'<',
+    '191':'?'
 };
 
 function getSpecialKey(keyCode){
@@ -57,12 +59,10 @@ function getSpecialKey(keyCode){
 }
 
 module.exports = function(ev){
-    var key = ev.which === 0?
-        getSpecialKey(ev.keyCode) :
-        (
-            String.fromCharCode(ev.which).trim() ||
-            getSpecialKey(ev.keyCode)
-        );
+    var key = getSpecialKey(ev.which) || String.fromCharCode(ev.which).trim();
+    if(!key){
+      return "";
+    }
     key = key.toLowerCase();
     if(ev.ctrlKey){
         key = "ctrl-"+key;
