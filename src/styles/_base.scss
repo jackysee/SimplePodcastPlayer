@@ -7,6 +7,29 @@
     margin-top: 1.5em;
 }
 
+*{
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+input,textarea{
+    user-select: auto;
+    -moz-user-select: auto;
+    -webkit-user-select: auto;
+    -ms-user-select: auto;
+}
+
+::selection{
+    background: var(--body-color);
+    color: var(--body-bg);
+}
+::-moz-selection{
+    background: var(--body-color);
+    color: var(--body-bg);
+}
+
 html{ font-size: 16px; }
 
 body {
