@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 24 24">
-  <g transform="rotate(180 12 12)">
-    <rect id="bar1" x="0" y="0" width="6" height="4"></rect>
-    <rect id="bar2" x="9" y="0" width="6" height="4"></rect>
-    <rect id="bar3" x="18" y="0" width="6" height="4"></rect>
-  </g>
-</svg>
