@@ -154,7 +154,6 @@ store.get(function(_model){
         if(target){
             var tagName = target.tagName.toLowerCase();
             if(tagName !== "input" && tagName !== "textarea"){
-                console.log(keycode(ev), ev.which);
                 app.ports.keyUp.send(keycode(ev));
             }
         }
