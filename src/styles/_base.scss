@@ -91,9 +91,11 @@ body {
     height: 2rem;
     padding: 0.5rem;
     position: relative;
+    --bg-color: var(--body-bg);
 
     &.is-selected{
         background-color: var(--body-color);
+        --bg-color: var(--body-color);
 
         > *{
             --body-color: var(--body-bg);
@@ -108,4 +110,7 @@ body {
     bottom: 1px;
     right: 1px;
     font-size: 0.6rem;
+    background: var(--bg-color);
+    border-radius: .5rem;
+    box-shadow: 0 0 0.1rem var(--bg-color);
 }
