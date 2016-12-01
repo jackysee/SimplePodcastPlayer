@@ -14,6 +14,7 @@ import Feed exposing (loadFeed, updateFeed, updateModelFeed, updateFeedItems, ma
 import Shortcut exposing (keyMap, selectNext, selectPrev)
 import FloatPlanel exposing (hideItemDropdown)
 import DecodeStoreModel exposing (decodeStoreValue)
+import Return exposing (Return)
 
 
 main : Program (Maybe Json.Decode.Value) Model Msg
@@ -68,41 +69,38 @@ updateFeeds feeds =
                 (Task.succeed feed)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Return Msg Model
 update msg model =
     let
         ( model_, cmds ) =
-            updateModel msg model []
+            updateModel msg model
     in
         case msg of
             NoOp ->
-                model_ ! []
+                Return.singleton model
 
             UpdateCurrentTime time ->
-                model_ ! []
+                let
+                    view =
+                        model.view
+                in
+                    { model | view = { view | currentTime = time } }
+                        |> Return.singleton
 
             _ ->
-                model_
-                    ! ([ updateCurrentTime ]
-                        ++ cmds
-                      )
+                Return.singleton model
+                    |> Return.command updateCurrentTime
 
 
-updateModel : Msg -> Model -> List (Cmd Msg) -> ( Model, List (Cmd Msg) )
-updateModel msg model cmds =
+
+--List (Cmd Msg) -> ( Model, List (Cmd Msg) )
+
+
+updateModel : Msg -> Model -> Return Msg Model
+updateModel msg model =
     case msg of
-        NoOp ->
-            ( model, [] )
-
-        UpdateCurrentTime time ->
-            let
-                view =
-                    model.view
-            in
-                ( { model | view = { view | currentTime = time } }, [] )
-
         SetUrl value ->
-            ( model
+            model
                 |> updateView
                     (\view ->
                         { view
@@ -110,205 +108,179 @@ updateModel msg model cmds =
                             , loadFeedState = Empty
                         }
                     )
-            , cmds
-            )
+                |> Return.singleton
 
         AddFeed ->
             if List.any (\feed -> feed.url == model.view.urlToAdd) model.feeds then
-                ( model |> updateView (\view -> { view | loadFeedState = AlreadyExist })
-                , cmds
-                )
+                model
+                    |> updateView (\view -> { view | loadFeedState = AlreadyExist })
+                    |> Return.singleton
             else
-                ( model |> updateView (\view -> { view | loadFeedState = Loading })
-                , [ loadFeed
-                        model.setting.fallbackRssServiceUrl
-                        model.view.urlToAdd
-                  ]
-                    ++ cmds
-                )
+                model
+                    |> updateView (\view -> { view | loadFeedState = Loading })
+                    |> Return.singleton
+                    |> Return.command
+                        (loadFeed
+                            model.setting.fallbackRssServiceUrl
+                            model.view.urlToAdd
+                        )
 
         ShowMoreItem ->
             let
                 view =
                     model.view
             in
-                ( { model
+                { model
                     | view =
                         { view | itemsToShow = view.itemsToShow + defaultModel.view.itemsToShow }
-                  }
-                , cmds
-                )
+                }
+                    |> Return.singleton
 
         FetchFeedSucceed ( feed, items ) ->
             let
                 view =
                     model.view
-
-                model_ =
-                    { model
-                        | feeds = model.feeds ++ [ feed ]
-                        , items = model.items ++ items
-                        , view =
-                            { view
-                                | loadFeedState = Empty
-                                , urlToAdd = ""
-                                , floatPanel = Hidden
-                                , listView = ViewFeed feed.url
-                                , itemFilter = Unlistened
-                            }
-                    }
             in
-                ( model_
-                , [ noOpTask (Dom.blur "add-feed")
-                  , saveView model_
-                  , saveFeeds [ feed ]
-                  , saveItems items
-                  ]
-                )
+                { model
+                    | feeds = model.feeds ++ [ feed ]
+                    , items = model.items ++ items
+                    , view =
+                        { view
+                            | loadFeedState = Empty
+                            , urlToAdd = ""
+                            , floatPanel = Hidden
+                            , listView = ViewFeed feed.url
+                            , itemFilter = Unlistened
+                        }
+                }
+                    |> Return.singleton
+                    |> Return.command (noOpTask (Dom.blur "add-feed"))
+                    |> Return.effect_ saveView
+                    |> Return.command (saveFeeds [ feed ])
+                    |> Return.command (saveItems items)
 
         FetchFeedFail error ->
             let
                 e =
                     Debug.log "error" error
             in
-                ( model |> updateView (\v -> { v | loadFeedState = Error })
-                , [ noOpTask (Dom.focus "add-feed") ] ++ cmds
-                )
+                model
+                    |> updateView (\v -> { v | loadFeedState = Error })
+                    |> Return.singleton
+                    |> Return.command (noOpTask (Dom.focus "add-feed"))
 
         Play item ->
-            let
-                model_ =
-                    model
-                        |> updateView
-                            (\view ->
-                                { view
-                                    | currentItem = Just ( item.url, item.feedUrl )
-                                    , playerState = SoundLoading
-                                }
-                            )
-            in
-                ( model_
-                , [ play
+            model
+                |> updateView
+                    (\view ->
+                        { view
+                            | currentItem = Just ( item.url, item.feedUrl )
+                            , playerState = SoundLoading
+                        }
+                    )
+                |> Return.singleton
+                |> Return.command
+                    (play
                         { url = item.url
                         , seek = item.progress
                         , rate = model.view.playerRate
                         , vol = model.view.playerVol
                         }
-                  , saveView model_
-                  ]
-                )
+                    )
+                |> Return.effect_ saveView
 
         SoundLoaded loaded ->
-            ( model |> updateView (\v -> { v | playerState = Playing })
-            , cmds
-            )
+            model
+                |> updateView (\v -> { v | playerState = Playing })
+                |> Return.singleton
 
         Pause item ->
-            ( model |> updateView (\v -> { v | playerState = Paused })
-            , [ pause "" ] ++ cmds
-            )
+            model
+                |> updateView (\v -> { v | playerState = Paused })
+                |> Return.singleton
+                |> Return.command (pause "")
 
         Stop item ->
-            ( model |> updateView (\v -> { v | playerState = Stopped })
-            , [ stop "" ] ++ cmds
-            )
+            model
+                |> updateView (\v -> { v | playerState = Stopped })
+                |> Return.singleton
+                |> Return.command (stop "")
 
         UpdateProgress progress ->
-            let
-                model_ =
-                    updateCurrentItem
+            Return.singleton model
+                |> Return.map
+                    (updateCurrentItem
                         (\item ->
                             { item
                                 | duration = progress.duration
                                 , progress = progress.progress
                             }
                         )
-                        model
-
-                cmd_ =
-                    getCurrentItem model
-                        |> Maybe.map (\item -> [ saveItems [ item ] ])
-                        |> Maybe.withDefault []
-            in
-                ( model_
-                  --  [ saveModel model_ ]
-                , cmd_ ++ cmds
-                )
+                    )
+                |> Return.command
+                    (getCurrentItem model
+                        |> Maybe.map (\item -> saveItems [ item ])
+                        |> Maybe.withDefault Cmd.none
+                    )
 
         UpdateAllFeed ->
-            ( model, [ updateFeeds model.feeds ] ++ cmds )
+            Return.singleton model |> Return.command (updateFeeds model.feeds)
 
         UpdateFeeds feeds feed ->
-            let
-                model_ =
-                    updateModelFeed { feed | state = Refreshing } model
-            in
-                ( model_
-                , [ updateFeed
-                        model.setting.fallbackRssServiceUrl
-                        feed
-                        feeds
-                  ]
-                    ++ cmds
-                )
+            Return.singleton model
+                |> Return.map (updateModelFeed { feed | state = Refreshing })
+                |> Return.command
+                    (updateFeed model.setting.fallbackRssServiceUrl feed feeds)
 
         UpdateFeedFail feeds feed error ->
             let
                 e =
                     Debug.log "error" error
 
-                cmds_ =
+                cmd =
                     if List.length feeds > 0 then
-                        [ updateFeeds feeds ]
+                        updateFeeds feeds
                     else
-                        []
+                        Cmd.none
             in
-                ( updateModelFeed { feed | state = RefreshError } model
-                , cmds_ ++ cmds
-                )
+                Return.singleton model
+                    |> Return.map (updateModelFeed { feed | state = RefreshError })
+                    |> Return.command cmd
 
         UpdateFeedSucceed feeds ( feed, items ) ->
             let
                 ( model_, items_ ) =
                     updateFeedItems model feed items
 
-                cmds_ =
+                cmd =
                     if List.length feeds > 0 then
-                        [ updateFeeds feeds ]
+                        updateFeeds feeds
                     else
-                        []
+                        Cmd.none
             in
-                ( model_
-                , [ saveItems items_ ]
-                    ++ cmds_
-                    ++ cmds
-                )
+                Return.singleton model
+                    |> Return.command (saveItems items_)
+                    |> Return.command cmd
 
         SetProgress current ->
             case getCurrentItem model of
                 Nothing ->
-                    ( model, cmds )
+                    Return.singleton model
 
                 Just item_ ->
                     let
                         item__ =
                             { item_ | progress = current }
-
-                        model_ =
-                            updateCurrentItem (\item -> item__) model
                     in
-                        ( model_
-                        , [ seek current
-                            --, saveModel model_
-                          , saveItems [ item__ ]
-                          ]
-                            ++ cmds
-                        )
+                        Return.singleton model
+                            |> Return.map (updateCurrentItem (\item -> item__))
+                            |> Return.command (seek current)
+                            |> Return.command (saveItems [ item__ ])
 
         ShowAddPanel ->
-            ( model |> updateView (\v -> { v | floatPanel = AddPanel })
-            , [ noOpTask (Dom.focus "add-feed") ] ++ cmds
-            )
+            Return.singleton model
+                |> Return.map (updateView (\v -> { v | floatPanel = AddPanel }))
+                |> Return.command (noOpTask (Dom.focus "add-feed"))
 
         HideAddPanel ->
             ( model
@@ -319,7 +291,7 @@ updateModel msg model cmds =
                             , urlToAdd = ""
                         }
                     )
-            , [ noOpTask (Dom.blur "add-feed") ] ++ cmds
+            , noOpTask (Dom.blur "add-feed")
             )
 
         SetListView listView ->
@@ -344,12 +316,10 @@ updateModel msg model cmds =
                         , items = items
                     }
             in
-                ( model_
-                , [ saveView model_
-                  , saveItems items
-                  ]
-                    ++ cmds
-                )
+                model_
+                    ! [ saveView model_
+                      , saveItems items
+                      ]
 
         HideFeed ->
             let
@@ -361,22 +331,18 @@ updateModel msg model cmds =
                         |> updateView (\v -> { v | listView = AllFeed })
                         |> (\model__ -> { model__ | items = items })
             in
-                ( model_
-                , [ saveView model_
-                  , saveItems items
-                  ]
-                    ++ cmds
-                )
+                model_
+                    ! [ saveView model_
+                      , saveItems items
+                      ]
 
         ShowConfirmDeleteFeed feed ->
-            ( updateModelFeed { feed | showConfirmDelete = True } model
-            , cmds
-            )
+            updateModelFeed { feed | showConfirmDelete = True } model
+                |> Return.singleton
 
         HideConfirmDeleteFeed feed ->
-            ( updateModelFeed { feed | showConfirmDelete = False } model
-            , cmds
-            )
+            updateModelFeed { feed | showConfirmDelete = False } model
+                |> Return.singleton
 
         ConfirmDeleteFeed feed ->
             let
@@ -420,13 +386,12 @@ updateModel msg model cmds =
                                 }
                             )
             in
-                ( model_
-                , [ saveView model_
-                  , deleteFeed <| toStoreFeed feed
-                  ]
-                    ++ cmds_
-                    ++ cmds
-                )
+                model_
+                    ! ([ saveView model_
+                       , deleteFeed <| toStoreFeed feed
+                       ]
+                        ++ cmds_
+                      )
 
         ClosePlayer ->
             let
@@ -440,12 +405,10 @@ updateModel msg model cmds =
                                 }
                             )
             in
-                ( model_
-                , [ pause ""
-                  , saveView model_
-                  ]
-                    ++ cmds
-                )
+                model_
+                    ! [ pause ""
+                      , saveView model_
+                      ]
 
         PlayEnd url ->
             let
@@ -477,16 +440,17 @@ updateModel msg model cmds =
             in
                 case nextItem of
                     Just ( feed, item_ ) ->
-                        updateModel
-                            (MsgBatch <|
-                                [ Play item_ ]
-                                    ++ (getCurrentItem model
-                                            |> Maybe.map (\item -> [ Dequeue item ])
-                                            |> Maybe.withDefault []
-                                       )
-                            )
-                            model_
-                            cmds
+                        Return.singleton model_
+                            |> Return.andThen
+                                (updateModel
+                                    (MsgBatch <|
+                                        [ Play item_ ]
+                                            ++ (getCurrentItem model
+                                                    |> Maybe.map (\item -> [ Dequeue item ])
+                                                    |> Maybe.withDefault []
+                                               )
+                                    )
+                                )
 
                     Nothing ->
                         let
@@ -494,13 +458,10 @@ updateModel msg model cmds =
                                 model_
                                     |> updateView (\v -> { v | currentItem = Nothing })
                         in
-                            ( model__
-                            , [ saveView model__ ]
-                                ++ cmds
-                            )
+                            model__ ! [ saveView model__ ]
 
         PlayError url ->
-            ( model |> updateView (\v -> { v | playerState = SoundError }), cmds )
+            ( model |> updateView (\v -> { v | playerState = SoundError }), Cmd.none )
 
         ToggleRate ->
             let
@@ -514,27 +475,23 @@ updateModel msg model cmds =
                     model
                         |> updateView (\v -> { v | playerRate = rate })
             in
-                ( model_
-                , [ setRate rate
-                  , saveView model_
-                  ]
-                    ++ cmds
-                )
+                model_
+                    ! [ setRate rate
+                      , saveView model_
+                      ]
 
         OpenNewLink url ->
-            ( model, [ openNewLink url ] ++ cmds )
+            ( model, openNewLink url )
 
         SetVol percentage ->
             let
                 model_ =
                     updateView (\v -> { v | playerVol = percentage }) model
             in
-                ( model_
-                , [ setVol percentage
-                  , saveView model_
-                  ]
-                    ++ cmds
-                )
+                model_
+                    ! [ setVol percentage
+                      , saveView model_
+                      ]
 
         SetItemFilter filter ->
             let
@@ -552,23 +509,22 @@ updateModel msg model cmds =
                                 }
                             )
             in
-                ( model_
-                , [ saveView model_, saveItems items ] ++ cmds
-                )
+                model_
+                    ! [ saveView model_, saveItems items ]
 
         ShowItemDropdown url ->
             ( updateView (\v -> { v | floatPanel = ItemDropdown url }) model
-            , cmds
+            , Cmd.none
             )
 
         HideItemDropdown ->
             ( updateView (\v -> { v | floatPanel = hideItemDropdown model.view.floatPanel }) model
-            , cmds
+            , Cmd.none
             )
 
         SelectItem item ->
             ( updateView (\v -> { v | itemSelected = Just ( item.url, item.feedUrl ) }) model
-            , cmds
+            , Cmd.none
             )
 
         MarkPlayCount item playCount ->
@@ -584,11 +540,10 @@ updateModel msg model cmds =
                         |> updateView
                             (\v -> { v | floatPanel = hideItemDropdown v.floatPanel })
             in
-                ( model_
-                , [ saveView model_ ]
-                    ++ cmd_
-                    ++ cmds
-                )
+                model_
+                    ! ([ saveView model_ ]
+                        ++ cmd_
+                      )
 
         MarkItemsBelowListened url ->
             let
@@ -613,12 +568,10 @@ updateModel msg model cmds =
                 items =
                     List.filter (\item -> Dict.member item.url toUpdate) model_.items
             in
-                ( model_
-                , [ saveView model_
-                  , saveItems items
-                  ]
-                    ++ cmds
-                )
+                model_
+                    ! [ saveView model_
+                      , saveItems items
+                      ]
 
         MarkAllItemsAsListened ->
             let
@@ -635,31 +588,26 @@ updateModel msg model cmds =
                 items =
                     List.filter (\item -> Dict.member item.url toUpdate) model_.items
             in
-                ( model_
-                , [ saveItems items ] ++ cmds
-                )
+                ( model_, saveItems items )
 
         SelectNext ->
             case selectNext model of
                 Just ( model_, cmd ) ->
-                    ( model_, [ cmd ] ++ cmds )
+                    ( model_, cmd )
 
                 Nothing ->
-                    updateModel
-                        (MsgBatch
-                            [ ShowMoreItem
-                            , SelectNext
-                            ]
-                        )
-                        model
-                        cmds
+                    Return.singleton model
+                        |> Return.andThen
+                            (updateModel
+                                (MsgBatch
+                                    [ ShowMoreItem
+                                    , SelectNext
+                                    ]
+                                )
+                            )
 
         SelectPrev ->
-            let
-                ( model_, cmd ) =
-                    selectPrev model
-            in
-                ( model_, [ cmd ] ++ cmds )
+            selectPrev model
 
         Enqueue item ->
             let
@@ -677,9 +625,7 @@ updateModel msg model cmds =
                                 }
                             )
             in
-                ( model_
-                , [ saveView model_ ] ++ cmds
-                )
+                ( model_, saveView model_ )
 
         Dequeue item ->
             let
@@ -704,9 +650,7 @@ updateModel msg model cmds =
                                 }
                             )
             in
-                ( model_
-                , [ saveView model_ ] ++ cmds
-                )
+                ( model_, saveView model_ )
 
         MoveQueuedItemUp item ->
             let
@@ -717,7 +661,7 @@ updateModel msg model cmds =
                                 { v | playList = swapUp ( item.url, item.feedUrl ) model.view.playList }
                             )
             in
-                ( model_, [ saveView model_ ] ++ cmds )
+                ( model_, saveView model_ )
 
         MoveQueuedItemDown item ->
             let
@@ -728,38 +672,34 @@ updateModel msg model cmds =
                                 { v | playList = swapDown ( item.url, item.feedUrl ) model.view.playList }
                             )
             in
-                ( model_, [ saveView model_ ] ++ cmds )
+                ( model_, saveView model_ )
 
         SetShortcutKeys keys ->
             let
                 model_ =
                     updateView (\v -> { v | shortcutKeys = keys }) model
             in
-                ( model_
-                , [ saveView model_ ] ++ cmds
-                )
+                ( model_, saveView model_ )
 
         SetFloatPanel panel ->
             let
                 model_ =
                     updateView (\v -> { v | floatPanel = panel }) model
             in
-                ( model_
-                , [ saveView model_ ] ++ cmds
-                )
+                ( model_, saveView model_ )
 
         MsgBatch list ->
             List.foldl
-                (\msg ( model, cmds ) -> updateModel msg model cmds)
-                ( model, cmds )
-                list
+                Return.andThen
+                (Return.singleton model)
+                (List.map updateModel list)
 
         SetItemSortLatest flag ->
             let
                 model_ =
                     updateView (\v -> { v | itemSortLatest = flag }) model
             in
-                ( model_, [ saveView model_ ] ++ cmds )
+                ( model_, saveView model_ )
 
         SetFallbackRssServiceUrl url ->
             let
@@ -776,28 +716,28 @@ updateModel msg model cmds =
                         )
                         model
             in
-                ( model_, [ saveSetting model_ ] ++ cmds )
+                ( model_, saveSetting model_ )
 
         SetFontSize fontSize ->
             let
                 model_ =
                     updateSetting (\s -> { s | fontSize = fontSize }) model
             in
-                ( model_, [ saveSetting model_ ] ++ cmds )
+                ( model_, saveSetting model_ )
 
         SetPlayerShowTimeLeft show ->
             let
                 model_ =
                     updateView (\v -> { v | playerShowTimeLeft = show }) model
             in
-                ( model_, [ saveView model_ ] ++ cmds )
+                ( model_, saveView model_ )
 
         SetTheme theme ->
             let
                 model_ =
                     updateSetting (\s -> { s | theme = theme }) model
             in
-                ( model_, [ saveSetting model_ ] ++ cmds )
+                ( model_, saveSetting model_ )
 
         SetEditingFeedTitle feedTitle ->
             let
@@ -805,20 +745,18 @@ updateModel msg model cmds =
                     case feedTitle of
                         Just feedTitle_ ->
                             if model.view.editingFeedTitle == Nothing then
-                                [ noOpTask (Dom.focus "input-feed-title") ]
+                                noOpTask (Dom.focus "input-feed-title")
                             else
-                                []
+                                Cmd.none
 
                         Nothing ->
-                            []
+                            Cmd.none
 
                 model_ =
                     model
                         |> updateView (\v -> { v | editingFeedTitle = feedTitle })
             in
-                ( model_
-                , cmd_ ++ cmds
-                )
+                ( model_, cmd_ )
 
         SetFeedTitle feed title ->
             let
@@ -828,7 +766,10 @@ updateModel msg model cmds =
                 model_ =
                     updateModelFeed feed_ model
             in
-                ( model_, [ saveFeeds [ feed_ ] ] ++ cmds )
+                ( model_, saveFeeds [ feed_ ] )
+
+        _ ->
+            Return.singleton model
 
 
 oneOfMaybe : List (Maybe a) -> Maybe a
