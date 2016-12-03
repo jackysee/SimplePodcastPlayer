@@ -59,3 +59,4 @@ type Msg
     | SetTheme Theme
     | SetEditingFeedTitle (Maybe String)
     | SetFeedTitle Feed String
+    | PlayerPaused Bool
