@@ -6,10 +6,10 @@ var keycode = require('./keycode');
 var store = require('./store');
 
 var root  = document.getElementById('root');
-window.sound = null;
 store.get(function(_model){
 
     var app = Elm.Main.embed(root, _model || null);
+    var sound;
 
     function playUrl(playLoad){
         console.log('playLoad', playLoad);

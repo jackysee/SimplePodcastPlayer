@@ -242,7 +242,7 @@ update msg model =
                     else
                         Cmd.none
             in
-                Return.singleton model
+                Return.singleton model_
                     |> Return.command (saveItems items_)
                     |> Return.command cmd
 
