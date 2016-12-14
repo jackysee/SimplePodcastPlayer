@@ -1,4 +1,4 @@
-module Player exposing (viewPlayer)
+port module Player exposing (viewPlayer, updatePlayer, playError, paused, playEnd, soundLoaded, updateProgress, stop)
 
 import Html exposing (Html, text, div, img, button, input)
 import Html.Attributes exposing (class, style, src, classList, type_, value)
@@ -9,7 +9,134 @@ import Models exposing (..)
 import Msgs exposing (..)
 import DateFormat exposing (formatDuration)
 import Icons
-import ListUtil exposing (findFirst)
+import ListUtil exposing (findFirst, dropWhile)
+import Return exposing (Return)
+import Storage exposing (..)
+
+
+--import Dom
+
+
+updatePlayer : PlayerMsg -> Model -> Return Msg Model
+updatePlayer msg model =
+    case msg of
+        Play item ->
+            model
+                |> updateView
+                    (\view ->
+                        { view
+                            | currentItem = Just ( item.url, item.feedUrl )
+                            , playerState = SoundLoading
+                        }
+                    )
+                |> Return.singleton
+                |> Return.command
+                    (play
+                        { url = item.url
+                        , seek = item.progress
+                        , rate = model.view.playerRate
+                        , vol = model.view.playerVol
+                        }
+                    )
+                |> Return.effect_ saveView
+
+        SoundLoaded loaded ->
+            model
+                |> updateView (\v -> { v | playerState = Playing })
+                |> Return.singleton
+
+        Pause item ->
+            model
+                |> updateView (\v -> { v | playerState = Paused })
+                |> Return.singleton
+                |> Return.command (pause "")
+
+        Stop item ->
+            model
+                |> updateView (\v -> { v | playerState = Stopped })
+                |> Return.singleton
+                |> Return.command (stop "")
+
+        UpdateProgress progress ->
+            Return.singleton model
+                |> Return.map
+                    (updateCurrentItem
+                        (\item ->
+                            { item
+                                | duration = progress.duration
+                                , progress = progress.progress
+                            }
+                        )
+                    )
+                |> Return.command
+                    (getCurrentItem model
+                        |> Maybe.map (\item -> saveItems [ item ])
+                        |> Maybe.withDefault Cmd.none
+                    )
+
+        SetProgress current ->
+            case getCurrentItem model of
+                Nothing ->
+                    Return.singleton model
+
+                Just item_ ->
+                    let
+                        item__ =
+                            { item_ | progress = current }
+                    in
+                        Return.singleton model
+                            |> Return.map (updateCurrentItem (\item -> item__))
+                            |> Return.command (seek current)
+                            |> Return.command (saveItems [ item__ ])
+
+        ClosePlayer ->
+            model
+                |> updateView
+                    (\v ->
+                        { v
+                            | playerState = Paused
+                            , currentItem = Nothing
+                        }
+                    )
+                |> Return.singleton
+                |> Return.command (pause "")
+                |> Return.effect_ saveView
+
+        PlayError url ->
+            model
+                |> updateView (\v -> { v | playerState = SoundError })
+                |> Return.singleton
+
+        ToggleRate ->
+            let
+                rate =
+                    [ 1, 1.12, 1.2, 1.5, 2.0 ]
+                        |> dropWhile (\r -> r <= model.view.playerRate)
+                        |> List.head
+                        |> Maybe.withDefault 1
+            in
+                model
+                    |> updateView (\v -> { v | playerRate = rate })
+                    |> Return.singleton
+                    |> Return.command (setRate rate)
+                    |> Return.effect_ saveView
+
+        SetVol percentage ->
+            model
+                |> updateView (\v -> { v | playerVol = percentage })
+                |> Return.singleton
+                |> Return.command (setVol percentage)
+                |> Return.effect_ saveView
+
+        SetPlayerShowTimeLeft show ->
+            updateView (\v -> { v | playerShowTimeLeft = show }) model
+                |> Return.singleton
+                |> Return.effect_ saveView
+
+        PlayerPaused stopped ->
+            getCurrentItem model
+                |> Maybe.map (\item -> updatePlayer (Pause item) model)
+                |> Maybe.withDefault (Return.singleton model)
 
 
 range : Float -> Float -> Float -> Float -> Bool -> (Float -> msg) -> Html msg
@@ -53,7 +180,7 @@ progressBar progress duration =
     if duration == -1 then
         range 0 100 1 0 True (\_ -> NoOp)
     else
-        range 0 duration 1 progress False SetProgress
+        range 0 duration 1 progress False (Player << SetProgress)
 
 
 setFloat : (Float -> msg) -> String -> msg
@@ -99,18 +226,18 @@ viewPlayer model =
                                   else if (model.view.playerState == Stopped || model.view.playerState == Paused || model.view.playerState == SoundError) then
                                     button
                                         [ class "btn player-btn"
-                                        , onClick (Play item_)
+                                        , onClick (Player <| Play item_)
                                         ]
                                         [ Icons.play ]
                                   else
                                     button
                                         [ class "btn player-btn"
-                                        , onClick (Pause item_)
+                                        , onClick (Player <| Pause item_)
                                         ]
                                         [ Icons.pause ]
                                 , div
                                     [ class "btn player-btn "
-                                    , onClick (SetProgress 0)
+                                    , onClick (Player <| SetProgress 0)
                                     ]
                                     [ Icons.angleDoubleLeft ]
                                 ]
@@ -154,7 +281,7 @@ viewPlayer model =
                             , div [ class "player-rate" ]
                                 [ button
                                     [ class "btn"
-                                    , onClick ToggleRate
+                                    , onClick <| Player ToggleRate
                                     ]
                                     [ text <| (toString model.view.playerRate) ++ "X" ]
                                 ]
@@ -171,11 +298,11 @@ viewPlayer model =
                                     ]
                                 , div
                                     [ class "player-vol-bar" ]
-                                    [ range 0 1 0.01 model.view.playerVol False SetVol ]
+                                    [ range 0 1 0.01 model.view.playerVol False (Player << SetVol) ]
                                 ]
                             , div
                                 [ class "player-progress"
-                                , onClick (SetPlayerShowTimeLeft <| not model.view.playerShowTimeLeft)
+                                , onClick (Player (SetPlayerShowTimeLeft <| not model.view.playerShowTimeLeft))
                                 ]
                                 [ text <|
                                     let
@@ -194,7 +321,7 @@ viewPlayer model =
                                 [ class "player-close" ]
                                 [ button
                                     [ class "btn btn-icon"
-                                    , onClick ClosePlayer
+                                    , onClick <| Player ClosePlayer
                                     ]
                                     [ Icons.close ]
                                 ]
@@ -218,3 +345,36 @@ marquee txt isPlaying =
             ]
         ]
         [ text txt ]
+
+
+port play : PlayLoad -> Cmd msg
+
+
+port stop : String -> Cmd msg
+
+
+port pause : String -> Cmd msg
+
+
+port updateProgress : (Progress -> msg) -> Sub msg
+
+
+port soundLoaded : (Bool -> msg) -> Sub msg
+
+
+port seek : Float -> Cmd msg
+
+
+port playEnd : (String -> msg) -> Sub msg
+
+
+port setRate : Float -> Cmd msg
+
+
+port setVol : Float -> Cmd msg
+
+
+port playError : (String -> msg) -> Sub msg
+
+
+port paused : (Bool -> msg) -> Sub msg

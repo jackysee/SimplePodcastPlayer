@@ -52,10 +52,10 @@ loadFeed fallbackRssServiceUrl url =
         (\result ->
             case result of
                 Ok feed ->
-                    FetchFeedSucceed feed
+                    AddFeed <| FetchFeedSucceed feed
 
                 Err err ->
-                    FetchFeedFail err
+                    AddFeed <| FetchFeedFail err
         )
         (Http.get (yqlUrl url) (decodeYqlFeed url)
             |> Http.toTask
@@ -338,11 +338,11 @@ toggleItem : Model -> Item -> Html.Attribute Msg
 toggleItem model item =
     if isCurrent item model then
         if model.view.playerState == Playing then
-            onClick (Pause item)
+            onClick (Player <| Pause item)
         else
-            onClick (Play item)
+            onClick (Player <| Play item)
     else
-        onClick (Play item)
+        onClick (Player <| Play item)
 
 
 renderItemState : Item -> Maybe ItemId -> PlayerState -> Html Msg

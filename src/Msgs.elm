@@ -7,35 +7,21 @@ import Time exposing (Time)
 
 type Msg
     = NoOp
-    | ShowAddPanel
-    | HideAddPanel
-    | SetUrl String
-    | AddFeed
-    | FetchFeedSucceed ( Feed, List Item )
-    | FetchFeedFail Http.Error
     | UpdateCurrentTime Time
+    | AddFeed AddFeedMsg
+    | Player PlayerMsg
+    | PlayEnd String
     | ShowMoreItem
-    | Play Item
-    | SoundLoaded Bool
-    | Pause Item
-    | Stop Item
-    | UpdateProgress Progress
     | UpdateAllFeed
     | UpdateFeeds (List Feed) Feed
     | UpdateFeedFail (List Feed) Feed Http.Error
     | UpdateFeedSucceed (List Feed) ( Feed, List Item )
-    | SetProgress Float
     | SetListView ListView
     | HideFeed
     | ShowConfirmDeleteFeed Feed
     | HideConfirmDeleteFeed Feed
     | ConfirmDeleteFeed Feed
-    | ClosePlayer
-    | PlayError String
-    | PlayEnd String
-    | ToggleRate
     | OpenNewLink String
-    | SetVol Float
     | SetItemFilter ItemFilter
     | MarkPlayCount Item Int
     | MarkItemsBelowListened String
@@ -55,8 +41,30 @@ type Msg
     | SetItemSortLatest Bool
     | SetFallbackRssServiceUrl String
     | SetFontSize FontSize
-    | SetPlayerShowTimeLeft Bool
     | SetTheme Theme
     | SetEditingFeedTitle (Maybe String)
     | SetFeedTitle Feed String
+
+
+type AddFeedMsg
+    = ShowAddPanel
+    | HideAddPanel
+    | SetUrl String
+    | ToAddFeed
+    | FetchFeedSucceed ( Feed, List Item )
+    | FetchFeedFail Http.Error
+
+
+type PlayerMsg
+    = Play Item
+    | SoundLoaded Bool
+    | Pause Item
+    | Stop Item
+    | UpdateProgress Progress
+    | SetProgress Float
+    | ClosePlayer
+    | PlayError String
+    | ToggleRate
+    | SetVol Float
+    | SetPlayerShowTimeLeft Bool
     | PlayerPaused Bool

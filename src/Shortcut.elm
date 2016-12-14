@@ -13,8 +13,10 @@ import ListUtil exposing (getNext, findFirst)
 
 shortcuts : List ( List String, Model -> Msg )
 shortcuts =
-    [ [ "g", "u" ] => \_ -> SetItemFilter Unlistened
-    , [ "g", "q" ] => \_ -> SetListView Queued
+    [ [ "g", "u" ]
+        => \_ -> SetItemFilter Unlistened
+    , [ "g", "q" ]
+        => \_ -> SetListView Queued
     , [ "g", "f" ]
         => \model ->
             model.view.itemSelected
@@ -23,11 +25,16 @@ shortcuts =
                         SetListView (ViewFeed feedUrl)
                     )
                 |> Maybe.withDefault NoOp
-    , [ "g", "a" ] => \_ -> HideFeed
-    , [ "j" ] => \_ -> SelectNext
-    , [ "down" ] => \_ -> SelectNext
-    , [ "k" ] => \_ -> SelectPrev
-    , [ "up" ] => \_ -> SelectPrev
+    , [ "g", "a" ]
+        => \_ -> HideFeed
+    , [ "j" ]
+        => \_ -> SelectNext
+    , [ "down" ]
+        => \_ -> SelectNext
+    , [ "k" ]
+        => \_ -> SelectPrev
+    , [ "up" ]
+        => \_ -> SelectPrev
     , [ "o" ]
         => \model ->
             getSelectedItem model
@@ -48,13 +55,13 @@ shortcuts =
                                 (\( feed, item ) ->
                                     case model.view.playerState of
                                         Playing ->
-                                            Pause item
+                                            Player <| Pause item
 
                                         Paused ->
-                                            Play item
+                                            Player <| Play item
 
                                         Stopped ->
-                                            Play item
+                                            Player <| Play item
 
                                         _ ->
                                             NoOp
@@ -65,10 +72,12 @@ shortcuts =
     , [ "enter" ]
         => \model ->
             getSelectedItem model
-                |> Maybe.map (\item -> Play item)
+                |> Maybe.map (\item -> Player <| Play item)
                 |> Maybe.withDefault NoOp
-    , [ "n" ] => \_ -> ShowAddPanel
-    , [ "esc" ] => \_ -> HideAddPanel
+    , [ "n" ]
+        => \_ -> AddFeed ShowAddPanel
+    , [ "esc" ]
+        => \_ -> AddFeed HideAddPanel
     , [ "u" ]
         => \model ->
             if model.view.listView == Queued then
@@ -101,8 +110,10 @@ shortcuts =
             getSelectedItem model
                 |> Maybe.map (\item -> markListenedMsg item)
                 |> Maybe.withDefault NoOp
-    , [ "shift-<" ] => \_ -> SetFloatPanel (About Settings)
-    , [ "shift-?" ] => \_ -> SetFloatPanel (About Shortcut)
+    , [ "shift-<" ]
+        => \_ -> SetFloatPanel (About Settings)
+    , [ "shift-?" ]
+        => \_ -> SetFloatPanel (About Shortcut)
     , [ "r", "r" ]
         => \model ->
             case model.view.listView of
@@ -114,7 +125,8 @@ shortcuts =
 
                 _ ->
                     UpdateAllFeed
-    , [ "shift-a" ] => \model -> MarkAllItemsAsListened
+    , [ "shift-a" ]
+        => \model -> MarkAllItemsAsListened
     ]
 
 

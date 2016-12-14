@@ -15,6 +15,9 @@ import Shortcut exposing (keyMap, selectNext, selectPrev)
 import FloatPlanel exposing (hideItemDropdown)
 import DecodeStoreModel exposing (decodeStoreValue)
 import Return exposing (Return)
+import AddFeed exposing (updateAddFeed)
+import Storage exposing (..)
+import Player exposing (updatePlayer, playError, paused, playEnd, soundLoaded, updateProgress, stop)
 
 
 main : Program (Maybe Json.Decode.Value) Model Msg
@@ -83,31 +86,56 @@ update msg model =
                 { model | view = { view | currentTime = time } }
                     |> Return.singleton
 
-        SetUrl value ->
-            model
-                |> updateView
-                    (\view ->
-                        { view
-                            | urlToAdd = value
-                            , loadFeedState = Empty
-                        }
-                    )
-                |> Return.singleton
+        AddFeed addFeedMsg ->
+            updateAddFeed addFeedMsg model
 
-        AddFeed ->
-            if List.any (\feed -> feed.url == model.view.urlToAdd) model.feeds then
-                model
-                    |> updateView (\view -> { view | loadFeedState = AlreadyExist })
-                    |> Return.singleton
-            else
-                model
-                    |> updateView (\view -> { view | loadFeedState = Loading })
-                    |> Return.singleton
-                    |> Return.command
-                        (loadFeed
-                            model.setting.fallbackRssServiceUrl
-                            model.view.urlToAdd
-                        )
+        Player playerMsg ->
+            updatePlayer playerMsg model
+
+        PlayEnd url ->
+            let
+                model_ =
+                    model
+                        |> updateCurrentItem
+                            (\item ->
+                                { item
+                                    | progress = 0
+                                    , markPlayCount = item.playCount + 1
+                                }
+                            )
+
+                nextInQueue =
+                    oneOfMaybe
+                        [ getNext (\( url_, feedUrl ) -> url == url_) model.view.playList
+                        , List.head model.view.playList
+                        ]
+                        |> Maybe.map (getItemByUrl model)
+                        |> Maybe.withDefault Nothing
+
+                nextItem =
+                    oneOfMaybe
+                        [ nextInQueue
+                        , itemList model
+                            |> Tuple.first
+                            |> getNext (\( feed, item ) -> item.url == url)
+                        ]
+            in
+                case nextItem of
+                    Just ( feed, item_ ) ->
+                        model_
+                            |> Return.singleton
+                            |> Return.andThen (update <| Player (Play item_))
+                            |> Return.andThen
+                                (getCurrentItem model
+                                    |> Maybe.map (\item -> update <| Dequeue item)
+                                    |> Maybe.withDefault (Return.singleton)
+                                )
+
+                    Nothing ->
+                        model_
+                            |> updateView (\v -> { v | currentItem = Nothing })
+                            |> Return.singleton
+                            |> Return.effect_ saveView
 
         ShowMoreItem ->
             let
@@ -119,93 +147,6 @@ update msg model =
                         { view | itemsToShow = view.itemsToShow + defaultModel.view.itemsToShow }
                 }
                     |> Return.singleton
-
-        FetchFeedSucceed ( feed, items ) ->
-            let
-                view =
-                    model.view
-            in
-                { model
-                    | feeds = model.feeds ++ [ feed ]
-                    , items = model.items ++ items
-                    , view =
-                        { view
-                            | loadFeedState = Empty
-                            , urlToAdd = ""
-                            , floatPanel = Hidden
-                            , listView = ViewFeed feed.url
-                            , itemFilter = Unlistened
-                        }
-                }
-                    |> Return.singleton
-                    |> Return.command (noOpTask (Dom.blur "add-feed"))
-                    |> Return.effect_ saveView
-                    |> Return.command (saveFeeds [ feed ])
-                    |> Return.command (saveItems items)
-
-        FetchFeedFail error ->
-            let
-                e =
-                    Debug.log "error" error
-            in
-                model
-                    |> updateView (\v -> { v | loadFeedState = Error })
-                    |> Return.singleton
-                    |> Return.command (noOpTask (Dom.focus "add-feed"))
-
-        Play item ->
-            model
-                |> updateView
-                    (\view ->
-                        { view
-                            | currentItem = Just ( item.url, item.feedUrl )
-                            , playerState = SoundLoading
-                        }
-                    )
-                |> Return.singleton
-                |> Return.command
-                    (play
-                        { url = item.url
-                        , seek = item.progress
-                        , rate = model.view.playerRate
-                        , vol = model.view.playerVol
-                        }
-                    )
-                |> Return.effect_ saveView
-
-        SoundLoaded loaded ->
-            model
-                |> updateView (\v -> { v | playerState = Playing })
-                |> Return.singleton
-
-        Pause item ->
-            model
-                |> updateView (\v -> { v | playerState = Paused })
-                |> Return.singleton
-                |> Return.command (pause "")
-
-        Stop item ->
-            model
-                |> updateView (\v -> { v | playerState = Stopped })
-                |> Return.singleton
-                |> Return.command (stop "")
-
-        UpdateProgress progress ->
-            Return.singleton model
-                |> Return.map
-                    (updateCurrentItem
-                        (\item ->
-                            { item
-                                | duration = progress.duration
-                                , progress = progress.progress
-                            }
-                        )
-                    )
-                |> Return.command
-                    (getCurrentItem model
-                        |> Maybe.map (\item -> saveItems [ item ])
-                        |> Maybe.withDefault Cmd.none
-                    )
 
         UpdateAllFeed ->
             Return.singleton model |> Return.command (updateFeeds model.feeds)
@@ -245,38 +186,6 @@ update msg model =
                 Return.singleton model_
                     |> Return.command (saveItems items_)
                     |> Return.command cmd
-
-        SetProgress current ->
-            case getCurrentItem model of
-                Nothing ->
-                    Return.singleton model
-
-                Just item_ ->
-                    let
-                        item__ =
-                            { item_ | progress = current }
-                    in
-                        Return.singleton model
-                            |> Return.map (updateCurrentItem (\item -> item__))
-                            |> Return.command (seek current)
-                            |> Return.command (saveItems [ item__ ])
-
-        ShowAddPanel ->
-            Return.singleton model
-                |> Return.map (updateView (\v -> { v | floatPanel = AddPanel }))
-                |> Return.command (noOpTask (Dom.focus "add-feed"))
-
-        HideAddPanel ->
-            ( model
-                |> updateView
-                    (\v ->
-                        { v
-                            | floatPanel = Hidden
-                            , urlToAdd = ""
-                        }
-                    )
-            , noOpTask (Dom.blur "add-feed")
-            )
 
         SetListView listView ->
             { model | items = flushPlayCount model.items }
@@ -355,92 +264,8 @@ update msg model =
                             Cmd.none
                         )
 
-        ClosePlayer ->
-            model
-                |> updateView
-                    (\v ->
-                        { v
-                            | playerState = Paused
-                            , currentItem = Nothing
-                        }
-                    )
-                |> Return.singleton
-                |> Return.command (pause "")
-                |> Return.effect_ saveView
-
-        PlayEnd url ->
-            let
-                model_ =
-                    model
-                        |> updateCurrentItem
-                            (\item ->
-                                { item
-                                    | progress = 0
-                                    , markPlayCount = item.playCount + 1
-                                }
-                            )
-
-                nextInQueue =
-                    oneOfMaybe
-                        [ getNext (\( url_, feedUrl ) -> url == url_) model.view.playList
-                        , List.head model.view.playList
-                        ]
-                        |> Maybe.map (getItemByUrl model)
-                        |> Maybe.withDefault Nothing
-
-                nextItem =
-                    oneOfMaybe
-                        [ nextInQueue
-                        , itemList model
-                            |> Tuple.first
-                            |> getNext (\( feed, item ) -> item.url == url)
-                        ]
-            in
-                case nextItem of
-                    Just ( feed, item_ ) ->
-                        model_
-                            |> Return.singleton
-                            |> Return.andThen (update <| Play item_)
-                            |> Return.andThen
-                                (getCurrentItem model
-                                    |> Maybe.map (\item -> update <| Dequeue item)
-                                    |> Maybe.withDefault (Return.singleton)
-                                )
-
-                    Nothing ->
-                        model_
-                            |> updateView (\v -> { v | currentItem = Nothing })
-                            |> Return.singleton
-                            |> Return.effect_ saveView
-
-        PlayError url ->
-            model
-                |> updateView (\v -> { v | playerState = SoundError })
-                |> Return.singleton
-
-        ToggleRate ->
-            let
-                rate =
-                    [ 1, 1.12, 1.2, 1.5, 2.0 ]
-                        |> dropWhile (\r -> r <= model.view.playerRate)
-                        |> List.head
-                        |> Maybe.withDefault 1
-            in
-                model
-                    |> updateView (\v -> { v | playerRate = rate })
-                    |> Return.singleton
-                    |> Return.command (setRate rate)
-                    |> Return.effect_ saveView
-
         OpenNewLink url ->
             ( model, openNewLink url )
-
-        SetVol percentage ->
-            model
-                |> updateView (\v -> { v | playerVol = percentage })
-                |> Return.singleton
-                |> Return.command (setVol percentage)
-                |> Return.effect_ saveView
 
         SetItemFilter filter ->
             { model | items = flushPlayCount model.items }
@@ -626,11 +451,6 @@ update msg model =
                 |> Return.singleton
                 |> Return.effect_ saveSetting
 
-        SetPlayerShowTimeLeft show ->
-            updateView (\v -> { v | playerShowTimeLeft = show }) model
-                |> Return.singleton
-                |> Return.effect_ saveView
-
         SetTheme theme ->
             updateSetting (\s -> { s | theme = theme }) model
                 |> Return.singleton
@@ -660,11 +480,6 @@ update msg model =
                 updateModelFeed feed_ model
                     |> Return.singleton
                     |> Return.command (saveFeeds [ feed_ ])
-
-        PlayerPaused stopped ->
-            getCurrentItem model
-                |> Maybe.map (\item -> update (Pause item) model)
-                |> Maybe.withDefault (Return.singleton model)
     )
         |> Return.command (updateCurrentTimeCmd msg)
 
@@ -712,94 +527,19 @@ flushPlayCount list =
         list
 
 
-noOpTask : Task x a -> Cmd Msg
-noOpTask task =
-    Task.attempt (\_ -> NoOp) task
-
-
-saveSetting : Model -> Cmd Msg
-saveSetting model =
-    model.setting |> toStoreSetting |> storeSetting
-
-
-saveView : Model -> Cmd Msg
-saveView model =
-    model.view |> toStoreView |> storeView
-
-
-saveFeeds : List Feed -> Cmd Msg
-saveFeeds feeds =
-    feeds
-        |> List.map toStoreFeed
-        |> storeFeeds
-
-
-saveItems : List Item -> Cmd Msg
-saveItems items =
-    storeItems items
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ updateProgress UpdateProgress
-        , soundLoaded SoundLoaded
+        [ updateProgress (Player << UpdateProgress)
+        , soundLoaded (Player << SoundLoaded)
         , playEnd PlayEnd
         , keyUp <| keyMap model
-        , playError PlayError
-        , paused PlayerPaused
+        , playError (Player << PlayError)
+        , paused (Player << PlayerPaused)
         ]
-
-
-port play : PlayLoad -> Cmd msg
-
-
-port stop : String -> Cmd msg
-
-
-port pause : String -> Cmd msg
-
-
-port updateProgress : (Progress -> msg) -> Sub msg
-
-
-port soundLoaded : (Bool -> msg) -> Sub msg
-
-
-port storeSetting : StoreSetting -> Cmd msg
-
-
-port storeView : StoreView -> Cmd msg
-
-
-port storeFeeds : List StoreFeed -> Cmd msg
-
-
-port storeItems : List Item -> Cmd msg
-
-
-port deleteFeed : StoreFeed -> Cmd msg
-
-
-port seek : Float -> Cmd msg
-
-
-port playEnd : (String -> msg) -> Sub msg
-
-
-port setRate : Float -> Cmd msg
 
 
 port openNewLink : String -> Cmd msg
 
 
-port setVol : Float -> Cmd msg
-
-
 port keyUp : (String -> msg) -> Sub msg
-
-
-port playError : (String -> msg) -> Sub msg
-
-
-port paused : (Bool -> msg) -> Sub msg
