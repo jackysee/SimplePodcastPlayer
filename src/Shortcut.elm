@@ -1,4 +1,4 @@
-port module Shortcut exposing (keyMap, selectNext, selectPrev)
+port module Shortcut exposing (keyMap, selectNext, selectPrev, scrollToIndex)
 
 import Msgs exposing (..)
 import Models exposing (..)
@@ -14,27 +14,27 @@ import ListUtil exposing (getNext, findFirst)
 shortcuts : List ( List String, Model -> Msg )
 shortcuts =
     [ [ "g", "u" ]
-        => \_ -> SetItemFilter Unlistened
+        => \_ -> ItemList <| SetItemFilter Unlistened
     , [ "g", "q" ]
-        => \_ -> SetListView Queued
+        => \_ -> ItemList <| SetListView Queued
     , [ "g", "f" ]
         => \model ->
-            model.view.itemSelected
+            getSelectedItem model
                 |> Maybe.map
-                    (\( itemUrl, feedUrl ) ->
-                        SetListView (ViewFeed feedUrl)
+                    (\item_ ->
+                        ItemList <| SetListView <| ViewFeed item_.feedUrl
                     )
                 |> Maybe.withDefault NoOp
     , [ "g", "a" ]
-        => \_ -> HideFeed
+        => \_ -> ItemList HideFeed
     , [ "j" ]
-        => \_ -> SelectNext
+        => \_ -> UpdateItem SelectNext
     , [ "down" ]
-        => \_ -> SelectNext
+        => \_ -> UpdateItem SelectNext
     , [ "k" ]
-        => \_ -> SelectPrev
+        => \_ -> UpdateItem SelectPrev
     , [ "up" ]
-        => \_ -> SelectPrev
+        => \_ -> UpdateItem SelectPrev
     , [ "o" ]
         => \model ->
             getSelectedItem model
@@ -82,7 +82,7 @@ shortcuts =
         => \model ->
             if model.view.listView == Queued then
                 getSelectedItem model
-                    |> Maybe.map (\item -> MoveQueuedItemUp item)
+                    |> Maybe.map (\item -> UpdateItem <| MoveQueuedItemUp item)
                     |> Maybe.withDefault NoOp
             else
                 NoOp
@@ -90,7 +90,7 @@ shortcuts =
         => \model ->
             if model.view.listView == Queued then
                 getSelectedItem model
-                    |> Maybe.map (\item -> MoveQueuedItemDown item)
+                    |> Maybe.map (\item -> UpdateItem <| MoveQueuedItemDown item)
                     |> Maybe.withDefault NoOp
             else
                 NoOp
@@ -100,9 +100,9 @@ shortcuts =
                 |> Maybe.map
                     (\item ->
                         if inPlayList item model then
-                            Dequeue item
+                            UpdateItem <| Dequeue item
                         else
-                            Enqueue item
+                            UpdateItem <| Enqueue item
                     )
                 |> Maybe.withDefault NoOp
     , [ "m" ]
@@ -120,13 +120,13 @@ shortcuts =
                 ViewFeed url ->
                     model.feeds
                         |> findFirst (\feed -> feed.url == url)
-                        |> Maybe.map (\feed -> UpdateFeeds [] feed)
+                        |> Maybe.map (\feed -> UpdateFeed (UpdateFeeds [] feed))
                         |> Maybe.withDefault NoOp
 
                 _ ->
-                    UpdateAllFeed
+                    UpdateFeed UpdateAllFeed
     , [ "shift-a" ]
-        => \model -> MarkAllItemsAsListened
+        => \model -> UpdateItem MarkAllItemsAsListened
     ]
 
 
@@ -175,33 +175,18 @@ selectNext : Model -> Maybe ( Model, Cmd Msg )
 selectNext model =
     let
         ( list, more ) =
-            itemList model
-
-        listHasUrl =
-            List.any (\( feed, item ) -> isItemEqual model.view.itemSelected item) list
-
-        selected =
-            if listHasUrl then
-                model.view.itemSelected
-            else
-                Nothing
+            model.view.items
 
         next =
-            case selected of
-                Just selected_ ->
-                    list
-                        |> List.indexedMap (,)
-                        |> getNext (\( index, ( feed, item ) ) -> isItemEqual (Just selected_) item)
-                        |> Maybe.map (\( index, ( feed, item ) ) -> ( index, item ))
+            model.view.itemSelected + 1
 
-                Nothing ->
-                    list
-                        |> List.indexedMap (,)
-                        |> List.map (\( index, ( feed, item ) ) -> ( index, item ))
-                        |> List.head
+        endIndex =
+            List.length list - 1
     in
-        if next == Nothing && more then
+        if next == endIndex && more then
             Nothing
+        else if next > endIndex then
+            Just ( model, Cmd.none )
         else
             Just (selectItem model next)
 
@@ -210,49 +195,31 @@ selectPrev : Model -> ( Model, Cmd Msg )
 selectPrev model =
     let
         ( list, more ) =
-            itemList model
+            model.view.items
 
-        listHasUrl =
-            List.any (\( feed, item ) -> isItemEqual model.view.itemSelected item) list
-
-        selected =
-            if listHasUrl then
-                model.view.itemSelected
-            else
-                Nothing
+        prev =
+            model.view.itemSelected - 1
     in
-        case selected of
-            Just selected_ ->
-                list
-                    |> List.indexedMap (,)
-                    |> List.reverse
-                    |> getNext (\( index, ( feed, item ) ) -> isItemEqual (Just selected_) item)
-                    |> Maybe.map (\( index, ( feed, item ) ) -> ( index, item ))
-                    |> selectItem model
-
-            Nothing ->
-                list
-                    |> List.indexedMap (,)
-                    |> List.map (\( index, ( feed, item ) ) -> ( index, item ))
-                    |> List.reverse
-                    |> List.head
-                    |> selectItem model
+        if prev < 0 then
+            ( model, Cmd.none )
+        else
+            selectItem model prev
 
 
-selectItem : Model -> Maybe ( Int, Item ) -> ( Model, Cmd Msg )
-selectItem model item =
+selectItem : Model -> Int -> ( Model, Cmd Msg )
+selectItem model index =
     let
         view =
             model.view
     in
-        case item of
-            Just ( index, item_ ) ->
-                ( { model | view = { view | itemSelected = Just ( item_.url, item_.feedUrl ) } }
-                , scrollToElement ("item-" ++ toString index)
-                )
+        ( { model | view = { view | itemSelected = index } }
+        , scrollToElement ("item-" ++ toString index)
+        )
 
-            Nothing ->
-                ( model, Cmd.none )
+
+scrollToIndex : Int -> Cmd Msg
+scrollToIndex index =
+    scrollToElement ("item-" ++ toString index)
 
 
 port scrollToElement : String -> Cmd msg

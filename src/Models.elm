@@ -2,7 +2,7 @@ module Models exposing (..)
 
 import Time exposing (Time)
 import Dict
-import ListUtil exposing (findFirst)
+import ListUtil exposing (findFirst, findIndex)
 import Regex
 
 
@@ -113,12 +113,13 @@ type alias View =
     , listView : ListView
     , itemFilter : ItemFilter
     , itemSortLatest : Bool
-    , itemSelected : Maybe ItemId
+    , itemSelected : Int
     , playList : List ItemId
     , shortcutKeys : List String
     , floatPanel : FloatPanel
     , editingFeedTitle : Maybe String
     , playerShowTimeLeft : Bool
+    , items : ( List ( Feed, Item ), Bool )
     }
 
 
@@ -190,8 +191,10 @@ getCurrentItem model =
 
 getSelectedItem : Model -> Maybe Item
 getSelectedItem model =
-    model.items
-        |> findFirst (isItemEqual model.view.itemSelected)
+    model.view.items
+        |> Tuple.first
+        |> findIndex model.view.itemSelected
+        |> Maybe.map Tuple.second
 
 
 updateCurrentItem : (Item -> Item) -> Model -> Model
@@ -217,6 +220,15 @@ updateItem updater currentItem model =
 updateView : (View -> View) -> Model -> Model
 updateView updater model =
     { model | view = updater model.view }
+
+
+updateViewItems : Model -> Model
+updateViewItems model =
+    let
+        view =
+            model.view
+    in
+        { model | view = { view | items = itemList model } }
 
 
 updateSetting : (Setting -> Setting) -> Model -> Model
@@ -338,23 +350,6 @@ toStoreModel model =
     }
 
 
-
-{--list = List.map toStoreFeed model.list
-    { currentItemUrl = model.currentItemUrl
-    , playerRate = model.playerRate
-    , playerVol = model.playerVol
-    , listView = listViewToStr model.listView
-    , itemFilter = itemFilterToStr model.itemFilter
-    , itemSortLatest = model.itemSortLatest
-    , playList = model.playList
-    , fallbackRssServiceUrl = model.fallbackRssServiceUrl
-    , fontSize = fontSizeToStr model.fontSize
-    , playerShowTimeLeft = model.playerShowTimeLeft
-    , theme = themeToStr model.theme
-    }
-    --}
-
-
 toStoreView : View -> StoreView
 toStoreView view =
     { currentItem = view.currentItem
@@ -398,13 +393,14 @@ defaultModel =
         , playerVol = toFloat 1
         , listView = AllFeed
         , itemFilter = Unlistened
-        , itemSelected = Nothing
+        , itemSelected = -1
         , itemSortLatest = True
         , playList = []
         , shortcutKeys = []
         , floatPanel = Hidden
         , editingFeedTitle = Nothing
         , playerShowTimeLeft = True
+        , items = ( [], False )
         }
     , setting =
         { fallbackRssServiceUrl = Nothing
@@ -427,8 +423,8 @@ fromStoreModel m =
 
         feeds =
             List.map toFeed m.feeds
-    in
-        { view =
+
+        view =
             { defaultView
                 | floatPanel = initAddPanel feeds
                 , currentItem = m.view.currentItem
@@ -440,15 +436,20 @@ fromStoreModel m =
                 , playList = m.view.playList
                 , playerShowTimeLeft = m.view.playerShowTimeLeft
             }
-        , setting =
-            { defaultSetting
-                | fallbackRssServiceUrl = m.setting.fallbackRssServiceUrl
-                , fontSize = toFontSize m.setting.fontSize
-                , theme = toTheme m.setting.theme
+
+        model =
+            { view = view
+            , setting =
+                { defaultSetting
+                    | fallbackRssServiceUrl = m.setting.fallbackRssServiceUrl
+                    , fontSize = toFontSize m.setting.fontSize
+                    , theme = toTheme m.setting.theme
+                }
+            , feeds = feeds
+            , items = m.items
             }
-        , feeds = feeds
-        , items = m.items
-        }
+    in
+        { model | view = { view | items = itemList model } }
 
 
 initAddPanel : List feed -> FloatPanel

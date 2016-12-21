@@ -88,7 +88,7 @@ viewLeftBtn listView =
     else
         button
             [ class "btn add-btn btn-icon top-bar-outset-btn"
-            , onClick (SetListView AllFeed)
+            , onClick (ItemList <| SetListView AllFeed)
             ]
             [ Icons.arrowLeft ]
 
@@ -134,7 +134,7 @@ viewTitle model feed_ =
                     , if not isRefreshing && List.length model.feeds > 0 && model.view.listView /= Queued then
                         button
                             [ class "btn btn-icon feed-control feed-refresh"
-                            , onClick UpdateAllFeed
+                            , onClick (UpdateFeed UpdateAllFeed)
                             , title "Refresh all feeds"
                             ]
                             [ Icons.refresh ]
@@ -153,7 +153,7 @@ viewTopLeftBar model =
                     [ ( "btn btn-icon queued-btn", True )
                     , ( "is-selected", model.view.listView == Queued )
                     ]
-                , onClick (SetListView Queued)
+                , onClick (ItemList <| SetListView Queued)
                 ]
                 [ Icons.list
                 , if List.length model.view.playList > 0 then
@@ -176,7 +176,7 @@ filterButton label filter modelItemFilter =
             [ ( "btn btn-text", True )
             , ( "is-active", modelItemFilter == filter )
             ]
-        , onClick (SetItemFilter filter)
+        , onClick (ItemList <| SetItemFilter filter)
         ]
         [ text label ]
 
@@ -200,7 +200,7 @@ viewItemList : Model -> Maybe Feed -> List (Html Msg)
 viewItemList model feed_ =
     let
         ( list, hasMoreItem ) =
-            itemList model
+            model.view.items
 
         itemList_ =
             case feed_ of
@@ -250,7 +250,7 @@ viewItemList model feed_ =
                     [ class "feed-show-more" ]
                     [ button
                         [ class "btn btn-text"
-                        , onClick ShowMoreItem
+                        , onClick <| ItemList ShowMoreItem
                         ]
                         [ text "show more" ]
                     ]
@@ -278,7 +278,7 @@ viewItemSortLatest model =
             div
                 [ class "item-sort" ]
                 [ span
-                    [ onClick (SetItemSortLatest (not model.view.itemSortLatest)) ]
+                    [ onClick <| ItemList <| SetItemSortLatest <| not model.view.itemSortLatest ]
                     [ if model.view.itemSortLatest then
                         text "latest first"
                       else

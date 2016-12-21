@@ -84,3 +84,11 @@ findFirst predicate list =
                 Just x
             else
                 findFirst predicate xs
+
+
+findIndex : Int -> List a -> Maybe a
+findIndex index list =
+    list
+        |> List.indexedMap (,)
+        |> findFirst (\( i, a ) -> i == index)
+        |> Maybe.map Tuple.second

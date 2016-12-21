@@ -144,7 +144,7 @@ viewAddFeed model =
                                 [ class "subscription-item" ]
                                 [ span
                                     [ class "add-feed-title"
-                                    , onInternalClick (SetListView (ViewFeed feed.url))
+                                    , onInternalClick <| ItemList <| SetListView (ViewFeed feed.url)
                                     ]
                                     [ text feed.title ]
                                 ]

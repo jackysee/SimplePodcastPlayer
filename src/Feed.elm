@@ -4,11 +4,14 @@ module Feed
         , updateFeed
         , updateModelFeed
         , updateFeedItems
+        , updateUpdateFeed
+        , updateDeleteFeed
         , viewFeedTitle
         , viewItem
         , viewConfirmDelete
         , markListenedMsg
         , markItemsListened
+        , updateFeeds
         )
 
 import Task exposing (Task)
@@ -27,6 +30,10 @@ import DateFormat exposing (formatDuration, formatDurationShort, format)
 import Events exposing (onInternalClick, onClickPosBottomRight, onBlurNotEmpty)
 import Icons
 import Escape
+import Return exposing (Return)
+import Storage exposing (saveItems, saveView, deleteFeed, noOpTask, saveFeeds)
+import Dom
+import Player exposing (stop)
 
 
 yqlUrl : String -> String
@@ -63,16 +70,101 @@ loadFeed fallbackRssServiceUrl url =
         )
 
 
+updateUpdateFeed : UpdateFeedMsg -> Model -> Return Msg Model
+updateUpdateFeed msg model =
+    case msg of
+        UpdateAllFeed ->
+            Return.singleton model
+                |> Return.command (updateFeeds model.feeds)
+
+        UpdateFeeds feeds feed ->
+            Return.singleton model
+                |> Return.map (updateModelFeed { feed | state = Refreshing })
+                |> Return.command
+                    (updateFeed model.setting.fallbackRssServiceUrl feed feeds)
+
+        UpdateFeedFail feeds feed error ->
+            let
+                e =
+                    Debug.log "error" error
+
+                cmd =
+                    if List.length feeds > 0 then
+                        updateFeeds feeds
+                    else
+                        Cmd.none
+            in
+                Return.singleton model
+                    |> Return.map (updateModelFeed { feed | state = RefreshError })
+                    |> Return.command cmd
+
+        UpdateFeedSucceed feeds ( feed, items ) ->
+            let
+                ( model_, items_ ) =
+                    updateFeedItems model feed items
+
+                cmd =
+                    if List.length feeds > 0 then
+                        updateFeeds feeds
+                    else
+                        Cmd.none
+            in
+                Return.singleton model_
+                    |> Return.command (saveItems items_)
+                    |> Return.command cmd
+
+        SetEditingFeedTitle feedTitle ->
+            model
+                |> updateView (\v -> { v | editingFeedTitle = feedTitle })
+                |> Return.singleton
+                |> Return.command
+                    (case feedTitle of
+                        Just feedTitle_ ->
+                            if model.view.editingFeedTitle == Nothing then
+                                noOpTask (Dom.focus "input-feed-title")
+                            else
+                                Cmd.none
+
+                        Nothing ->
+                            Cmd.none
+                    )
+
+        SetFeedTitle feed title ->
+            let
+                feed_ =
+                    { feed | title = title }
+            in
+                updateModelFeed feed_ model
+                    |> Return.singleton
+                    |> Return.command (saveFeeds [ feed_ ])
+
+
+updateFeeds : List Feed -> Cmd Msg
+updateFeeds feeds =
+    case feeds of
+        [] ->
+            Cmd.none
+
+        feed :: feeds ->
+            Task.attempt
+                (\result ->
+                    result
+                        |> Result.map (\feed -> UpdateFeed (UpdateFeeds feeds feed))
+                        |> Result.withDefault NoOp
+                )
+                (Task.succeed feed)
+
+
 updateFeed : Maybe String -> Feed -> List Feed -> Cmd Msg
 updateFeed fallbackRssServiceUrl feed feeds =
     Task.attempt
         (\result ->
             case result of
                 Ok feed ->
-                    UpdateFeedSucceed feeds feed
+                    UpdateFeed <| UpdateFeedSucceed feeds feed
 
                 Err err ->
-                    UpdateFeedFail feeds feed err
+                    UpdateFeed <| UpdateFeedFail feeds feed err
         )
         (Http.get (yqlUrl feed.url) (decodeYqlFeed feed.url)
             |> Http.toTask
@@ -145,6 +237,66 @@ updateFeedItems model newFeed items =
                 ( model, [] )
 
 
+updateDeleteFeed : DeleteFeedMsg -> Model -> Return Msg Model
+updateDeleteFeed msg model =
+    case msg of
+        ShowConfirmDeleteFeed feed ->
+            updateModelFeed { feed | showConfirmDelete = True } model
+                |> Return.singleton
+
+        HideConfirmDeleteFeed feed ->
+            updateModelFeed { feed | showConfirmDelete = False } model
+                |> Return.singleton
+
+        ConfirmDeleteFeed feed ->
+            let
+                feeds =
+                    List.filter (\f -> f.url /= feed.url) model.feeds
+
+                items =
+                    List.filter (\i -> i.feedUrl /= feed.url) model.items
+
+                currentItemDeleted =
+                    not (List.any (\item -> isCurrent item model) items)
+
+                currentItem =
+                    if currentItemDeleted then
+                        Nothing
+                    else
+                        model.view.currentItem
+
+                itemUrls =
+                    List.map (\item -> ( item.url, item.feedUrl )) items
+
+                playList =
+                    List.filter
+                        (\playListItem -> not (List.member playListItem itemUrls))
+                        model.view.playList
+            in
+                { model
+                    | feeds = feeds
+                    , items = items
+                }
+                    |> updateView
+                        (\v ->
+                            { v
+                                | listView = AllFeed
+                                , playList = playList
+                                , currentItem = currentItem
+                            }
+                        )
+                    |> Return.singleton
+                    |> Return.map updateViewItems
+                    |> Return.effect_ saveView
+                    |> Return.command (deleteFeed <| toStoreFeed feed)
+                    |> Return.command
+                        (if currentItemDeleted then
+                            stop ""
+                         else
+                            Cmd.none
+                        )
+
+
 maybeEqual : Maybe a -> Maybe a -> Bool
 maybeEqual a b =
     (Maybe.map2 (==) a b) == Just True
@@ -183,7 +335,7 @@ viewFeedTitle model feed =
                 _ ->
                     button
                         [ class "btn btn-icon feed-control feed-refresh"
-                        , onClick (UpdateFeeds [] feed)
+                        , onClick <| UpdateFeed (UpdateFeeds [] feed)
                         ]
                         [ Icons.refresh ]
 
@@ -206,22 +358,23 @@ viewFeedTitle model feed =
                     [ id "input-feed-title"
                     , class "input-text input-feed-title"
                     , value feedTitle
-                    , onInput (\value -> SetEditingFeedTitle (Just value))
+                    , onInput (\value -> UpdateFeed <| SetEditingFeedTitle (Just value))
                     , onBlur <|
                         MsgBatch
-                            [ SetFeedTitle feed <|
-                                if model.view.editingFeedTitle /= (Just "") then
-                                    Maybe.withDefault feed.title model.view.editingFeedTitle
-                                else
-                                    feed.title
-                            , SetEditingFeedTitle Nothing
+                            [ UpdateFeed <|
+                                SetFeedTitle feed <|
+                                    if model.view.editingFeedTitle /= (Just "") then
+                                        Maybe.withDefault feed.title model.view.editingFeedTitle
+                                    else
+                                        feed.title
+                            , UpdateFeed <| SetEditingFeedTitle Nothing
                             ]
                     ]
                     []
                 , span
                     [ class "feed-title"
                     , title feedTitle
-                    , onClick (SetEditingFeedTitle <| Just feed.title)
+                    , onClick (UpdateFeed <| SetEditingFeedTitle <| Just feed.title)
                     ]
                     [ text feedTitle ]
                 ]
@@ -246,13 +399,13 @@ viewConfirmDelete feed =
                     --[ span [] [ text "Delete?" ]
                     [ button
                         [ class "btn btn-text"
-                        , onClick (HideConfirmDeleteFeed feed)
+                        , onClick <| DeleteFeed (HideConfirmDeleteFeed feed)
                         ]
                         [ text "Cancel" ]
                     , span [] [ text "/" ]
                     , button
                         [ class "btn btn-text confirm-delete-btn "
-                        , onClick (ConfirmDeleteFeed feed)
+                        , onClick <| DeleteFeed (ConfirmDeleteFeed feed)
                         ]
                         [ text "Delete" ]
                     ]
@@ -261,7 +414,7 @@ viewConfirmDelete feed =
             button
                 [ classList
                     [ ( "btn btn-icon feed-control feed-trash", True ) ]
-                , onClick (ShowConfirmDeleteFeed feed)
+                , onClick <| DeleteFeed (ShowConfirmDeleteFeed feed)
                 ]
                 [ Icons.trash ]
         ]
@@ -282,11 +435,11 @@ viewItem model feed ( index, item ) =
                 , ( "is-current", isCurrent item model )
                 , ( "is-unplayed", item.progress == -1 && not listened )
                 , ( "is-played", listened )
-                , ( "is-selected", isItemEqual model.view.itemSelected item )
+                , ( "is-selected", index == model.view.itemSelected )
                 , ( "is-enqueued", inPlayList item model )
                 ]
             , toggleItem model item
-            , onMouseEnter (SelectItem item)
+            , onMouseEnter (UpdateItem <| SelectItem index)
               -- , onMouseLeave (UnselectItem item)
             , id ("item-" ++ toString index)
             ]
@@ -295,7 +448,7 @@ viewItem model feed ( index, item ) =
                 Just feed_ ->
                     div
                         [ class "item-feed-title"
-                        , onInternalClick (SetListView <| ViewFeed feed_.url)
+                        , onInternalClick (ItemList <| SetListView <| ViewFeed feed_.url)
                         ]
                         [ text feed_.title ]
 
@@ -379,17 +532,17 @@ renderQueueControl item listView =
             [ class "item-reorder" ]
             [ button
                 [ class "btn btn-icon"
-                , onInternalClick (MoveQueuedItemUp item)
+                , onInternalClick (UpdateItem <| MoveQueuedItemUp item)
                 ]
                 [ Icons.arrowUp ]
             , button
                 [ class "btn btn-icon"
-                , onInternalClick (MoveQueuedItemDown item)
+                , onInternalClick (UpdateItem <| MoveQueuedItemDown item)
                 ]
                 [ Icons.arrowDown ]
             , button
                 [ class "btn btn-icon"
-                , onInternalClick (Dequeue item)
+                , onInternalClick (UpdateItem <| Dequeue item)
                 ]
                 [ Icons.close ]
             ]
@@ -438,13 +591,13 @@ viewItemControl listened model item =
             , if inPlayList item model then
                 div
                     [ class "dropdown-item"
-                    , onInternalClick (Dequeue item)
+                    , onInternalClick (UpdateItem <| Dequeue item)
                     ]
                     [ text "Dequeue" ]
               else
                 div
                     [ class "dropdown-item"
-                    , onInternalClick (Enqueue item)
+                    , onInternalClick (UpdateItem <| Enqueue item)
                     ]
                     [ text "Enqueue" ]
             , div
@@ -458,7 +611,7 @@ viewItemControl listened model item =
                 ]
             , div
                 [ class "dropdown-item"
-                , onInternalClick (MarkItemsBelowListened item.url)
+                , onInternalClick (UpdateItem <| MarkItemsBelowListened item.url)
                 ]
                 [ text "Mark item and items below as listened" ]
             ]
@@ -509,7 +662,7 @@ markListenedMsg item =
             else
                 1
     in
-        MarkPlayCount item markPlayCount
+        UpdateItem <| MarkPlayCount item markPlayCount
 
 
 markItemsListened : Dict String Bool -> List Item -> List Item

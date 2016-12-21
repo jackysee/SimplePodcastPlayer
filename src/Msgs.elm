@@ -11,39 +11,19 @@ type Msg
     | AddFeed AddFeedMsg
     | Player PlayerMsg
     | PlayEnd String
-    | ShowMoreItem
-    | UpdateAllFeed
-    | UpdateFeeds (List Feed) Feed
-    | UpdateFeedFail (List Feed) Feed Http.Error
-    | UpdateFeedSucceed (List Feed) ( Feed, List Item )
-    | SetListView ListView
-    | HideFeed
-    | ShowConfirmDeleteFeed Feed
-    | HideConfirmDeleteFeed Feed
-    | ConfirmDeleteFeed Feed
+    | UpdateFeed UpdateFeedMsg
+    | DeleteFeed DeleteFeedMsg
+    | ItemList ItemListMsg
+    | UpdateItem UpdateItemMsg
     | OpenNewLink String
-    | SetItemFilter ItemFilter
-    | MarkPlayCount Item Int
-    | MarkItemsBelowListened String
-    | MarkAllItemsAsListened
     | ShowItemDropdown String
     | HideItemDropdown
-    | SelectItem Item
-    | SelectNext
-    | SelectPrev
-    | Enqueue Item
-    | Dequeue Item
-    | MoveQueuedItemUp Item
-    | MoveQueuedItemDown Item
     | SetShortcutKeys (List String)
     | SetFloatPanel FloatPanel
     | MsgBatch (List Msg)
-    | SetItemSortLatest Bool
     | SetFallbackRssServiceUrl String
     | SetFontSize FontSize
     | SetTheme Theme
-    | SetEditingFeedTitle (Maybe String)
-    | SetFeedTitle Feed String
 
 
 type AddFeedMsg
@@ -53,6 +33,12 @@ type AddFeedMsg
     | ToAddFeed
     | FetchFeedSucceed ( Feed, List Item )
     | FetchFeedFail Http.Error
+
+
+type DeleteFeedMsg
+    = ShowConfirmDeleteFeed Feed
+    | HideConfirmDeleteFeed Feed
+    | ConfirmDeleteFeed Feed
 
 
 type PlayerMsg
@@ -68,3 +54,33 @@ type PlayerMsg
     | SetVol Float
     | SetPlayerShowTimeLeft Bool
     | PlayerPaused Bool
+
+
+type UpdateFeedMsg
+    = UpdateAllFeed
+    | UpdateFeeds (List Feed) Feed
+    | UpdateFeedFail (List Feed) Feed Http.Error
+    | UpdateFeedSucceed (List Feed) ( Feed, List Item )
+    | SetEditingFeedTitle (Maybe String)
+    | SetFeedTitle Feed String
+
+
+type ItemListMsg
+    = SetListView ListView
+    | ShowMoreItem
+    | SetItemFilter ItemFilter
+    | HideFeed
+    | SetItemSortLatest Bool
+
+
+type UpdateItemMsg
+    = MarkPlayCount Item Int
+    | MarkItemsBelowListened String
+    | MarkAllItemsAsListened
+    | SelectItem Int
+    | SelectNext
+    | SelectPrev
+    | Enqueue Item
+    | Dequeue Item
+    | MoveQueuedItemUp Item
+    | MoveQueuedItemDown Item
