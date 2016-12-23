@@ -15,15 +15,13 @@ type Msg
     | DeleteFeed DeleteFeedMsg
     | ItemList ItemListMsg
     | UpdateItem UpdateItemMsg
+    | UpdateSetting UpdateSettingMsg
     | OpenNewLink String
     | ShowItemDropdown String
     | HideItemDropdown
     | SetShortcutKeys (List String)
     | SetFloatPanel FloatPanel
     | MsgBatch (List Msg)
-    | SetFallbackRssServiceUrl String
-    | SetFontSize FontSize
-    | SetTheme Theme
 
 
 type AddFeedMsg
@@ -84,3 +82,9 @@ type UpdateItemMsg
     | Dequeue Item
     | MoveQueuedItemUp Item
     | MoveQueuedItemDown Item
+
+
+type UpdateSettingMsg
+    = SetFallbackRssServiceUrl String
+    | SetFontSize FontSize
+    | SetTheme Theme

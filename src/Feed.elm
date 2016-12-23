@@ -8,7 +8,6 @@ module Feed
         , updateDeleteFeed
         , viewFeedTitle
         , viewItem
-        , viewConfirmDelete
         , markListenedMsg
         , markItemsListened
         , updateFeeds

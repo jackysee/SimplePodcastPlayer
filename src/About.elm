@@ -1,4 +1,4 @@
-module About exposing (viewAbout, viewAboutButton)
+module About exposing (viewAbout, viewAboutButton, updateSettings)
 
 import Html exposing (Html, div, text, img, button, h2, span, input, a)
 import Html.Attributes exposing (class, src, classList, value, href, target, style)
@@ -10,6 +10,37 @@ import Events exposing (onInternalClick)
 import Icons
 import String
 import Regex
+import Return exposing (Return)
+import Storage exposing (saveSetting)
+
+
+updateSettings : UpdateSettingMsg -> Model -> Return Msg Model
+updateSettings msg model =
+    case msg of
+        SetFallbackRssServiceUrl url ->
+            updateSetting
+                (\s ->
+                    { s
+                        | fallbackRssServiceUrl =
+                            if url /= "" then
+                                Just url
+                            else
+                                Nothing
+                    }
+                )
+                model
+                |> Return.singleton
+                |> Return.effect_ saveSetting
+
+        SetFontSize fontSize ->
+            updateSetting (\s -> { s | fontSize = fontSize }) model
+                |> Return.singleton
+                |> Return.effect_ saveSetting
+
+        SetTheme theme ->
+            updateSetting (\s -> { s | theme = theme }) model
+                |> Return.singleton
+                |> Return.effect_ saveSetting
 
 
 creditContent : String
@@ -176,7 +207,7 @@ viewSettingFallbackUrl fallbackRssServiceUrl =
                 []
                 [ input
                     [ class "about-setting-input"
-                    , onInput SetFallbackRssServiceUrl
+                    , onInput (\s -> UpdateSetting <| SetFallbackRssServiceUrl s)
                     , value (Maybe.withDefault "" fallbackRssServiceUrl)
                     ]
                     []
@@ -213,7 +244,7 @@ viewSettingFontSize fontSize =
                             ]
                         , style
                             [ ( "font-size", getFontSizePx fontSize_ ) ]
-                        , onClick (SetFontSize fontSize_)
+                        , onClick (UpdateSetting <| SetFontSize fontSize_)
                         ]
                         [ text "aA" ]
                 )
@@ -238,7 +269,7 @@ viewSettingTheme theme =
                 (\theme_ ->
                     div
                         [ classList [ ( "is-selected", theme == theme_ ) ]
-                        , onClick (SetTheme theme_)
+                        , onClick (UpdateSetting <| SetTheme theme_)
                         ]
                         [ div
                             [ class <| "theme-box theme-" ++ (themeToStr theme_ |> String.toLower)

@@ -4,7 +4,6 @@ import Html as App
 import Task exposing (Task)
 import Time
 import ListUtil exposing (swapDown, swapUp, getNext, getPrev)
-import Dom
 import Json.Decode
 import Models exposing (..)
 import Msgs exposing (..)
@@ -27,6 +26,7 @@ import AddFeed exposing (updateAddFeed)
 import Storage exposing (..)
 import Player exposing (updatePlayer, playError, paused, playEnd, soundLoaded, updateProgress)
 import ItemList exposing (updateItemList, updateUpdateItem)
+import About exposing (updateSettings)
 
 
 main : Program (Maybe Json.Decode.Value) Model Msg
@@ -142,6 +142,9 @@ update msg model =
         UpdateItem msg ->
             updateUpdateItem msg model
 
+        UpdateSetting msg ->
+            updateSettings msg model
+
         OpenNewLink url ->
             ( model, openNewLink url )
 
@@ -170,31 +173,6 @@ update msg model =
                 Return.andThen
                 (Return.singleton model)
                 (List.map update list)
-
-        SetFallbackRssServiceUrl url ->
-            updateSetting
-                (\s ->
-                    { s
-                        | fallbackRssServiceUrl =
-                            if url /= "" then
-                                Just url
-                            else
-                                Nothing
-                    }
-                )
-                model
-                |> Return.singleton
-                |> Return.effect_ saveSetting
-
-        SetFontSize fontSize ->
-            updateSetting (\s -> { s | fontSize = fontSize }) model
-                |> Return.singleton
-                |> Return.effect_ saveSetting
-
-        SetTheme theme ->
-            updateSetting (\s -> { s | theme = theme }) model
-                |> Return.singleton
-                |> Return.effect_ saveSetting
     )
         |> Return.command (updateCurrentTimeCmd msg)
 
