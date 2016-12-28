@@ -99,7 +99,7 @@ viewAbout model =
             About content ->
                 [ button
                     [ class "btn btn-icon app-about-close"
-                    , onClick (SetFloatPanel Hidden)
+                    , onClick (FloatPanelAction <| SetFloatPanel Hidden)
                     ]
                     [ Icons.close ]
                 , div
@@ -112,7 +112,7 @@ viewAbout model =
                                     [ ( "about-tab", True )
                                     , ( "is-selected", content == content_ )
                                     ]
-                                , onClick (SetFloatPanel (About content_))
+                                , onClick (FloatPanelAction << SetFloatPanel << About <| content_)
                                 ]
                                 [ text label ]
                         )
@@ -291,7 +291,7 @@ viewAboutButton : Html Msg
 viewAboutButton =
     button
         [ class "btn btn-icon"
-        , onInternalClick (SetFloatPanel (About Credit))
+        , onInternalClick (FloatPanelAction <| SetFloatPanel <| About Credit)
         ]
         [ Icons.infoCircle
         ]

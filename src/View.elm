@@ -52,7 +52,7 @@ view model =
             , viewAbout model
             , div
                 [ class "wrap"
-                , onClick (SetFloatPanel Hidden)
+                , onClick (FloatPanelAction <| SetFloatPanel Hidden)
                 ]
               <|
                 [ div
@@ -263,7 +263,7 @@ viewItemList model feed_ =
                 [ ( "item-list-wrap", True )
                 , ( "has-sort", sortBar /= Nothing )
                 ]
-            , onScroll HideItemDropdown
+            , onScroll (FloatPanelAction <| HideItemDropdown)
             ]
             [ itemList_
             , showMore

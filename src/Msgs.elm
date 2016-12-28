@@ -14,13 +14,10 @@ type Msg
     | UpdateFeed UpdateFeedMsg
     | DeleteFeed DeleteFeedMsg
     | ItemList ItemListMsg
-    | UpdateItem UpdateItemMsg
+    | ItemAction ItemMsg
     | UpdateSetting UpdateSettingMsg
-    | OpenNewLink String
-    | ShowItemDropdown String
-    | HideItemDropdown
+    | FloatPanelAction FloatPanelMsg
     | SetShortcutKeys (List String)
-    | SetFloatPanel FloatPanel
     | MsgBatch (List Msg)
 
 
@@ -71,7 +68,7 @@ type ItemListMsg
     | SetItemSortLatest Bool
 
 
-type UpdateItemMsg
+type ItemMsg
     = MarkPlayCount Item Int
     | MarkItemsBelowListened String
     | MarkAllItemsAsListened
@@ -82,9 +79,16 @@ type UpdateItemMsg
     | Dequeue Item
     | MoveQueuedItemUp Item
     | MoveQueuedItemDown Item
+    | OpenNewLink String
 
 
 type UpdateSettingMsg
     = SetFallbackRssServiceUrl String
     | SetFontSize FontSize
     | SetTheme Theme
+
+
+type FloatPanelMsg
+    = SetFloatPanel FloatPanel
+    | ShowItemDropdown String
+    | HideItemDropdown

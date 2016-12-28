@@ -1,4 +1,4 @@
-module ItemList
+port module ItemList
     exposing
         ( updateItemList
         , updateUpdateItem
@@ -84,7 +84,7 @@ flushPlayCount list =
         list
 
 
-updateUpdateItem : UpdateItemMsg -> Model -> Return Msg Model
+updateUpdateItem : ItemMsg -> Model -> Return Msg Model
 updateUpdateItem msg model =
     case msg of
         MarkPlayCount item playCount ->
@@ -227,3 +227,9 @@ updateUpdateItem msg model =
                 |> Return.map updateViewItems
                 |> Return.effect_ saveView
                 |> Return.effect_ (\model -> scrollToIndex model.view.itemSelected)
+
+        OpenNewLink url ->
+            ( model, openNewLink url )
+
+
+port openNewLink : String -> Cmd msg

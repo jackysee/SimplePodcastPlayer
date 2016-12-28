@@ -438,7 +438,7 @@ viewItem model feed ( index, item ) =
                 , ( "is-enqueued", inPlayList item model )
                 ]
             , toggleItem model item
-            , onMouseEnter (UpdateItem <| SelectItem index)
+            , onMouseEnter (ItemAction <| SelectItem index)
               -- , onMouseLeave (UnselectItem item)
             , id ("item-" ++ toString index)
             ]
@@ -531,17 +531,17 @@ renderQueueControl item listView =
             [ class "item-reorder" ]
             [ button
                 [ class "btn btn-icon"
-                , onInternalClick (UpdateItem <| MoveQueuedItemUp item)
+                , onInternalClick (ItemAction <| MoveQueuedItemUp item)
                 ]
                 [ Icons.arrowUp ]
             , button
                 [ class "btn btn-icon"
-                , onInternalClick (UpdateItem <| MoveQueuedItemDown item)
+                , onInternalClick (ItemAction <| MoveQueuedItemDown item)
                 ]
                 [ Icons.arrowDown ]
             , button
                 [ class "btn btn-icon"
-                , onInternalClick (UpdateItem <| Dequeue item)
+                , onInternalClick (ItemAction <| Dequeue item)
                 ]
                 [ Icons.close ]
             ]
@@ -567,7 +567,7 @@ viewItemControl listened model item =
                 Just link ->
                     [ div
                         [ class "dropdown-item"
-                        , onInternalClick (OpenNewLink link)
+                        , onInternalClick (ItemAction <| OpenNewLink link)
                         ]
                         [ text "Open link" ]
                     ]
@@ -590,13 +590,13 @@ viewItemControl listened model item =
             , if inPlayList item model then
                 div
                     [ class "dropdown-item"
-                    , onInternalClick (UpdateItem <| Dequeue item)
+                    , onInternalClick (ItemAction <| Dequeue item)
                     ]
                     [ text "Dequeue" ]
               else
                 div
                     [ class "dropdown-item"
-                    , onInternalClick (UpdateItem <| Enqueue item)
+                    , onInternalClick (ItemAction <| Enqueue item)
                     ]
                     [ text "Enqueue" ]
             , div
@@ -610,7 +610,7 @@ viewItemControl listened model item =
                 ]
             , div
                 [ class "dropdown-item"
-                , onInternalClick (UpdateItem <| MarkItemsBelowListened item.url)
+                , onInternalClick (ItemAction <| MarkItemsBelowListened item.url)
                 ]
                 [ text "Mark item and items below as listened" ]
             ]
@@ -626,7 +626,7 @@ viewItemControl listened model item =
                     [ button
                         [ class "btn btn-icon btn-more"
                         , onInternalClick
-                            (ShowItemDropdown item.url)
+                            (FloatPanelAction <| ShowItemDropdown item.url)
                         ]
                         [ Icons.ellipsisV ]
                     , case model.view.floatPanel of
@@ -661,7 +661,7 @@ markListenedMsg item =
             else
                 1
     in
-        UpdateItem <| MarkPlayCount item markPlayCount
+        ItemAction <| MarkPlayCount item markPlayCount
 
 
 markItemsListened : Dict String Bool -> List Item -> List Item

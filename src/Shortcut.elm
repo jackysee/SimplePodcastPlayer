@@ -28,20 +28,20 @@ shortcuts =
     , [ "g", "a" ]
         => \_ -> ItemList HideFeed
     , [ "j" ]
-        => \_ -> UpdateItem SelectNext
+        => \_ -> ItemAction SelectNext
     , [ "down" ]
-        => \_ -> UpdateItem SelectNext
+        => \_ -> ItemAction SelectNext
     , [ "k" ]
-        => \_ -> UpdateItem SelectPrev
+        => \_ -> ItemAction SelectPrev
     , [ "up" ]
-        => \_ -> UpdateItem SelectPrev
+        => \_ -> ItemAction SelectPrev
     , [ "o" ]
         => \model ->
             getSelectedItem model
                 |> Maybe.map
                     (\item_ ->
                         item_.link
-                            |> Maybe.map (\link -> OpenNewLink link)
+                            |> Maybe.map (\link -> ItemAction <| OpenNewLink link)
                             |> Maybe.withDefault NoOp
                     )
                 |> Maybe.withDefault NoOp
@@ -82,7 +82,7 @@ shortcuts =
         => \model ->
             if model.view.listView == Queued then
                 getSelectedItem model
-                    |> Maybe.map (\item -> UpdateItem <| MoveQueuedItemUp item)
+                    |> Maybe.map (\item -> ItemAction <| MoveQueuedItemUp item)
                     |> Maybe.withDefault NoOp
             else
                 NoOp
@@ -90,7 +90,7 @@ shortcuts =
         => \model ->
             if model.view.listView == Queued then
                 getSelectedItem model
-                    |> Maybe.map (\item -> UpdateItem <| MoveQueuedItemDown item)
+                    |> Maybe.map (\item -> ItemAction <| MoveQueuedItemDown item)
                     |> Maybe.withDefault NoOp
             else
                 NoOp
@@ -100,9 +100,9 @@ shortcuts =
                 |> Maybe.map
                     (\item ->
                         if inPlayList item model then
-                            UpdateItem <| Dequeue item
+                            ItemAction <| Dequeue item
                         else
-                            UpdateItem <| Enqueue item
+                            ItemAction <| Enqueue item
                     )
                 |> Maybe.withDefault NoOp
     , [ "m" ]
@@ -111,9 +111,9 @@ shortcuts =
                 |> Maybe.map (\item -> markListenedMsg item)
                 |> Maybe.withDefault NoOp
     , [ "shift-<" ]
-        => \_ -> SetFloatPanel (About Settings)
+        => \_ -> FloatPanelAction <| SetFloatPanel <| About Settings
     , [ "shift-?" ]
-        => \_ -> SetFloatPanel (About Shortcut)
+        => \_ -> FloatPanelAction <| SetFloatPanel <| About Shortcut
     , [ "r", "r" ]
         => \model ->
             case model.view.listView of
@@ -126,7 +126,7 @@ shortcuts =
                 _ ->
                     UpdateFeed UpdateAllFeed
     , [ "shift-a" ]
-        => \model -> UpdateItem MarkAllItemsAsListened
+        => \model -> ItemAction MarkAllItemsAsListened
     ]
 
 

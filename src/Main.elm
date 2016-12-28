@@ -19,7 +19,7 @@ import Feed
         , updateDeleteFeed
         )
 import Shortcut exposing (keyMap, scrollToIndex)
-import FloatPlanel exposing (hideItemDropdown)
+import FloatPlanel exposing (updateFloatPanel)
 import DecodeStoreModel exposing (decodeStoreValue)
 import Return exposing (Return)
 import AddFeed exposing (updateAddFeed)
@@ -120,7 +120,7 @@ update msg model =
                             |> Return.andThen (update <| Player (Play item_))
                             |> Return.andThen
                                 (getCurrentItem model
-                                    |> Maybe.map (\item -> update <| UpdateItem <| Dequeue item)
+                                    |> Maybe.map (\item -> update <| ItemAction <| Dequeue item)
                                     |> Maybe.withDefault (Return.singleton)
                                 )
 
@@ -139,32 +139,17 @@ update msg model =
         ItemList msg ->
             updateItemList msg model
 
-        UpdateItem msg ->
+        ItemAction msg ->
             updateUpdateItem msg model
 
         UpdateSetting msg ->
             updateSettings msg model
 
-        OpenNewLink url ->
-            ( model, openNewLink url )
-
-        ShowItemDropdown url ->
-            model
-                |> updateView (\v -> { v | floatPanel = ItemDropdown url })
-                |> Return.singleton
-
-        HideItemDropdown ->
-            model
-                |> updateView (\v -> { v | floatPanel = hideItemDropdown model.view.floatPanel })
-                |> Return.singleton
+        FloatPanelAction msg ->
+            updateFloatPanel msg model
 
         SetShortcutKeys keys ->
             updateView (\v -> { v | shortcutKeys = keys }) model
-                |> Return.singleton
-                |> Return.effect_ saveView
-
-        SetFloatPanel panel ->
-            updateView (\v -> { v | floatPanel = panel }) model
                 |> Return.singleton
                 |> Return.effect_ saveView
 
@@ -215,9 +200,6 @@ subscriptions model =
         , playError (Player << PlayError)
         , paused (Player << PlayerPaused)
         ]
-
-
-port openNewLink : String -> Cmd msg
 
 
 port keyUp : (String -> msg) -> Sub msg
