@@ -443,20 +443,22 @@ viewItem model feed ( index, item ) =
             , id ("item-" ++ toString index)
             ]
             [ renderItemState item model.view.currentItem model.view.playerState
-            , case feed of
-                Just feed_ ->
-                    div
-                        [ class "item-feed-title"
-                        , onInternalClick (ItemList <| SetListView <| ViewFeed feed_.url)
-                        ]
-                        [ text feed_.title ]
+            , div [ class "item-info" ]
+                [ div [ class "item-desp" ]
+                    [ case feed of
+                        Just feed_ ->
+                            div
+                                [ class "item-feed-title"
+                                , onInternalClick (ItemList <| SetListView <| ViewFeed feed_.url)
+                                ]
+                                [ text feed_.title ]
 
-                Nothing ->
-                    text ""
-            , div [ class "item-desp" ]
-                [ div
-                    [ class "item-title", title item.title ]
-                    [ text item.title ]
+                        Nothing ->
+                            text ""
+                    , div
+                        [ class "item-title", title item.title ]
+                        [ text item.title ]
+                    ]
                 , let
                     description_ =
                         item.description
@@ -476,13 +478,15 @@ viewItem model feed ( index, item ) =
             , viewItemQueued model item
             , renderQueueControl item model.view.listView
             , viewItemControl listened model item
-            , div [ class "item-progress" ]
-                [ text <| formatDurationShort item.duration ]
-            , div
-                [ class "item-date"
-                , title <| format item.pubDate model.view.currentTime True
+            , div []
+                [ div
+                    [ class "item-date"
+                    , title <| format item.pubDate model.view.currentTime True
+                    ]
+                    [ text <| format item.pubDate model.view.currentTime False ]
+                , div [ class "item-progress" ]
+                    [ text <| formatDurationShort item.duration ]
                 ]
-                [ text <| format item.pubDate model.view.currentTime False ]
             ]
 
 
