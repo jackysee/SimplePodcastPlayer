@@ -27,6 +27,7 @@ import Storage exposing (..)
 import Player exposing (updatePlayer, playError, paused, playEnd, soundLoaded, updateProgress)
 import ItemList exposing (updateItemList, updateUpdateItem)
 import About exposing (updateSettings)
+import Goto exposing (updateGoto)
 
 
 main : Program (Maybe Json.Decode.Value) Model Msg
@@ -147,6 +148,9 @@ update msg model =
 
         FloatPanelAction msg ->
             updateFloatPanel msg model
+
+        GotoAction msg ->
+            updateGoto msg model
 
         SetShortcutKeys keys ->
             updateView (\v -> { v | shortcutKeys = keys }) model

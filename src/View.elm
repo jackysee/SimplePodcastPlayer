@@ -2,13 +2,14 @@ module View exposing (view)
 
 import Html exposing (div, text, input, Html, span, ul, li, button, img, node)
 import Html.Events exposing (onClick)
-import Html.Attributes exposing (class, src, style, classList, checked, title, property)
+import Html.Attributes exposing (id, value, class, src, style, classList, checked, title, property)
 import Json.Encode
 import String
 import Models exposing (..)
 import Msgs exposing (..)
 import Feed exposing (viewFeedTitle, viewItem)
 import AddFeed exposing (viewAddFeed, addFeedButton)
+import Goto exposing (viewGoto)
 import Player exposing (viewPlayer)
 import About exposing (viewAbout, viewAboutButton)
 import Events exposing (onScroll)
@@ -50,6 +51,7 @@ view model =
             [ viewFontSizeStyle model.setting.fontSize
             , viewAddFeed model
             , viewAbout model
+            , viewGoto model
             , div
                 [ class "wrap"
                 , onClick (FloatPanelAction <| SetFloatPanel Hidden)

@@ -2,7 +2,7 @@ module AddFeed exposing (viewAddFeed, addFeedButton, updateAddFeed)
 
 import Html exposing (Html, div, button, img, span, input, text, ul, li)
 import Html.Attributes exposing (classList, class, src, id, class, value, placeholder, disabled)
-import Html.Events exposing (onClick, onInput, on, keyCode, onWithOptions)
+import Html.Events exposing (onClick, onInput, on, keyCode)
 import Models exposing (..)
 import Msgs exposing (..)
 import Events exposing (onInternalClick, onKeyup)
@@ -11,6 +11,7 @@ import Return exposing (Return)
 import Dom
 import Storage exposing (..)
 import Feed exposing (loadFeed)
+import Task
 
 
 updateAddFeed : AddFeedMsg -> Model -> Return Msg Model
@@ -78,6 +79,7 @@ updateAddFeed msg model =
                 }
                     |> Return.singleton
                     |> Return.command (noOpTask (Dom.blur "add-feed"))
+                    |> Return.map updateViewItems
                     |> Return.effect_ saveView
                     |> Return.command (saveFeeds [ feed ])
                     |> Return.command (saveItems items)

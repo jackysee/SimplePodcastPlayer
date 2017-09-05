@@ -127,6 +127,8 @@ shortcuts =
                     UpdateFeed UpdateAllFeed
     , [ "shift-a" ]
         => \model -> ItemAction MarkAllItemsAsListened
+    , [ "g", "g" ]
+        => \_ -> GotoAction ShowGoto
     ]
 
 

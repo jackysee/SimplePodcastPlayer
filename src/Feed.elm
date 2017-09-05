@@ -17,7 +17,7 @@ import Task exposing (Task)
 import Http
 import String
 import Html exposing (Html, text, button, ul, li, div, span, img, a, input)
-import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, onInput, onBlur)
+import Html.Events exposing (onClick, onInput, onBlur)
 import Html.Attributes exposing (class, title, src, classList, id, href, target, value)
 import Dict exposing (Dict)
 import Regex
@@ -109,6 +109,8 @@ updateUpdateFeed msg model =
                         Cmd.none
             in
                 Return.singleton model_
+                    |> Return.map updateViewItems
+                    |> Return.effect_ saveView
                     |> Return.command (saveItems items_)
                     |> Return.command cmd
 
@@ -310,11 +312,7 @@ viewFeedTitle model feed =
                 Refreshing ->
                     div
                         [ class "feed-state" ]
-                        [ Icons.loadingSpin
-                          -- , span
-                          --     [ class "feed-status" ]
-                          --     [ text <| feed.title ++ " is refreshing..." ]
-                        ]
+                        [ Icons.loadingSpin ]
 
                 RefreshError ->
                     span
@@ -438,7 +436,7 @@ viewItem model feed ( index, item ) =
                 , ( "is-enqueued", inPlayList item model )
                 ]
             , toggleItem model item
-            , onMouseEnter (ItemAction <| SelectItem index)
+              --, onMouseEnter (ItemAction <| SelectItem index)
               -- , onMouseLeave (UnselectItem item)
             , id ("item-" ++ toString index)
             ]

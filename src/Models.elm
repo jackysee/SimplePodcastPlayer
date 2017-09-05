@@ -68,6 +68,7 @@ type ItemFilter
 
 type FloatPanel
     = AddPanel
+    | GotoPanel
     | About AboutPanel
     | ItemDropdown String
     | Hidden
@@ -103,6 +104,8 @@ type alias Setting =
 
 type alias View =
     { urlToAdd : String
+    , gotoSearch : String
+    , gotoSelected : Int
     , loadFeedState : LoadFeedState
     , playerState : PlayerState
     , currentTime : Time
@@ -384,6 +387,8 @@ defaultModel : Model
 defaultModel =
     { view =
         { urlToAdd = ""
+        , gotoSearch = ""
+        , gotoSelected = 0
         , loadFeedState = Empty
         , currentTime = 0
         , itemsToShow = 30

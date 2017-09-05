@@ -17,6 +17,7 @@ type Msg
     | ItemAction ItemMsg
     | UpdateSetting UpdateSettingMsg
     | FloatPanelAction FloatPanelMsg
+    | GotoAction GotoMsg
     | SetShortcutKeys (List String)
     | MsgBatch (List Msg)
 
@@ -28,6 +29,14 @@ type AddFeedMsg
     | ToAddFeed
     | FetchFeedSucceed ( Feed, List Item )
     | FetchFeedFail Http.Error
+
+
+type GotoMsg
+    = ShowGoto
+    | HideGoto
+    | SetSearch String
+    | GotoUp
+    | GotoDown
 
 
 type DeleteFeedMsg
