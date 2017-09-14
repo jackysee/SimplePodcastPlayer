@@ -175,8 +175,8 @@ viewLoadFeedState state =
 addFeedButton : Html Msg
 addFeedButton =
     button
-        [ class "btn add-btn btn-icon top-bar-outset-btn"
+        [ class "btn add-btn btn-icon"
         , onInternalClick (AddFeed ShowAddPanel)
         ]
-        [ Icons.subscription
+        [ Icons.plus
         ]

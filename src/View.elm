@@ -85,14 +85,17 @@ viewFontSizeStyle fontSize =
 
 viewLeftBtn : ListView -> Html Msg
 viewLeftBtn listView =
-    if listView == AllFeed then
-        addFeedButton
-    else
-        button
-            [ class "btn add-btn btn-icon top-bar-outset-btn"
-            , onClick (ItemList <| SetListView AllFeed)
-            ]
-            [ Icons.arrowLeft ]
+    div [ class "top-bar-left" ]
+        [ if listView == AllFeed then
+            --addFeedButton
+            text ""
+          else
+            button
+                [ class "btn add-btn btn-icon top-bar-outset-btn"
+                , onClick (ItemList <| SetListView AllFeed)
+                ]
+                [ Icons.arrowLeft ]
+        ]
 
 
 viewTitle : Model -> Maybe Feed -> Html Msg
@@ -114,9 +117,11 @@ viewTitle model feed_ =
                     [ div
                         [ class "feed-title" ]
                         [ if List.length model.feeds == 0 then
-                            span
+                            div
                                 [ class "feed-empty" ]
-                                [ text "← Click to add feed" ]
+                                [ text "Please add feed"
+                                , addFeedButton
+                                ]
                           else
                             case model.view.listView of
                                 Queued ->
@@ -149,7 +154,8 @@ viewTopLeftBar : Model -> Html Msg
 viewTopLeftBar model =
     div
         [ class "top-left-bar" ]
-        [ if List.length model.feeds > 0 then
+        [ addFeedButton
+        , if List.length model.feeds > 0 then
             button
                 [ classList
                     [ ( "btn btn-icon queued-btn", True )

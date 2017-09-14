@@ -144,19 +144,26 @@
 .item{
     position: relative;
     margin: 0;
-    padding: 0.5rem;
+    padding: 1rem 0.5rem;
     display: flex;
     // align-items: center;
-    cursor: pointer;
-    height: 4rem;
+    // cursor: pointer;
+    height: 5rem;
     border: 1px solid transparent;
     // border-bottom: 1px solid var(--state-color);
-
 }
 
 .item-info{
     flex: 1;
     overflow: hidden;
+    margin-top: 0;
+}
+
+.item-info-state{
+    display: inline-flex;
+    flex: 1;
+    overflow: hidden;
+    cursor: pointer;
 }
 
 
@@ -235,6 +242,10 @@
     // text-overflow: ellipsis;
 }
 
+.item-date-time{
+    font-size: 0.85rem;
+}
+
 .item-date{
     text-align: right;
     min-width : 4rem;
@@ -265,12 +276,13 @@
 }
 
 .item-feed-title{
-    width: 8rem;
+    width: 10rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: pointer;
     display: inline-block;
+    margin-right: 1rem;
 }
 
 
@@ -283,7 +295,6 @@
     position: relative;
     display: inline-block;
     margin: 0;
-    margin-top: 0.1rem;
 
     .btn{
         height: 1rem;
@@ -322,13 +333,14 @@
 }
 
 .item-queued{
-    font-size: 0.5rem;
-    font-color: var(--button-color);
+    font-size: 0.6rem;
+    color: var(--button-color);
     background: var(--button-bg);
     text-transform: uppercase;
     display: inline-block;
-    padding: 0.1rem 0.2rem;
+    padding: 0 0.2rem;
     height: 1rem;
+    line-height: 1rem;
 }
 
 .feed-header-title{
@@ -359,4 +371,14 @@
         }
     }
 
+}
+
+.feed-empty .add-btn{
+    height: 1.5rem;
+    width: 1.5rem;
+    margin-left: 0.5rem;
+
+    svg{
+        stroke-width: 2;
+    }
 }

@@ -96,6 +96,9 @@ body {
     margin-right: 0.5rem;
 }
 
+.top-bar-left{
+    min-width: 1rem;
+}
 
 .top-left-bar{
     display: flex;
@@ -103,7 +106,7 @@ body {
 
     > *{
         margin-top: 0;
-        margin-left: 1rem;
+        margin-left: 0.5rem;
     }
 
     > .btn{

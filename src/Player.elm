@@ -292,8 +292,10 @@ viewPlayer model =
                                         [ class "btn player-btn" ]
                                         [ if model.view.playerVol == 0 then
                                             Icons.volumeOff
+                                          else if model.view.playerVol <= 0.5 then
+                                            Icons.volume1
                                           else
-                                            Icons.volumeUp
+                                            Icons.volume2
                                         ]
                                     ]
                                 , div

@@ -435,48 +435,22 @@ viewItem model feed ( index, item ) =
                 , ( "is-selected", index == model.view.itemSelected )
                 , ( "is-enqueued", inPlayList item model )
                 ]
-            , toggleItem model item
-              --, onMouseEnter (ItemAction <| SelectItem index)
-              -- , onMouseLeave (UnselectItem item)
+
+            --, onMouseEnter (ItemAction <| SelectItem index)
+            -- , onMouseLeave (UnselectItem item)
             , id ("item-" ++ toString index)
             ]
-            [ renderItemState item model.view.currentItem model.view.playerState
-            , div [ class "item-info" ]
-                [ div [ class "item-desp" ]
-                    [ case feed of
-                        Just feed_ ->
-                            div
-                                [ class "item-feed-title"
-                                , onInternalClick (ItemList <| SetListView <| ViewFeed feed_.url)
-                                ]
-                                [ text feed_.title ]
-
-                        Nothing ->
-                            text ""
-                    , div
-                        [ class "item-title", title item.title ]
-                        [ text item.title ]
-                    ]
-                , let
-                    description_ =
-                        item.description
-                            |> Maybe.map stripHtml
-                            >> Maybe.withDefault ""
-                            >> String.slice 0 300
-                  in
-                    div
-                        [ class "item-description-text"
-                        , title <| Escape.unEsc description_
-                        ]
-                        [ description_
-                            |> String.slice 0 300
-                            >> Escape.text_
-                        ]
+            [ div
+                [ class "item-info-state"
+                , toggleItem model item
+                ]
+                [ renderItemState item model.view.currentItem model.view.playerState
+                , viewItemInfo feed item
                 ]
             , viewItemQueued model item
             , renderQueueControl item model.view.listView
             , viewItemControl listened model item
-            , div []
+            , div [ class "item-date-time" ]
                 [ div
                     [ class "item-date"
                     , title <| format item.pubDate model.view.currentTime True
@@ -497,6 +471,40 @@ toggleItem model item =
             onClick (Player <| Play item)
     else
         onClick (Player <| Play item)
+
+
+viewItemInfo : Maybe Feed -> Item -> Html Msg
+viewItemInfo feed item =
+    div
+        [ class "item-info" ]
+        [ div [ class "item-desp" ]
+            [ case feed of
+                Just feed_ ->
+                    div
+                        [ class "item-feed-title"
+                        , onInternalClick (ItemList <| SetListView <| ViewFeed feed_.url)
+                        ]
+                        [ text feed_.title ]
+
+                Nothing ->
+                    text ""
+            , div
+                [ class "item-title", title item.title ]
+                [ text item.title ]
+            ]
+        , let
+            description_ =
+                item.description
+                    |> Maybe.map stripHtml
+                    >> Maybe.withDefault ""
+                    >> String.slice 0 300
+          in
+            div
+                [ class "item-description-text"
+                , title <| Escape.unEsc description_
+                ]
+                [ description_ |> Escape.text_ ]
+        ]
 
 
 renderItemState : Item -> Maybe ItemId -> PlayerState -> Html Msg
@@ -534,16 +542,19 @@ renderQueueControl item listView =
             [ button
                 [ class "btn btn-icon"
                 , onInternalClick (ItemAction <| MoveQueuedItemUp item)
+                , title "move up"
                 ]
                 [ Icons.arrowUp ]
             , button
                 [ class "btn btn-icon"
                 , onInternalClick (ItemAction <| MoveQueuedItemDown item)
+                , title "move down"
                 ]
                 [ Icons.arrowDown ]
             , button
                 [ class "btn btn-icon"
                 , onInternalClick (ItemAction <| Dequeue item)
+                , title "remove from queue"
                 ]
                 [ Icons.close ]
             ]

@@ -129,6 +129,8 @@ shortcuts =
         => \model -> ItemAction MarkAllItemsAsListened
     , [ "g", "g" ]
         => \_ -> GotoAction ShowGoto
+    , [ "s" ]
+        => \_ -> Player ToggleRate
     ]
 
 

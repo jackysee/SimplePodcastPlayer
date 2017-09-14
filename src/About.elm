@@ -48,7 +48,7 @@ creditContent =
     """
 Created by [@jackysee](http://github.com/jackysee/SimplePodcastPlayer) using
 [Elm](http://elm-lang.org). The RSS service is provided by [YQL](http://developer.yahoo.com/yql/console/).
-Icons provided by [font-awesome](http://fontawesome.io).
+Icons provided by [Feather](https://feather.netlify.com/).
 """
 
 
@@ -58,6 +58,7 @@ shortcutContent =
 - Navigation
     - Go to Unlistened : **g u**
     - Go to Queued : **g q**
+    - Go to Feed by search: **g g**
     - Go to Feed of the selected item : **g f**
     - Go to All Podcasts : **g a**
     - show settings : **shift+,**
@@ -73,6 +74,7 @@ shortcutContent =
 - Actions
     - Refresh selected feed / all feeds : **r r**
     - Play / Pause player item : **p**
+    - Toggle player rate : **s**
 - Queue
     - move selected item Up : **u**
     - move sleected item Down : **d**

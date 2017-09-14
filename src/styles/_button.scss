@@ -25,6 +25,7 @@
 
 .btn-icon{
     height: 1rem;
+    min-wdith: 1rem;
 }
 
 .btn-text{
@@ -36,6 +37,16 @@
 
 svg{
     fill: var(--icon-color);
+}
+
+svg.feather{
+    fill: none;
+    color: var(--icon-color);
+    stroke-width: 4;
+}
+
+svg.feather.feather-thin{
+    stroke-width: 2;
 }
 
 svg, img[src$=svg]{

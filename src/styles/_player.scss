@@ -38,6 +38,8 @@ $player-top-padding : 0.5rem;
 
 .player-buttons{
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .player-btn{

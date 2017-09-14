@@ -1,17 +1,37 @@
 module Icons exposing (..)
 
 import Html exposing (Html)
-import Svg exposing (svg, path, node, rect, animate, g, animateTransform)
+import Svg
+    exposing
+        ( svg
+        , path
+        , rect
+        , animate
+        , g
+        , animateTransform
+        , line
+        , polyline
+        , polygon
+        , circle
+        )
 import Svg.Attributes
     exposing
-        ( viewBox
+        ( class
+        , viewBox
         , d
         , transform
         , attributeName
         , width
         , height
         , x
+        , x1
+        , x2
+        , cx
         , y
+        , y1
+        , y2
+        , cy
+        , r
         , from
         , to
         , dur
@@ -22,7 +42,28 @@ import Svg.Attributes
         , opacity
         , type_
         , fill
+        , stroke
+        , strokeWidth
+        , strokeLinecap
+        , strokeLinejoin
+        , points
         )
+
+
+plus : Html msg
+plus =
+    svg
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "3"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather"
+        ]
+        [ line [ x1 "12", y1 "5", x2 "12", y2 "19" ] []
+        , line [ x1 "5", y1 "12", x2 "19", y2 "12" ] []
+        ]
 
 
 subscription : Html msg
@@ -38,50 +79,81 @@ subscription =
 arrowDown : Html msg
 arrowDown =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1675 832q0 53-37 90l-651 652q-39 37-91 37-53 0-90-37l-651-652q-38-36-38-90 0-53 38-91l74-75q39-37 91-37 53 0 90 37l294 294v-704q0-52 38-90t90-38h128q52 0 90 38t38 90v704l294-294q37-37 90-37 52 0 91 37l75 75q37 39 37 91z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "3"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather"
+        ]
+        [ line [ x1 "12", y1 "4", x2 "12", y2 "20" ] []
+        , polyline [ points "18 14 12 20 6 14" ] []
         ]
 
 
 arrowLeft : Html msg
 arrowLeft =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1664 896v128q0 53-32.5 90.5t-84.5 37.5h-704l293 294q38 36 38 90t-38 90l-75 76q-37 37-90 37-52 0-91-37l-651-652q-37-37-37-90 0-52 37-91l651-650q38-38 91-38 52 0 90 38l75 74q38 38 38 91t-38 91l-293 293h704q52 0 84.5 37.5t32.5 90.5z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "3"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather"
+        ]
+        [ line [ x1 "20", y1 "12", x2 "4", y2 "12" ] []
+        , polyline [ points "10 18 4 12 10 6" ] []
         ]
 
 
 arrowUp : Html msg
 arrowUp =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1675 971q0 51-37 90l-75 75q-38 38-91 38-54 0-90-38l-294-293v704q0 52-37.5 84.5t-90.5 32.5h-128q-53 0-90.5-32.5t-37.5-84.5v-704l-294 293q-36 38-90 38t-90-38l-75-75q-38-38-38-90 0-53 38-91l651-651q35-37 90-37 54 0 91 37l651 651q37 39 37 91z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "3"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather"
+        ]
+        [ line [ x1 "12", y1 "20", x2 "12", y2 "4" ] []
+        , polyline [ points "6 10 12 4 18 10" ] []
         ]
 
 
 close : Html msg
 close =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1490 1322q0 40-28 68l-136 136q-28 28-68 28t-68-28l-294-294-294 294q-28 28-68 28t-68-28l-136-136q-28-28-28-68t28-68l294-294-294-294q-28-28-28-68t28-68l136-136q28-28 68-28t68 28l294 294 294-294q28-28 68-28t68 28l136 136q28 28 28 68t-28 68l-294 294 294 294q28 28 28 68z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "3"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather"
+        ]
+        [ line [ x1 "18", y1 "6", x2 "6", y2 "18" ] []
+        , line [ x1 "6", y1 "6", x2 "18", y2 "18" ] []
         ]
 
 
 ellipsisV : Html msg
 ellipsisV =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1088 1248v192q0 40-28 68t-68 28h-192q-40 0-68-28t-28-68v-192q0-40 28-68t68-28h192q40 0 68 28t28 68zm0-512v192q0 40-28 68t-68 28h-192q-40 0-68-28t-28-68v-192q0-40 28-68t68-28h192q40 0 68 28t28 68zm0-512v192q0 40-28 68t-68 28h-192q-40 0-68-28t-28-68v-192q0-40 28-68t68-28h192q40 0 68 28t28 68z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ circle [ cx "12", cy "12", r "2" ] []
+        , circle [ cx "12", cy "4", r "2" ] []
+        , circle [ cx "12", cy "20", r "2" ] []
         ]
 
 
@@ -143,15 +215,9 @@ equalizerStop =
         [ viewBox "0 0 24 24" ]
         [ g
             [ transform "rotate(180 12 12)" ]
-            [ rect
-                [ x "0", y "0", width "6", height "4" ]
-                []
-            , rect
-                [ x "9", y "0", width "6", height "4" ]
-                []
-            , rect
-                [ x "18", y "0", width "6", height "4" ]
-                []
+            [ rect [ x "0", y "0", width "6", height "4" ] []
+            , rect [ x "9", y "0", width "6", height "4" ] []
+            , rect [ x "18", y "0", width "6", height "4" ] []
             ]
         ]
 
@@ -159,52 +225,64 @@ equalizerStop =
 exclamation : Html msg
 exclamation =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M896 128q209 0 385.5 103t279.5 279.5 103 385.5-103 385.5-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103zm128 1247v-190q0-14-9-23.5t-22-9.5h-192q-13 0-23 10t-10 23v190q0 13 10 23t23 10h192q13 0 22-9.5t9-23.5zm-2-344l18-621q0-12-10-18-10-8-24-8h-220q-14 0-24 8-10 6-10 18l17 621q0 10 10 17.5t24 7.5h185q14 0 23.5-7.5t10.5-17.5z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
         ]
-
-
-externalLink : Html msg
-externalLink =
-    svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1408 928v320q0 119-84.5 203.5t-203.5 84.5h-832q-119 0-203.5-84.5t-84.5-203.5v-832q0-119 84.5-203.5t203.5-84.5h704q14 0 23 9t9 23v64q0 14-9 23t-23 9h-704q-66 0-113 47t-47 113v832q0 66 47 113t113 47h832q66 0 113-47t47-113v-320q0-14 9-23t23-9h64q14 0 23 9t9 23zm384-864v512q0 26-19 45t-45 19-45-19l-176-176-652 652q-10 10-23 10t-23-10l-114-114q-10-10-10-23t10-23l652-652-176-176q-19-19-19-45t19-45 45-19h512q26 0 45 19t19 45z" ]
-            []
+        [ circle [ cx "12", cy "12", r "10" ] []
+        , line [ x1 "12", y1 "8", x2 "12", y2 "12" ] []
+        , line [ x1 "12", y1 "16", x2 "12", y2 "16" ] []
         ]
 
 
 infoCircle : Html msg
 infoCircle =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1152 1376v-160q0-14-9-23t-23-9h-96v-512q0-14-9-23t-23-9h-320q-14 0-23 9t-9 23v160q0 14 9 23t23 9h96v320h-96q-14 0-23 9t-9 23v160q0 14 9 23t23 9h448q14 0 23-9t9-23zm-128-896v-160q0-14-9-23t-23-9h-192q-14 0-23 9t-9 23v160q0 14 9 23t23 9h192q14 0 23-9t9-23zm640 416q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ circle [ cx "12", cy "12", r "10" ] []
+        , line [ x1 "12", y1 "16", x2 "12", y2 "12" ] []
+        , line [ x1 "12", y1 "8", x2 "12", y2 "8" ] []
         ]
 
 
 loadingSpin : Html msg
 loadingSpin =
     svg
-        [ viewBox "0 0 32 32"
-        , fill "#666666"
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
         ]
-        [ path
-            [ opacity ".25"
-            , d "M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"
-            ]
+        [ g
             []
-        , path
-            [ d "M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z" ]
-            [ animateTransform
+            [ line [ x1 "12", y1 "2", x2 "12", y2 "6" ] []
+            , line [ x1 "12", y1 "18", x2 "12", y2 "22" ] []
+            , line [ x1 "4.93", y1 "4.93", x2 "7.76", y2 "7.76" ] []
+            , line [ x1 "16.24", y1 "16.24", x2 "19.07", y2 "19.07" ] []
+            , line [ x1 "2", y1 "12", x2 "6", y2 "12" ] []
+            , line [ x1 "18", y1 "12", x2 "22", y2 "12" ] []
+            , line [ x1 "4.93", y1 "19.07", x2 "7.76", y2 "16.24" ] []
+            , line [ x1 "16.24", y1 "7.76", x2 "19.07", y2 "4.93" ] []
+            , animateTransform
                 [ attributeName "transform"
                 , type_ "rotate"
-                , from "0 16 16"
-                , to "360 16 16"
-                , dur "0.8s"
+                , from "0 12 12"
+                , to "360 12 12"
+                , dur "1.5s"
                 , repeatCount "indefinite"
                 ]
                 []
@@ -212,101 +290,179 @@ loadingSpin =
         ]
 
 
+
+{-
+   svg
+       [ viewBox "0 0 32 32"
+       , fill "#666666"
+       ]
+       [ path
+           [ opacity ".25"
+           , d "M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"
+           ]
+           []
+       , path
+           [ d "M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z" ]
+           [ animateTransform
+               [ attributeName "transform"
+               , type_ "rotate"
+               , from "0 16 16"
+               , to "360 16 16"
+               , dur "0.8s"
+               , repeatCount "indefinite"
+               ]
+               []
+           ]
+       ]
+-}
+
+
 pause : Html msg
 pause =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1664 192v1408q0 26-19 45t-45 19h-512q-26 0-45-19t-19-45v-1408q0-26 19-45t45-19h512q26 0 45 19t19 45zm-896 0v1408q0 26-19 45t-45 19h-512q-26 0-45-19t-19-45v-1408q0-26 19-45t45-19h512q26 0 45 19t19 45z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ rect [ x "6", y "4", width "4", height "16" ] []
+        , rect [ x "14", y "4", width "4", height "16" ] []
         ]
 
 
 play : Html msg
 play =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1576 927l-1328 738q-23 13-39.5 3t-16.5-36v-1472q0-26 16.5-36t39.5 3l1328 738q23 13 23 31t-23 31z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
         ]
-
-
-plusCiricle : Html msg
-plusCiricle =
-    svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1344 960v-128q0-26-19-45t-45-19h-256v-256q0-26-19-45t-45-19h-128q-26 0-45 19t-19 45v256h-256q-26 0-45 19t-19 45v128q0 26 19 45t45 19h256v256q0 26 19 45t45 19h128q26 0 45-19t19-45v-256h256q26 0 45-19t19-45zm320-64q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z" ]
-            []
+        [ polygon [ points "5 3 19 12 5 21 5 3" ] []
         ]
 
 
 refresh : Html msg
 refresh =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1639 1056q0 5-1 7-64 268-268 434.5t-478 166.5q-146 0-282.5-55t-243.5-157l-129 129q-19 19-45 19t-45-19-19-45v-448q0-26 19-45t45-19h448q26 0 45 19t19 45-19 45l-137 137q71 66 161 102t187 36q134 0 250-65t186-179q11-17 53-117 8-23 30-23h192q13 0 22.5 9.5t9.5 22.5zm25-800v448q0 26-19 45t-45 19h-448q-26 0-45-19t-19-45 19-45l138-138q-148-137-349-137-134 0-250 65t-186 179q-11 17-53 117-8 23-30 23h-199q-13 0-22.5-9.5t-9.5-22.5v-7q65-268 270-434.5t480-166.5q146 0 284 55.5t245 156.5l130-129q19-19 45-19t45 19 19 45z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
         ]
-
-
-stop : Html msg
-stop =
-    svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1664 192v1408q0 26-19 45t-45 19h-1408q-26 0-45-19t-19-45v-1408q0-26 19-45t45-19h1408q26 0 45 19t19 45z" ]
-            []
+        [ polyline [ points "23 4 23 10 17 10" ] []
+        , polyline [ points "1 20 1 14 7 14" ] []
+        , path [ d "M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" ] []
         ]
 
 
 trash : Html msg
 trash =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M704 1376v-704q0-14-9-23t-23-9h-64q-14 0-23 9t-9 23v704q0 14 9 23t23 9h64q14 0 23-9t9-23zm256 0v-704q0-14-9-23t-23-9h-64q-14 0-23 9t-9 23v704q0 14 9 23t23 9h64q14 0 23-9t9-23zm256 0v-704q0-14-9-23t-23-9h-64q-14 0-23 9t-9 23v704q0 14 9 23t23 9h64q14 0 23-9t9-23zm-544-992h448l-48-117q-7-9-17-11h-317q-10 2-17 11zm928 32v64q0 14-9 23t-23 9h-96v948q0 83-47 143.5t-113 60.5h-832q-66 0-113-58.5t-47-141.5v-952h-96q-14 0-23-9t-9-23v-64q0-14 9-23t23-9h309l70-167q15-37 54-63t79-26h320q40 0 79 26t54 63l70 167h309q14 0 23 9t9 23z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ polyline [ points "3 6 5 6 21 6" ] []
+        , path [ d "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" ] []
+        , line [ x1 "10", y1 "11", x2 "10", y2 "17" ] []
+        , line [ x1 "14", y1 "11", x2 "14", y2 "17" ] []
         ]
 
 
 volumeOff : Html msg
 volumeOff =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1280 352v1088q0 26-19 45t-45 19-45-19l-333-333h-262q-26 0-45-19t-19-45v-384q0-26 19-45t45-19h262l333-333q19-19 45-19t45 19 19 45z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ polygon [ points "11 5 6 9 2 9 2 15 6 15 11 19 11 5" ] []
+        , line [ x1 "23", y1 "9", x2 "17", y2 "15" ] []
+        , line [ x1 "17", y1 "9", x2 "23", y2 "15" ] []
         ]
 
 
-volumeUp : Html msg
-volumeUp =
+volume1 : Html msg
+volume1 =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M832 352v1088q0 26-19 45t-45 19-45-19l-333-333h-262q-26 0-45-19t-19-45v-384q0-26 19-45t45-19h262l333-333q19-19 45-19t45 19 19 45zm384 544q0 76-42.5 141.5t-112.5 93.5q-10 5-25 5-26 0-45-18.5t-19-45.5q0-21 12-35.5t29-25 34-23 29-35.5 12-57-12-57-29-35.5-34-23-29-25-12-35.5q0-27 19-45.5t45-18.5q15 0 25 5 70 27 112.5 93t42.5 142zm256 0q0 153-85 282.5t-225 188.5q-13 5-25 5-27 0-46-19t-19-45q0-39 39-59 56-29 76-44 74-54 115.5-135.5t41.5-173.5-41.5-173.5-115.5-135.5q-20-15-76-44-39-20-39-59 0-26 19-45t45-19q13 0 26 5 140 59 225 188.5t85 282.5zm256 0q0 230-127 422.5t-338 283.5q-13 5-26 5-26 0-45-19t-19-45q0-36 39-59 7-4 22.5-10.5t22.5-10.5q46-25 82-51 123-91 192-227t69-289-69-289-192-227q-36-26-82-51-7-4-22.5-10.5t-22.5-10.5q-39-23-39-59 0-26 19-45t45-19q13 0 26 5 211 91 338 283.5t127 422.5z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ polygon [ points "11 5 6 9 2 9 2 15 6 15 11 19 11 5" ] []
+        , path [ d "M15.54 8.46a5 5 0 0 1 0 7.07" ] []
+        ]
+
+
+volume2 : Html msg
+volume2 =
+    svg
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "1"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ polygon [ points "11 5 6 9 2 9 2 15 6 15 11 19 11 5" ] []
+        , path [ d "M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" ] []
         ]
 
 
 list : Html msg
 list =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M384 1408q0 80-56 136t-136 56-136-56-56-136 56-136 136-56 136 56 56 136zm0-512q0 80-56 136t-136 56-136-56-56-136 56-136 136-56 136 56 56 136zm1408 416v192q0 13-9.5 22.5t-22.5 9.5h-1216q-13 0-22.5-9.5t-9.5-22.5v-192q0-13 9.5-22.5t22.5-9.5h1216q13 0 22.5 9.5t9.5 22.5zm-1408-928q0 80-56 136t-136 56-136-56-56-136 56-136 136-56 136 56 56 136zm1408 416v192q0 13-9.5 22.5t-22.5 9.5h-1216q-13 0-22.5-9.5t-9.5-22.5v-192q0-13 9.5-22.5t22.5-9.5h1216q13 0 22.5 9.5t9.5 22.5zm0-512v192q0 13-9.5 22.5t-22.5 9.5h-1216q-13 0-22.5-9.5t-9.5-22.5v-192q0-13 9.5-22.5t22.5-9.5h1216q13 0 22.5 9.5t9.5 22.5z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather"
+        ]
+        [ line [ x1 "8", y1 "6", x2 "21", y2 "6" ] []
+        , line [ x1 "8", y1 "12", x2 "21", y2 "12" ] []
+        , line [ x1 "8", y1 "18", x2 "21", y2 "18" ] []
+        , line [ x1 "3", y1 "6", x2 "3", y2 "6" ] []
+        , line [ x1 "3", y1 "12", x2 "3", y2 "12" ] []
+        , line [ x1 "3", y1 "18", x2 "3", y2 "18" ] []
         ]
 
 
 angleDoubleLeft : Html msg
 angleDoubleLeft =
     svg
-        [ viewBox "0 0 1792 1792" ]
-        [ path
-            [ d "M1011 1376q0 13-10 23l-50 50q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l466-466q10-10 23-10t23 10l50 50q10 10 10 23t-10 23l-393 393 393 393q10 10 10 23zm384 0q0 13-10 23l-50 50q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l466-466q10-10 23-10t23 10l50 50q10 10 10 23t-10 23l-393 393 393 393q10 10 10 23z" ]
-            []
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ polyline [ points "11 17 6 12 11 7" ] []
+        , polyline [ points "18 17 13 12 18 7" ] []
         ]
