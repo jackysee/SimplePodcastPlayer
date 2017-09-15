@@ -19,49 +19,44 @@ module.exports = {
     // Generated JS files.
     filename: 'js/[name].[chunkhash:8].js'
   },
-  resolveLoader: {
-
-    // Look for loaders in own ./node_modules
-    root: paths.ownModules,
-    moduleTemplates: [ '*-loader' ]
-  },
   resolve: {
-    modulesDirectories: [ 'node_modules' ],
-    extensions: [ '', '.js', '.elm' ]
+    modules: [ 'node_modules' ],
+    extensions: [ '.js', '.elm' ],
+    enforceExtension: false
   },
   module: {
     noParse: /\.elm$/,
-    loaders: [
+    rules: [
       {
         test: /\.elm$/,
         exclude: [ /elm-stuff/, /node_modules/ ],
-
-        // Use the local installation of elm-make
-        loader: 'elm-webpack',
-        query: {
-          pathToMake: paths.elmMake
-        }
+        use: [
+          {
+            loader: 'elm-webpack-loader',
+            options: {
+              pathToMake: paths.elmMake
+            }
+          }
+        ]
       },
       {
         test: /\.css$/,
-        loader: 'style!css'
+        use: [ 'style-loader', 'css-loader' ]
       },
       {
         test: /\.scss$/,
-        loaders: ['style','css','sass']
+        use: ['style-loader','css-loader','sass-loader']
       }
     ]
   },
   plugins: [
 
-    // Remove the content of the ./dist/ folder.
     new CleanWebpackPlugin([ 'dist' ], {
       root: root,
       verbose: true,
       dry: false
     }),
 
-    // Minify the compiled JavaScript.
     new webpack.optimize.UglifyJsPlugin({
       compress: {
         warnings: false

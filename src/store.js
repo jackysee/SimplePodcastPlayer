@@ -1,4 +1,4 @@
-var StoreWorker = require('worker!./workerStore2.js');
+var StoreWorker = require('worker-loader!./workerStore2.js');
 
 var worker = new StoreWorker();
 var queryId = 11;

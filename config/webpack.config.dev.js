@@ -29,31 +29,42 @@ module.exports = {
 
     publicPath: '/'
   },
-  resolveLoader: {
-
-    // Look for loadres in own node_modules
-    root: paths.ownModules,
-    moduleTemplates: [ '*-loader' ]
-  },
   resolve: {
-    modulesDirectories: [ 'node_modules' ],
-    extensions: [ '', '.js', '.elm' ]
+    modules: ['node_modules'],
+    extensions: [ '.js', '.elm' ],
+    enforceExtension: false
   },
   module: {
     noParse: /\.elm$/,
-    loaders: [
+    rules: [
       {
         test: /\.elm$/,
         exclude: [ /elm-stuff/, /node_modules/ ],
-        loader: 'elm-hot!elm-webpack?verbose=true&warn=true&pathToMake=' + paths.elmMake
+        use: [
+          'elm-hot-loader',
+          {
+            loader: 'elm-webpack-loader',
+            options: {
+              verbose: true,
+              warn: true,
+              pathToMake: paths.elmMake,
+              cwd: paths.cwd,
+              forceWatch: true
+            }
+          }
+        ]
       },
       {
         test: /\.css$/,
-        loader: 'style!css'
+        use: [ 'style-loader', 'css-loader' ]
       },
       {
         test: /\.scss$/,
-        loaders: ['style','css','sass']
+        use: [
+          'style-loader',
+          'css-loader',
+          'sass-loader'
+        ]
       }
     ]
   },

@@ -1,6 +1,7 @@
 const path = require('path');
 
 module.exports = {
+  cwd: path.resolve('.'),
   entry: path.resolve('./src/index'),
   assets: path.resolve('./src/assets'),
   dist: path.resolve('./dist'),
