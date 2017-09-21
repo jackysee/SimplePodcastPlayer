@@ -25,6 +25,7 @@ type alias Feed =
     , title : String
     , state : FeedState
     , showConfirmDelete : Bool
+    , link : Maybe String
     }
 
 
@@ -67,10 +68,10 @@ type ItemFilter
 
 
 type FloatPanel
-    = AddPanel
-    | GotoPanel
+    = GotoPanel
     | About AboutPanel
     | ItemDropdown String
+    | EditFeedPanel Feed
     | Hidden
 
 
@@ -78,6 +79,7 @@ type AboutPanel
     = Credit
     | Shortcut
     | Settings
+    | Subscriptions
 
 
 type FontSize
@@ -120,7 +122,7 @@ type alias View =
     , playList : List ItemId
     , shortcutKeys : List String
     , floatPanel : FloatPanel
-    , editingFeedTitle : Maybe String
+    , editingFeedTitle : String
     , playerShowTimeLeft : Bool
     , items : ( List ( Feed, Item ), Bool )
     }
@@ -157,6 +159,7 @@ type alias StoreSetting =
 type alias StoreFeed =
     { url : String
     , title : String
+    , link : Maybe String
     }
 
 
@@ -308,12 +311,13 @@ toTheme str =
 toFeed : StoreFeed -> Feed
 toFeed storeFeed =
     { url = storeFeed.url
-    , title =
-        storeFeed.title
-        -- , items = storeFeed.items
-        -- , items = []
+    , title = storeFeed.title
+
+    -- , items = storeFeed.items
+    -- , items = []
     , state = Normal
     , showConfirmDelete = False
+    , link = storeFeed.link
     }
 
 
@@ -377,9 +381,8 @@ toStoreSetting setting =
 toStoreFeed : Feed -> StoreFeed
 toStoreFeed feed =
     { url = feed.url
-    , title =
-        feed.title
-        -- , items = feed.items
+    , title = feed.title
+    , link = feed.link
     }
 
 
@@ -403,7 +406,7 @@ defaultModel =
         , playList = []
         , shortcutKeys = []
         , floatPanel = Hidden
-        , editingFeedTitle = Nothing
+        , editingFeedTitle = ""
         , playerShowTimeLeft = True
         , items = ( [], False )
         }
@@ -459,10 +462,7 @@ fromStoreModel m =
 
 initAddPanel : List feed -> FloatPanel
 initAddPanel feeds =
-    if List.length feeds == 0 then
-        AddPanel
-    else
-        Hidden
+    Hidden
 
 
 itemList : Model -> ( List ( Feed, Item ), Bool )

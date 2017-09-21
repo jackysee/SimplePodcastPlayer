@@ -39,8 +39,7 @@ decodeStoreView : Json.Decoder StoreView
 decodeStoreView =
     decode StoreView
         -- |> required "currentItem" (nullable Json.string)
-        |>
-            custom (Json.at [ "currentItem" ] (Json.maybe decodeItemId))
+        |> custom (Json.at [ "currentItem" ] (Json.maybe decodeItemId))
         |> optional "playerRate" Json.float defaultModel.view.playerRate
         |> optional "playerVol" Json.float defaultModel.view.playerVol
         |> optional "listView" Json.string (listViewToStr defaultModel.view.listView)
@@ -55,10 +54,7 @@ decodeStoreFeed =
     decode StoreFeed
         |> required "url" Json.string
         |> required "title" Json.string
-
-
-
--- |> required "items" (Json.list decodeStoreItem)
+        |> required "link" (nullable Json.string)
 
 
 decodeStoreItem : Json.Decoder Item

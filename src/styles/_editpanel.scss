@@ -1,0 +1,51 @@
+
+.edit-item > * {
+    margin-top: 0;
+}
+
+.edit-label{
+    margin-bottom: 1rem;
+    color: var(--label-color);
+}
+.edit-feed-title{
+    margin-top: 1rem;
+}
+
+.feed-url{
+    margin-top: 0;
+    border-bottom: none;
+}
+
+.edit-input{
+    border: none;
+    border-bottom: 1px solid var(--input-border);
+    font-size: 1rem;
+    width: 100%;
+    background: transparent;
+    color: var(--input-color);
+
+    &[readonly]{
+        // border-bottom-style: dotted;
+        border-bottom: none;
+    }
+}
+
+.btn-set-feed-title{
+    margin-top: 0.5rem;
+}
+
+.feed-confirm-delete{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 2rem;
+
+    > * {
+        margin-top: 0;
+    }
+
+    > *:not(:last-child) {
+        margin-right: 1rem;
+    }
+}
+

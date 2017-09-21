@@ -1,6 +1,6 @@
 
 .theme-dark{
-    --body-bg: #333;
+    --body-bg: #1C2022;
     --body-color: #CCC;
     --body-sub-color: #777;
     --link-color: #999;
@@ -8,8 +8,10 @@
     --button-bg: #555;
     --button-active-color: #333;
     --button-active-bg: #CCC;
+    --button-disabled: #444;
+    --button-danger: #FF4136;
     --icon-color: #CCC;
-    --panel-bg: #333;
+    --panel-bg: #1C2022;
     --panel-shadow: #555;
     --panel-border: #666;
     --input-bg: #333;
@@ -18,7 +20,8 @@
     --state-color: #988;
     --state-empty-color: #888;
     --state-played-color: #888;
-    --state-selected-bg: #555;
+    --state-selected-bg: #444;
+    --state-hover-bg: #333;
     --state-selected-border: #EEE;
     --state-current-bg: #3F3F3F;
     --control-color: #AAA;
@@ -26,4 +29,5 @@
     --tab-selected-border: #555;
     --thumb-color: #CCC;
     --track-color: #555;
+    --label-color: #888;
 }

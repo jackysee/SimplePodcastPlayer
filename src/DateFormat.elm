@@ -39,7 +39,7 @@ formatDurationShort time =
     else if time < 60 then
         toString time ++ "s"
     else if time < 60 * 60 then
-        roundDp 1 (time / 60) ++ "m"
+        roundDp 0 (time / 60) ++ "m"
     else
         roundDp 1 (time / (60 * 60)) ++ "h"
 
@@ -50,7 +50,7 @@ roundDp dp num =
         factor =
             10 ^ dp |> toFloat
     in
-        toFloat (round (num * factor))
+        toFloat (ceiling (num * factor))
             / factor
             |> toString
 
@@ -93,12 +93,53 @@ format time currentTime showYear =
     in
         String.join "" <|
             [ Date.day date |> toString
-            , Date.month date |> printMonth
+            , "/"
+            , Date.month date |> printMonthInNum
+            , if showYear then
+                "" ++ (toString currentYear)
+              else
+                ""
             ]
-                ++ if showYear then
-                    [ toString currentYear ]
-                   else
-                    []
+
+
+printMonthInNum : Month -> String
+printMonthInNum month =
+    case month of
+        Jan ->
+            "1"
+
+        Feb ->
+            "2"
+
+        Mar ->
+            "3"
+
+        Apr ->
+            "4"
+
+        May ->
+            "5"
+
+        Jun ->
+            "6"
+
+        Jul ->
+            "7"
+
+        Aug ->
+            "8"
+
+        Sep ->
+            "9"
+
+        Oct ->
+            "10"
+
+        Nov ->
+            "11"
+
+        Dec ->
+            "12"
 
 
 printMonth : Month -> String

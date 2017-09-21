@@ -1,6 +1,6 @@
 module About exposing (viewAbout, viewAboutButton, updateSettings)
 
-import Html exposing (Html, div, text, img, button, h2, span, input, a)
+import Html exposing (Html, div, text, img, button, h2, span, input, a, ul, li)
 import Html.Attributes exposing (class, src, classList, value, href, target, style)
 import Html.Events exposing (onClick, onInput)
 import Models exposing (..)
@@ -12,6 +12,7 @@ import String
 import Regex
 import Return exposing (Return)
 import Storage exposing (saveSetting)
+import AddFeed exposing (viewAddInput)
 
 
 updateSettings : UpdateSettingMsg -> Model -> Return Msg Model
@@ -85,7 +86,7 @@ viewAbout : Model -> Html Msg
 viewAbout model =
     div
         [ classList
-            [ ( "app-about", True )
+            [ ( "panel app-about", True )
             , ( "is-show"
               , case model.view.floatPanel of
                     About _ ->
@@ -96,58 +97,75 @@ viewAbout model =
               )
             ]
         ]
-    <|
-        case model.view.floatPanel of
-            About content ->
-                [ button
-                    [ class "btn btn-icon app-about-close"
-                    , onClick (FloatPanelAction <| SetFloatPanel Hidden)
-                    ]
-                    [ Icons.close ]
-                , div
-                    [ class "about-tabs" ]
-                  <|
-                    List.map
-                        (\( content_, label ) ->
-                            div
-                                [ classList
-                                    [ ( "about-tab", True )
-                                    , ( "is-selected", content == content_ )
-                                    ]
-                                , onClick (FloatPanelAction << SetFloatPanel << About <| content_)
-                                ]
-                                [ text label ]
-                        )
-                        [ ( Settings, "Settings" )
-                        , ( Shortcut, "Shortcuts" )
-                        , ( Credit, "Credits" )
+        [ div [] <|
+            case model.view.floatPanel of
+                About content ->
+                    [ button
+                        [ class "btn btn-icon panel-close"
+                        , onClick (FloatPanelAction <| SetFloatPanel Hidden)
                         ]
-                , case content of
-                    Credit ->
-                        div []
-                            [ h2 [] [ text "Simple Podcast Player" ]
-                            , Markdown.toHtml
-                                [ class "about-tab-content app-about-content" ]
-                                creditContent
+                        [ Icons.close ]
+                    , div
+                        [ class "about-tabs" ]
+                      <|
+                        List.map
+                            (\( content_, label ) ->
+                                div
+                                    [ classList
+                                        [ ( "about-tab", True )
+                                        , ( "is-selected", content == content_ )
+                                        ]
+                                    , onClick (FloatPanelAction << SetFloatPanel << About <| content_)
+                                    ]
+                                    [ text label ]
+                            )
+                            [ ( Subscriptions, "Subscriptions" )
+                            , ( Settings, "Settings" )
+                            , ( Shortcut, "Shortcuts" )
+                            , ( Credit, "About" )
                             ]
+                    , case content of
+                        Credit ->
+                            div []
+                                [ h2 [] [ text "Simple Podcast Player" ]
+                                , Markdown.toHtml
+                                    [ class "about-tab-content app-about-content" ]
+                                    creditContent
+                                ]
 
-                    Shortcut ->
-                        Markdown.toHtml
-                            [ class "about-tab-content about-shortcut" ]
-                        <|
-                            decorateKeys shortcutContent
+                        Shortcut ->
+                            Markdown.toHtml
+                                [ class "about-tab-content about-shortcut" ]
+                            <|
+                                decorateKeys shortcutContent
 
-                    Settings ->
-                        div
-                            [ class "about-tab-content about-settings" ]
-                            [ viewSettingFallbackUrl model.setting.fallbackRssServiceUrl
-                            , viewSettingFontSize model.setting.fontSize
-                            , viewSettingTheme model.setting.theme
-                            ]
-                ]
+                        Settings ->
+                            div
+                                [ class "about-tab-content about-settings" ]
+                                [ viewSettingFallbackUrl model.setting.fallbackRssServiceUrl
+                                , viewSettingFontSize model.setting.fontSize
+                                , viewSettingTheme model.setting.theme
+                                ]
 
-            _ ->
-                [ text "" ]
+                        Subscriptions ->
+                            div
+                                [ class "about-tab-content about-subscriptions" ]
+                                [ div
+                                    [ class "about-add-input" ]
+                                    [ viewAddInput model ]
+
+                                --button
+                                --    [ class "btn btn-block"
+                                --    , onInternalClick (AddFeed ShowAddPanel)
+                                --    ]
+                                --    [ text "Add Podcast feed" ]
+                                , viewSubscriptions model.feeds
+                                ]
+                    ]
+
+                _ ->
+                    [ text "" ]
+        ]
 
 
 decorateKeys : String -> String
@@ -297,3 +315,22 @@ viewAboutButton =
         ]
         [ Icons.infoCircle
         ]
+
+
+viewSubscriptions : List Feed -> Html Msg
+viewSubscriptions feeds =
+    ul [ class "subscription-list" ] <|
+        List.map
+            (\feed ->
+                li
+                    []
+                    [ a
+                        [ onInternalClick <| ItemList <| SetListView (ViewFeed feed.url) ]
+                        [ text feed.title ]
+                    ]
+            )
+            feeds
+
+
+
+--(List.append feeds (List.repeat 20 { url = "", title = "abc", state = Normal, showConfirmDelete = False, link = Nothing }))

@@ -69,9 +69,10 @@ store.get(function(_model){
 
     var updateProgressTimer;
     function updateProgress(){
-        if(!sound){
+        if(!sound || isNaN(sound.seek())){
             return;
         }
+
         app.ports.updateProgress.send({
             progress: sound.seek(),
             duration: sound.duration()
@@ -182,6 +183,13 @@ store.get(function(_model){
             if(elOffsetTop + elOffsetHeight > parentScrollTop + parentOffsetHeight ){
                 parent.scrollTop = elOffsetTop + elOffsetHeight - parentOffsetHeight;
             }
+        }
+    });
+
+    app.ports.selectText.subscribe(function(id){
+        var el = document.getElementById(id);
+        if(el){
+            el.select();
         }
     });
 });

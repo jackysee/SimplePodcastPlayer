@@ -26,8 +26,10 @@ $track-color: #CCC!default;
 @import "base";
 @import "button";
 @import "input";
+@import "panel";
 
-@import "addpanel";
+@import "addfeed";
+@import "editpanel";
 @import "feed";
 @import "loader";
 @import "player";

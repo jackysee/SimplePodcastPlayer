@@ -5,7 +5,6 @@ module Feed
         , updateModelFeed
         , updateFeedItems
         , updateUpdateFeed
-        , updateDeleteFeed
         , viewFeedTitle
         , viewItem
         , markListenedMsg
@@ -30,9 +29,7 @@ import Events exposing (onInternalClick, onClickPosBottomRight, onBlurNotEmpty)
 import Icons
 import Escape
 import Return exposing (Return)
-import Storage exposing (saveItems, saveView, deleteFeed, noOpTask, saveFeeds)
-import Dom
-import Player exposing (stop)
+import Storage exposing (saveItems, saveView, noOpTask, saveFeeds)
 
 
 yqlUrl : String -> String
@@ -113,31 +110,6 @@ updateUpdateFeed msg model =
                     |> Return.effect_ saveView
                     |> Return.command (saveItems items_)
                     |> Return.command cmd
-
-        SetEditingFeedTitle feedTitle ->
-            model
-                |> updateView (\v -> { v | editingFeedTitle = feedTitle })
-                |> Return.singleton
-                |> Return.command
-                    (case feedTitle of
-                        Just feedTitle_ ->
-                            if model.view.editingFeedTitle == Nothing then
-                                noOpTask (Dom.focus "input-feed-title")
-                            else
-                                Cmd.none
-
-                        Nothing ->
-                            Cmd.none
-                    )
-
-        SetFeedTitle feed title ->
-            let
-                feed_ =
-                    { feed | title = title }
-            in
-                updateModelFeed feed_ model
-                    |> Return.singleton
-                    |> Return.command (saveFeeds [ feed_ ])
 
 
 updateFeeds : List Feed -> Cmd Msg
@@ -238,66 +210,6 @@ updateFeedItems model newFeed items =
                 ( model, [] )
 
 
-updateDeleteFeed : DeleteFeedMsg -> Model -> Return Msg Model
-updateDeleteFeed msg model =
-    case msg of
-        ShowConfirmDeleteFeed feed ->
-            updateModelFeed { feed | showConfirmDelete = True } model
-                |> Return.singleton
-
-        HideConfirmDeleteFeed feed ->
-            updateModelFeed { feed | showConfirmDelete = False } model
-                |> Return.singleton
-
-        ConfirmDeleteFeed feed ->
-            let
-                feeds =
-                    List.filter (\f -> f.url /= feed.url) model.feeds
-
-                items =
-                    List.filter (\i -> i.feedUrl /= feed.url) model.items
-
-                currentItemDeleted =
-                    not (List.any (\item -> isCurrent item model) items)
-
-                currentItem =
-                    if currentItemDeleted then
-                        Nothing
-                    else
-                        model.view.currentItem
-
-                itemUrls =
-                    List.map (\item -> ( item.url, item.feedUrl )) items
-
-                playList =
-                    List.filter
-                        (\playListItem -> not (List.member playListItem itemUrls))
-                        model.view.playList
-            in
-                { model
-                    | feeds = feeds
-                    , items = items
-                }
-                    |> updateView
-                        (\v ->
-                            { v
-                                | listView = AllFeed
-                                , playList = playList
-                                , currentItem = currentItem
-                            }
-                        )
-                    |> Return.singleton
-                    |> Return.map updateViewItems
-                    |> Return.effect_ saveView
-                    |> Return.command (deleteFeed <| toStoreFeed feed)
-                    |> Return.command
-                        (if currentItemDeleted then
-                            stop ""
-                         else
-                            Cmd.none
-                        )
-
-
 maybeEqual : Maybe a -> Maybe a -> Bool
 maybeEqual a b =
     (Maybe.map2 (==) a b) == Just True
@@ -335,86 +247,35 @@ viewFeedTitle model feed =
                         , onClick <| UpdateFeed (UpdateFeeds [] feed)
                         ]
                         [ Icons.refresh ]
-
-        feedTitle =
-            case model.view.editingFeedTitle of
-                Just title_ ->
-                    title_
-
-                Nothing ->
-                    feed.title
     in
         div [ class "feed-header" ]
             [ div
-                [ classList
-                    [ ( "feed-header-title", True )
-                    , ( "is-editing", model.view.editingFeedTitle /= Nothing )
-                    ]
-                ]
-                [ input
-                    [ id "input-feed-title"
-                    , class "input-text input-feed-title"
-                    , value feedTitle
-                    , onInput (\value -> UpdateFeed <| SetEditingFeedTitle (Just value))
-                    , onBlur <|
-                        MsgBatch
-                            [ UpdateFeed <|
-                                SetFeedTitle feed <|
-                                    if model.view.editingFeedTitle /= (Just "") then
-                                        Maybe.withDefault feed.title model.view.editingFeedTitle
-                                    else
-                                        feed.title
-                            , UpdateFeed <| SetEditingFeedTitle Nothing
-                            ]
-                    ]
-                    []
-                , span
+                [ class "feed-header-title" ]
+                [ span
                     [ class "feed-title"
-                    , title feedTitle
-                    , onClick (UpdateFeed <| SetEditingFeedTitle <| Just feed.title)
+                    , title feed.title
                     ]
-                    [ text feedTitle ]
+                    [ text feed.title ]
                 ]
+            , case feed.link of
+                Just link ->
+                    a
+                        [ class "btn btn-icon feed-control-btn"
+                        , href link
+                        , target "_blank"
+                        ]
+                        [ Icons.externalLink ]
+
+                _ ->
+                    text ""
+            , button
+                [ class "btn btn-icon feed-control feed-control-btn"
+                , onInternalClick <| EditFeed <| ShowEditFeed feed
+                ]
+                [ Icons.edit ]
             , feedState
             , refreshBtn
-            , if feed.state /= Refreshing then
-                viewConfirmDelete feed
-              else
-                text ""
             ]
-
-
-viewConfirmDelete : Feed -> Html Msg
-viewConfirmDelete feed =
-    div
-        [ class "feed-confirm-delete" ]
-        [ if feed.showConfirmDelete then
-            div
-                [ class "feed-control" ]
-                [ div
-                    [ class "confirm-delete feed-control" ]
-                    --[ span [] [ text "Delete?" ]
-                    [ button
-                        [ class "btn btn-text"
-                        , onClick <| DeleteFeed (HideConfirmDeleteFeed feed)
-                        ]
-                        [ text "Cancel" ]
-                    , span [] [ text "/" ]
-                    , button
-                        [ class "btn btn-text confirm-delete-btn "
-                        , onClick <| DeleteFeed (ConfirmDeleteFeed feed)
-                        ]
-                        [ text "Delete" ]
-                    ]
-                ]
-          else
-            button
-                [ classList
-                    [ ( "btn btn-icon feed-control feed-trash", True ) ]
-                , onClick <| DeleteFeed (ShowConfirmDeleteFeed feed)
-                ]
-                [ Icons.trash ]
-        ]
 
 
 viewItem : Model -> Maybe Feed -> ( Int, Item ) -> Html Msg
@@ -444,9 +305,7 @@ viewItem model feed ( index, item ) =
                 [ class "item-info-state"
                 , toggleItem model item
                 ]
-                [ renderItemState item model.view.currentItem model.view.playerState
-                , viewItemInfo feed item
-                ]
+                [ viewItemInfo model feed item ]
             , viewItemQueued model item
             , renderQueueControl item model.view.listView
             , viewItemControl listened model item
@@ -473,8 +332,8 @@ toggleItem model item =
         onClick (Player <| Play item)
 
 
-viewItemInfo : Maybe Feed -> Item -> Html Msg
-viewItemInfo feed item =
+viewItemInfo : Model -> Maybe Feed -> Item -> Html Msg
+viewItemInfo model feed item =
     div
         [ class "item-info" ]
         [ div [ class "item-desp" ]
@@ -489,8 +348,10 @@ viewItemInfo feed item =
                 Nothing ->
                     text ""
             , div
-                [ class "item-title", title item.title ]
-                [ text item.title ]
+                [ class "item-title" ]
+                [ renderItemState item model.view.currentItem model.view.playerState
+                , text item.title
+                ]
             ]
         , let
             description_ =
@@ -501,7 +362,8 @@ viewItemInfo feed item =
           in
             div
                 [ class "item-description-text"
-                , title <| Escape.unEsc description_
+
+                --, title <| Escape.unEsc description_
                 ]
                 [ description_ |> Escape.text_ ]
         ]

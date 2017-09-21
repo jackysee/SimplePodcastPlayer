@@ -30,7 +30,7 @@ viewGoto model =
     in
         div
             [ classList
-                [ ( "goto-panel", True )
+                [ ( "panel goto-panel", True )
                 , ( "is-show", model.view.floatPanel == GotoPanel )
                 ]
             ]
@@ -59,7 +59,8 @@ viewGoto model =
                     , onInput (\s -> GotoAction <| SetSearch s)
                     , value model.view.gotoSearch
                     , placeholder "Go to"
-                      --, disabled <| model.view.loadFeedState == Loading
+
+                    --, disabled <| model.view.loadFeedState == Loading
                     ]
                     []
                 , if List.length model.feeds > 0 then
@@ -73,6 +74,11 @@ viewGoto model =
                                             [ ( "goto-item", True )
                                             , ( "selected", model.view.gotoSelected == index )
                                             ]
+                                        , onClick <|
+                                            MsgBatch
+                                                [ ItemList <| SetListView <| ViewFeed feed.url
+                                                , GotoAction HideGoto
+                                                ]
                                         ]
                                         [ text feed.title ]
                                 )

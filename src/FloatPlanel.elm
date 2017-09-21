@@ -20,7 +20,8 @@ updateFloatPanel msg model =
                 |> Return.singleton
 
         SetFloatPanel panel ->
-            updateView (\v -> { v | floatPanel = panel }) model
+            model
+                |> updateView (\v -> { v | floatPanel = panel, urlToAdd = "" })
                 |> Return.singleton
                 |> Return.effect_ saveView
 

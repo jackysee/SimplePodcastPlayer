@@ -360,8 +360,7 @@ refresh =
         , class "feather feather-thin"
         ]
         [ polyline [ points "23 4 23 10 17 10" ] []
-        , polyline [ points "1 20 1 14 7 14" ] []
-        , path [ d "M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" ] []
+        , path [ d "M20.49 15a9 9 0 1 1-2.12-9.36L23 10" ] []
         ]
 
 
@@ -465,4 +464,37 @@ angleDoubleLeft =
         ]
         [ polyline [ points "11 17 6 12 11 7" ] []
         , polyline [ points "18 17 13 12 18 7" ] []
+        ]
+
+
+edit : Html msg
+edit =
+    svg
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ path [ d "M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34" ] []
+        , polygon [ points "18 2 22 6 12 16 8 16 8 12 18 2" ] []
+        ]
+
+
+externalLink : Html msg
+externalLink =
+    svg
+        [ viewBox "0 0 24 24"
+        , fill "none"
+        , stroke "currentColor"
+        , strokeWidth "2"
+        , strokeLinecap "round"
+        , strokeLinejoin "round"
+        , class "feather feather-thin"
+        ]
+        [ path [ d "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" ] []
+        , polyline [ points "15 3 21 3 21 9" ] []
+        , line [ x1 "10", y1 "14", x2 "21", y2 "3" ] []
         ]

@@ -2,13 +2,14 @@ module View exposing (view)
 
 import Html exposing (div, text, input, Html, span, ul, li, button, img, node)
 import Html.Events exposing (onClick)
-import Html.Attributes exposing (id, value, class, src, style, classList, checked, title, property)
+import Html.Attributes exposing (id, value, class, src, style, classList, checked, title, property, tabindex)
 import Json.Encode
 import String
 import Models exposing (..)
 import Msgs exposing (..)
 import Feed exposing (viewFeedTitle, viewItem)
-import AddFeed exposing (viewAddFeed, addFeedButton)
+import AddFeed exposing (addFeedButton)
+import EditFeed exposing (viewEditFeed)
 import Goto exposing (viewGoto)
 import Player exposing (viewPlayer)
 import About exposing (viewAbout, viewAboutButton)
@@ -47,11 +48,15 @@ view model =
                 [ ( "app-wrap", True )
                 , ( "theme-" ++ (themeToStr model.setting.theme |> String.toLower), True )
                 ]
+            , tabindex -1
+            , id "app-main"
             ]
             [ viewFontSizeStyle model.setting.fontSize
-            , viewAddFeed model
+
+            --, viewAddFeed model
             , viewAbout model
             , viewGoto model
+            , viewEditFeed model
             , div
                 [ class "wrap"
                 , onClick (FloatPanelAction <| SetFloatPanel Hidden)
@@ -154,8 +159,9 @@ viewTopLeftBar : Model -> Html Msg
 viewTopLeftBar model =
     div
         [ class "top-left-bar" ]
-        [ addFeedButton
-        , if List.length model.feeds > 0 then
+        [ -- addFeedButton
+          --,
+          if List.length model.feeds > 0 then
             button
                 [ classList
                     [ ( "btn btn-icon queued-btn", True )

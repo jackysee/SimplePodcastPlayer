@@ -1,36 +1,10 @@
 $about-width: 80vw;
 .app-about{
-    position: absolute;
     width: $about-width;
-    max-width: 700px;
-    min-height: 30rem;
-    border: 1px solid var(--panel-border);
-    box-shadow: 0 0 2px var(--panel-shadow);
-    margin: 0;
-    left: 50%;
-    top: 1.5rem;
-    transform: translateX(-50%) translateY(calc(-100% - 1.5rem - 5px));
-    background: var(--panel-bg);
-    padding: 1.5rem;
-    z-index: 10;
-    max-height: 80vh;
-    overflow: auto;
-    transition:transform 0.3s ease-in-out;
-
-    &.is-show{
-        transform: translateX(-50%) translateY(0);
-    }
 }
-
 
 .app-about h2{
     margin: 0;
-}
-
-.app-about-close{
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
 }
 
 .app-about-content{
@@ -80,12 +54,14 @@ $about-width: 80vw;
 }
 
 .about-tabs{
+    clear: right;
     display: flex;
     flex-direction: row;
     border-bottom: 1px solid var(--tab-border);
-    margin-top: 0.5rem;
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
+    margin-top: 0; //0.5rem;
+    // margin-left: -0.5rem;
+    // margin-right: -0.5rem;
+    padding-top: 0.5rem;
 }
 .about-tab{
     margin: 0;
@@ -98,16 +74,21 @@ $about-width: 80vw;
         padding-bottom: calc(1rem - 2px);
     }
 }
+.about-tab-content{
+    margin-bottom: 2rem;
+}
 .about-settings{
     font-size: 1rem;
 }
 .about-setting-item{
-    display: flex;
-    align-items: flex-start;
+    // display: flex;
+    // align-items: flex-start;
 }
 .about-setting-label{
-    flex: 0.5;
-    text-align: right;
+    // flex: 0.5;
+    // text-align: right;
+    margin-bottom: 1rem;
+    color: var(--label-color);
 }
 .about-setting-item > * {
     margin-top: 0;
@@ -182,4 +163,28 @@ $about-width: 80vw;
     font-weight: normal;
     border-radius: 0.1rem;
     box-shadow: 0 0 1px var(--input-border);
+}
+
+.about-add-input{
+    // padding: 1rem;
+    // background-color: var(--state-selected-bg);
+}
+
+.subscription-list{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 60vh;
+    overflow: auto;
+
+    > li {
+        margin: 0;
+        padding: .5rem 0;
+    }
+
+    a{
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
 }

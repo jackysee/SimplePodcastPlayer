@@ -1,0 +1,23 @@
+.panel{
+    position: absolute;
+    background-color: var(--panel-bg);
+    box-shadow: 0 0 5px var(--panel-shadow);
+    width: 80vw;
+    // height: 7rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    top: 0;
+    left: 50%;
+    z-index: 10;
+    transform: translateY(calc(-100% - 1rem - 5px)) translateX(-50%);
+    transition:all 0.3s cubic-bezier(1, 0, 0, 1);
+    max-width: 700px;
+}
+
+.panel.is-show{
+    transform: translateY(0) translateX(-50%);
+}
+
+.panel-close{
+    float: right;
+}

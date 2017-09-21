@@ -16,7 +16,6 @@ import Feed
         , updateFeedItems
         , updateUpdateFeed
         , updateFeeds
-        , updateDeleteFeed
         )
 import Shortcut exposing (keyMap, scrollToIndex)
 import FloatPlanel exposing (updateFloatPanel)
@@ -28,6 +27,7 @@ import Player exposing (updatePlayer, playError, paused, playEnd, soundLoaded, u
 import ItemList exposing (updateItemList, updateUpdateItem)
 import About exposing (updateSettings)
 import Goto exposing (updateGoto)
+import EditFeed exposing (updateEditFeed)
 
 
 main : Program (Maybe Json.Decode.Value) Model Msg
@@ -98,21 +98,21 @@ update msg model =
                                 }
                             )
 
-                nextInQueue =
-                    oneOfMaybe
-                        [ getNext (\( url_, feedUrl ) -> url == url_) model.view.playList
-                        , List.head model.view.playList
-                        ]
-                        |> Maybe.map (getItemByUrl model)
-                        |> Maybe.withDefault Nothing
+                currentInQueue =
+                    case model.view.currentItem of
+                        Just item_ ->
+                            List.member item_ model.view.playList
+
+                        Nothing ->
+                            False
 
                 nextItem =
-                    oneOfMaybe
-                        [ nextInQueue
-                        , itemList model
-                            |> Tuple.first
-                            |> getNext (\( feed, item ) -> item.url == url)
-                        ]
+                    if currentInQueue then
+                        getNext (\( url_, feedUrl ) -> url == url_) model.view.playList
+                            |> Maybe.map (getItemByUrl model)
+                            |> Maybe.withDefault Nothing
+                    else
+                        Nothing
             in
                 case nextItem of
                     Just ( feed, item_ ) ->
@@ -134,9 +134,6 @@ update msg model =
         UpdateFeed msg ->
             updateUpdateFeed msg model
 
-        DeleteFeed msg ->
-            updateDeleteFeed msg model
-
         ItemList msg ->
             updateItemList msg model
 
@@ -156,6 +153,9 @@ update msg model =
             updateView (\v -> { v | shortcutKeys = keys }) model
                 |> Return.singleton
                 |> Return.effect_ saveView
+
+        EditFeed msg ->
+            updateEditFeed msg model
 
         MsgBatch list ->
             List.foldl

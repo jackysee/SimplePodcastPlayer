@@ -26,7 +26,9 @@
 }
 
 .feed-empty{
-    color: var(--state-empty-color);
+    // color: var(--state-empty-color);
+    display: flex;
+    align-items: center;
 }
 
 
@@ -41,7 +43,11 @@
 
 .feed-filter{
     margin: 0.5rem;
-    padding-left: 1rem;
+    // padding-left: 1rem;
+}
+
+.feed-control-btn{
+    margin-right: 1rem;
 }
 
 .feed-filter > .btn{
@@ -56,39 +62,6 @@
 
 .feed-state-error{
     color: rgba(255, 0, 0, 0.4);
-}
-
-
-// .feed-control{
-//     display: none;
-// }
-//
-// .feed-header:hover .feed-control{
-//     display: inline-block;;
-// }
-
-.feed-control.is-show{
-    display: inline-block;
-}
-
-.feed-confirm-delete{
-    margin: 0;
-    margin-left: 1rem;
-}
-
-
-.confirm-delete{
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-}
-
-.confirm-delete > *{
-    margin-top: 0;
-}
-
-.confirm-delete .btn{
-    margin-left: 0.5rem;
 }
 
 .feed-show-more{
@@ -148,9 +121,13 @@
     display: flex;
     // align-items: center;
     // cursor: pointer;
-    height: 5rem;
+    min-height: 5rem;
     border: 1px solid transparent;
     // border-bottom: 1px solid var(--state-color);
+
+    &:hover{
+        background: var(--state-hover-bg);
+    }
 }
 
 .item-info{
@@ -183,11 +160,12 @@
 
 .item.is-selected:not(.item-more){
     background: var(--state-selected-bg);
-    // border: 1px solid var(--state-selected-border);
+    // border: 1px solid var(--state-selected-bg);
 }
 
 .item:not(.is-current):not(.is-error) .item-state{
-    visibility: hidden;
+    display: none;
+    // visibility: hidden;
 }
 
 .item.is-selected:not(.is-current) .item-state{
@@ -208,11 +186,12 @@
 }
 
 .item-state{
-    margin-right: 0.5rem;
-    margin-top: 0.2rem;
+    display: inline-block;
     width: 1rem;
     height: 1rem;
-    text-align: center;
+    margin-right: 0.5rem;
+    // margin-top: 0.2rem;
+    // text-align: center;
 }
 
 .item-control{
@@ -227,7 +206,7 @@
 }
 
 .item-progress{
-    min-width: 3.5rem;
+    min-width: 2.5rem;
     text-align: right;
     margin-top: 0;
 }
@@ -237,8 +216,8 @@
     margin-top: 0;
     flex: 1;
     overflow: hidden;
-    white-space: nowrap;
-    display: flex;
+    // white-space: nowrap;
+    // display: flex;
     // text-overflow: ellipsis;
 }
 
@@ -248,16 +227,18 @@
 
 .item-date{
     text-align: right;
-    min-width : 4rem;
+    min-width : 2.5rem;
 }
 
 .item-title{
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    // white-space: nowrap;
     padding-right: 1rem;
     position: relative;
-    display: inline-block;
+    // display: inline-block;
+    display: inline-flex;
+    align-items: center;
     margin-top: 0;
     flex: 1;
 }
@@ -265,23 +246,24 @@
 .item-description-text{
     display: inline;
     margin-top: 0;
-    color: var(--body-sub-color);
+    // color: var(--body-sub-color);
     overflow: hidden;
-    white-space: nowrap;
+    // white-space: nowrap;
+    white-space: pre-wrap;
     font-size: 0.8rem;
 
-    .is-played &{
-        color: var(--state-played-color);
-    }
+    // .is-played &{
+        // color: var(--state-played-color);
+    // }
 }
 
 .item-feed-title{
-    width: 10rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    // width: 6rem;
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    // white-space: nowrap;
     cursor: pointer;
-    display: inline-block;
+    // display: inline-block;
     margin-right: 1rem;
 }
 
@@ -306,19 +288,6 @@
     white-space: nowrap;
 }
 
-.feed-confirm-delete{
-    display: inline-flex;
-    flex-direction: row;
-    align-items: center;
-
-    > * {
-        margin-top: 0;
-    }
-}
-.confirm-delete-btn.confirm-delete-btn{
-    color: red;
-    margin-left: 0;
-}
 
 .feed-status{
     margin: 0;

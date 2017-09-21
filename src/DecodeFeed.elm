@@ -12,16 +12,23 @@ import Regex
 decodeFeed : List String -> String -> Json.Decoder ( Feed, List Item )
 decodeFeed paths url =
     decode
-        (\title items ->
+        (\title link items ->
             ( { url = url
               , title = title
               , state = Normal
               , showConfirmDelete = False
+              , link = link
               }
             , items
             )
         )
         |> requiredAt (paths ++ [ "title" ]) Json.string
+        |> custom
+            (Json.oneOf
+                [ Json.at (paths ++ [ "link" ]) decodeLink
+                , Json.at (paths ++ [ "url" ]) decodeLink
+                ]
+            )
         |> requiredAt (paths ++ [ "item" ])
             (Json.list (Json.maybe (decodeItem url))
                 |> Json.andThen
@@ -41,6 +48,33 @@ decodeYqlFeed =
 decodeCustomFeed : String -> Json.Decoder ( Feed, List Item )
 decodeCustomFeed =
     decodeFeed []
+
+
+decodeLink : Json.Decoder (Maybe String)
+decodeLink =
+    Json.maybe <|
+        Json.oneOf
+            [ Json.string
+            , decodeLinkList
+            ]
+
+
+decodeLinkList : Json.Decoder String
+decodeLinkList =
+    Json.list
+        (Json.oneOf
+            [ Json.maybe Json.string
+            , Json.maybe (Json.field "href" Json.string)
+            ]
+        )
+        |> Json.andThen
+            (\list ->
+                list
+                    |> List.filterMap identity
+                    |> List.head
+                    |> Maybe.map Json.succeed
+                    |> Maybe.withDefault (Json.fail "no href found")
+            )
 
 
 decodeItem : String -> Json.Decoder Item

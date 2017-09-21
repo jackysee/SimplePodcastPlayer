@@ -256,27 +256,27 @@ viewPlayer model =
                                         ]
                                     ]
                                 , progressBar item_.progress item_.duration
-                                , div
-                                    [ class "player-item-queued-info" ]
-                                    [ let
-                                        currentInQueue =
-                                            case model.view.currentItem of
-                                                Just item_ ->
-                                                    List.member item_ model.view.playList
 
-                                                Nothing ->
-                                                    False
-                                      in
-                                        if model.view.playerState == Playing then
-                                            if currentInQueue then
-                                                text "Playing queued items"
-                                            else if List.length model.view.playList > 0 then
-                                                text "Queued items will be played next."
-                                            else
-                                                text ""
-                                        else
-                                            text ""
-                                    ]
+                                --, div
+                                --    [ class "player-item-queued-info" ]
+                                --    [ let
+                                --        currentInQueue =
+                                --            case model.view.currentItem of
+                                --                Just item_ ->
+                                --                    List.member item_ model.view.playList
+                                --                Nothing ->
+                                --                    False
+                                --      in
+                                --        if model.view.playerState == Playing then
+                                --            if currentInQueue then
+                                --                text "Playing queued items"
+                                --            else if List.length model.view.playList > 0 then
+                                --                text "Queued items will be played next."
+                                --            else
+                                --                text ""
+                                --        else
+                                --            text ""
+                                --    ]
                                 ]
                             , div [ class "player-rate" ]
                                 [ button
@@ -327,9 +327,10 @@ viewPlayer model =
                                     ]
                                     [ Icons.close ]
                                 ]
-                              -- , div
-                              --     [ class "player-title "]
-                              --     [ text item_.title ]
+
+                            -- , div
+                            --     [ class "player-title "]
+                            --     [ text item_.title ]
                             ]
                         ]
 

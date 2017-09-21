@@ -12,7 +12,6 @@ type Msg
     | Player PlayerMsg
     | PlayEnd String
     | UpdateFeed UpdateFeedMsg
-    | DeleteFeed DeleteFeedMsg
     | ItemList ItemListMsg
     | ItemAction ItemMsg
     | UpdateSetting UpdateSettingMsg
@@ -20,6 +19,7 @@ type Msg
     | GotoAction GotoMsg
     | SetShortcutKeys (List String)
     | MsgBatch (List Msg)
+    | EditFeed EditFeedMsg
 
 
 type AddFeedMsg
@@ -37,12 +37,6 @@ type GotoMsg
     | SetSearch String
     | GotoUp
     | GotoDown
-
-
-type DeleteFeedMsg
-    = ShowConfirmDeleteFeed Feed
-    | HideConfirmDeleteFeed Feed
-    | ConfirmDeleteFeed Feed
 
 
 type PlayerMsg
@@ -65,8 +59,11 @@ type UpdateFeedMsg
     | UpdateFeeds (List Feed) Feed
     | UpdateFeedFail (List Feed) Feed Http.Error
     | UpdateFeedSucceed (List Feed) ( Feed, List Item )
-    | SetEditingFeedTitle (Maybe String)
-    | SetFeedTitle Feed String
+
+
+
+--| SetEditingFeedTitle (Maybe String)
+--| SetFeedTitle Feed String
 
 
 type ItemListMsg
@@ -101,3 +98,14 @@ type FloatPanelMsg
     = SetFloatPanel FloatPanel
     | ShowItemDropdown String
     | HideItemDropdown
+
+
+type EditFeedMsg
+    = ShowEditFeed Feed
+    | HideEditFeed
+    | SetFeedTitle Feed
+    | SetEditingFeedTitle String
+    | ShowConfirmDelete
+    | HideConfirmDelete
+    | ConfirmDelete Feed
+    | FocusUrl

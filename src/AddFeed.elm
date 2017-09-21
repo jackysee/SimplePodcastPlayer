@@ -1,4 +1,4 @@
-module AddFeed exposing (viewAddFeed, addFeedButton, updateAddFeed)
+module AddFeed exposing (addFeedButton, updateAddFeed, viewAddInput)
 
 import Html exposing (Html, div, button, img, span, input, text, ul, li)
 import Html.Attributes exposing (classList, class, src, id, class, value, placeholder, disabled)
@@ -11,7 +11,6 @@ import Return exposing (Return)
 import Dom
 import Storage exposing (..)
 import Feed exposing (loadFeed)
-import Task
 
 
 updateAddFeed : AddFeedMsg -> Model -> Return Msg Model
@@ -19,7 +18,7 @@ updateAddFeed msg model =
     case msg of
         ShowAddPanel ->
             Return.singleton model
-                |> Return.map (updateView (\v -> { v | floatPanel = AddPanel }))
+                |> Return.map (updateView (\v -> { v | floatPanel = About Subscriptions }))
                 |> Return.command (noOpTask (Dom.focus "add-feed"))
 
         HideAddPanel ->
@@ -72,9 +71,10 @@ updateAddFeed msg model =
                         { view
                             | loadFeedState = Empty
                             , urlToAdd = ""
-                            , floatPanel = Hidden
-                            , listView = ViewFeed feed.url
-                            , itemFilter = Unlistened
+
+                            --, floatPanel = Hidden
+                            --, listView = ViewFeed feed.url
+                            --, itemFilter = Unlistened
                         }
                 }
                     |> Return.singleton
@@ -95,66 +95,48 @@ updateAddFeed msg model =
                     |> Return.command (noOpTask (Dom.focus "add-feed"))
 
 
-viewAddFeed : Model -> Html Msg
-viewAddFeed model =
+
+--viewAddFeed : Model -> Html Msg
+--viewAddFeed model =
+--    div
+--        [ classList
+--            [ ( "panel add-panel", True )
+--            , ( "is-show", model.view.floatPanel == AddPanel )
+--            ]
+--        ]
+--        [ button
+--            [ class "btn btn-icon panel-close"
+--            , onClick <| AddFeed HideAddPanel
+--            ]
+--            [ Icons.close ]
+--        , viewAddInput model
+--        ]
+
+
+viewAddInput : Model -> Html Msg
+viewAddInput model =
     div
-        [ classList
-            [ ( "add-panel", True )
-            , ( "is-show", model.view.floatPanel == AddPanel )
+        [ class "add-input" ]
+        [ input
+            [ id "add-feed"
+            , class "add-feed input-text"
+            , onKeyup
+                [ ( 13
+                  , \code ->
+                        if model.view.urlToAdd == "" then
+                            NoOp
+                        else
+                            AddFeed ToAddFeed
+                  )
+                , ( 27, \_ -> AddFeed HideAddPanel )
+                ]
+            , onInput (\s -> AddFeed <| SetUrl s)
+            , value model.view.urlToAdd
+            , placeholder "Input Podcast Feed and ENTER to Add"
+            , disabled <| model.view.loadFeedState == Loading
             ]
-        ]
-        [ div
-            [ class "add-input" ]
-            [ button
-                [ class "btn btn-icon add-close"
-                , onClick <| AddFeed HideAddPanel
-                ]
-                [ Icons.close ]
-            , input
-                [ id "add-feed"
-                , class "add-feed input-text"
-                , onKeyup
-                    [ ( 13
-                      , \code ->
-                            if model.view.urlToAdd == "" then
-                                NoOp
-                            else
-                                AddFeed ToAddFeed
-                      )
-                    , ( 27, \_ -> AddFeed HideAddPanel )
-                    ]
-                , onInput (\s -> AddFeed <| SetUrl s)
-                , value model.view.urlToAdd
-                , placeholder "Add Feed"
-                , disabled <| model.view.loadFeedState == Loading
-                ]
-                []
-            , viewLoadFeedState model.view.loadFeedState
-            ]
-        , if model.view.floatPanel == AddPanel && List.length model.feeds > 0 then
-            div
-                [ class "subscriptions-wrap" ]
-                [ div
-                    [ class "subscription-title" ]
-                    [ text "Subscribed: " ]
-                , div
-                    [ class "subscriptions" ]
-                  <|
-                    List.map
-                        (\feed ->
-                            span
-                                [ class "subscription-item" ]
-                                [ span
-                                    [ class "add-feed-title"
-                                    , onInternalClick <| ItemList <| SetListView (ViewFeed feed.url)
-                                    ]
-                                    [ text feed.title ]
-                                ]
-                        )
-                        model.feeds
-                ]
-          else
-            text ""
+            []
+        , viewLoadFeedState model.view.loadFeedState
         ]
 
 

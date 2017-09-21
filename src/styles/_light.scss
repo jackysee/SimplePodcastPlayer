@@ -8,6 +8,8 @@
     --button-bg: #EFEFEF;
     --button-active-color: #CCC;
     --button-active-bg: #333;
+    --button-disabled: #DDD;
+    --button-danger: #FF4136;
     --icon-color: #333;
     --panel-bg: #FFF;
     --panel-shadow: #BBB;
@@ -19,6 +21,7 @@
     --state-empty-color: #CCC;
     --state-played-color: #CCC;
     --state-selected-bg: #DDD;
+    --state-hover-bg: #DDD;
     --state-selected-border: #333;
     --state-current-bg: #F5F5F5;
     --control-color: #AAA;
@@ -26,4 +29,5 @@
     --tab-selected-border: #AAA;
     --thumb-color: #333;
     --track-color: #CCC;
+    --label-color: #888;
 }
