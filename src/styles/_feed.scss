@@ -19,6 +19,11 @@
     // padding: 1rem 0.5rem 0 0.5rem;
     align-items: center;
     position: relative;
+    flex-wrap: wrap;
+
+    @include tablet{
+        flex-wrap: nowrap;
+    }
 }
 
 .feed-header > * {
@@ -119,11 +124,9 @@
     margin: 0;
     padding: 1rem 0.5rem;
     display: flex;
-    // align-items: center;
-    // cursor: pointer;
+    align-items: baseline;
     min-height: 5rem;
     border: 1px solid transparent;
-    // border-bottom: 1px solid var(--state-color);
 
     &:hover{
         background: var(--state-hover-bg);
@@ -144,9 +147,9 @@
 }
 
 
-.item.is-unplayed:not(.is-error) .item-title{
-    font-weight: bold;
-}
+// .item.is-unplayed:not(.is-error) .item-title{
+//     font-weight: bold;
+// }
 
 .item.is-played{
     color: var(--state-played-color);
@@ -195,13 +198,26 @@
 }
 
 .item-control{
-    // display: none;
-    //visibility: hidden;
     display: flex;
-    // align-items: center;
+    justify-content: flex-end;
+
+    & > *{
+        margin-top: 0;
+    }
+
 }
 
-.item-control .btn{
+.item-control-more{
+    // display: none;
+    //visibility: hidden;
+    // display: flex;
+    // align-items: center;
+    text-align: right;
+    margin-bottom: .5rem;
+    margin-left: 0.5rem;
+}
+
+.item-control-more .btn{
     margin-top: 0;
 }
 
@@ -223,6 +239,7 @@
 
 .item-date-time{
     font-size: 0.85rem;
+    margin-top: 0;
 }
 
 .item-date{
@@ -231,42 +248,32 @@
 }
 
 .item-title{
-    // overflow: hidden;
-    // text-overflow: ellipsis;
-    // white-space: nowrap;
+    font-weight: bold;
     padding-right: 1rem;
     position: relative;
-    // display: inline-block;
     display: inline-flex;
-    align-items: center;
-    margin-top: 0;
     flex: 1;
+    margin-top: .3rem;
+    margin-bottom: .3rem;
+    white-space: nowrap;
 }
 
 .item-description-text{
-    display: inline;
+    // display: block;
     margin-top: 0;
-    // color: var(--body-sub-color);
+    font-size: 0.875rem;
     overflow: hidden;
+    color: var(--body-sub-color);
     // white-space: nowrap;
-    white-space: pre-wrap;
-    font-size: 0.8rem;
-
-    // .is-played &{
-        // color: var(--state-played-color);
-    // }
+    max-height: calc(3 * 1.3 * 0.875rem);
+    text-overflow: ellipsis;
 }
 
 .item-feed-title{
-    // width: 6rem;
-    // overflow: hidden;
-    // text-overflow: ellipsis;
-    // white-space: nowrap;
     cursor: pointer;
-    // display: inline-block;
     margin-right: 1rem;
+    font-size: 0.875rem;
 }
-
 
 
 .item-feed-title:hover{
@@ -286,6 +293,7 @@
 
 .feed-more-panel{
     white-space: nowrap;
+    text-align-last: left;
 }
 
 
@@ -317,6 +325,13 @@
     position: relative;
     margin-right: 1rem;
     overflow: hidden;
+    width: 100%;
+    margin-bottom: 0.5rem;
+
+    @include tablet{
+        width: auto;
+        margin-bottom: 0;
+    }
 
     .input-feed-title{
         font-size: 1.5rem;

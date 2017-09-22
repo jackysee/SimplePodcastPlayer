@@ -3,6 +3,7 @@
     border-bottom: 1px solid var(--input-border);
     color: var(--input-color);
     background: transparent;
+    width: 100%;
 
     &[disabled]{
         opacity: 0.3;
@@ -12,4 +13,9 @@
     &::-moz-placeholder{
         color: var(--input-color);
     }
+}
+
+.field-label{
+    margin-bottom: 1rem;
+    color: var(--label-color);
 }

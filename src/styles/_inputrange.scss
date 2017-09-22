@@ -10,7 +10,8 @@ $track-color-ori: transparent; //#CCCCCC!default;
 $thumb-color: #000000!default;
 
 $thumb-radius: 0% !default;
-$thumb-height: 13px !default;
+// $thumb-height: 13px !default;
+$thumb-height: 0px !default;
 $thumb-width: 5px !default;
 $thumb-shadow-size: 0px !default;
 $thumb-shadow-blur: 0px !default;
@@ -19,7 +20,7 @@ $thumb-border-width: 0px !default;
 $thumb-border-color: #000 !default;
 
 $track-width: 100% !default;
-$track-height: 2px !default;
+$track-height: 5px !default;
 $track-shadow-size: 0px !default;
 $track-shadow-blur: 0px !default;
 $track-shadow-color: #222 !default;
@@ -148,7 +149,7 @@ $contrast: 5% !default;
     position: absolute;
     height: $track-height;
     margin: 0;
-    top: 7px;
+    top: 5px;
     left: 1px;
     width: calc(100% - 2px);
     display: flex;

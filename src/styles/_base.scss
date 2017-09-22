@@ -77,8 +77,12 @@ body {
 .top-bar{
     position: relative;
     display: flex;
-    align-items: center;
+    align-items: baseline;
     padding: 1rem 0rem 0.5rem 0.6rem;
+
+    @include tablet{
+        align-items: center;
+    }
 
     .feed-header{
         flex: 1;

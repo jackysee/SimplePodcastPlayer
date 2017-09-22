@@ -236,12 +236,12 @@ viewPlayer model =
                                         ]
                                         [ Icons.pause ]
                                 , div
-                                    [ class "btn player-btn "
+                                    [ class "btn player-btn player-btn-restart "
                                     , onClick (Player <| SetProgress 0)
                                     ]
                                     [ Icons.angleDoubleLeft ]
                                 ]
-                            , div [ class "progress" ]
+                            , div [ class "progress player-time-progress" ]
                                 [ div
                                     [ class "player-title" ]
                                     [ if model.view.playerState == SoundError then
@@ -303,21 +303,24 @@ viewPlayer model =
                                     [ range 0 1 0.01 model.view.playerVol False (Player << SetVol) ]
                                 ]
                             , div
-                                [ class "player-progress"
-                                , onClick (Player (SetPlayerShowTimeLeft <| not model.view.playerShowTimeLeft))
-                                ]
-                                [ text <|
-                                    let
-                                        progress_ =
-                                            if item_.progress == -1 then
-                                                0
+                                [ class "player-progress" ]
+                                [ button
+                                    [ class "btn"
+                                    , onClick (Player (SetPlayerShowTimeLeft <| not model.view.playerShowTimeLeft))
+                                    ]
+                                    [ text <|
+                                        let
+                                            progress_ =
+                                                if item_.progress == -1 then
+                                                    0
+                                                else
+                                                    item_.progress
+                                        in
+                                            if model.view.playerShowTimeLeft then
+                                                "-" ++ formatDuration (item_.duration - progress_)
                                             else
-                                                item_.progress
-                                    in
-                                        if model.view.playerShowTimeLeft then
-                                            "-" ++ formatDuration (item_.duration - progress_)
-                                        else
-                                            formatDuration progress_
+                                                formatDuration progress_
+                                    ]
                                 ]
                             , div
                                 [ class "player-close" ]

@@ -22,6 +22,8 @@ $about-width: 80vw;
 
 .about-shortcut{
     font-size: 0.8rem;
+    max-height: 67vh;
+    overflow: auto;
 
     > ul{
         display: flex;
@@ -35,7 +37,11 @@ $about-width: 80vw;
 
         > li {
             margin: 0;
-            width: 50%;
+            width: 100%;
+
+            @include tablet{
+                width: 50%;
+            }
 
             > ul {
                 list-style: none;
@@ -62,6 +68,7 @@ $about-width: 80vw;
     // margin-left: -0.5rem;
     // margin-right: -0.5rem;
     padding-top: 0.5rem;
+    overflow: auto;
 }
 .about-tab{
     margin: 0;
@@ -76,6 +83,8 @@ $about-width: 80vw;
 }
 .about-tab-content{
     margin-bottom: 2rem;
+    max-height: 60vh;
+    overflow: auto;
 }
 .about-settings{
     font-size: 1rem;
@@ -83,12 +92,6 @@ $about-width: 80vw;
 .about-setting-item{
     // display: flex;
     // align-items: flex-start;
-}
-.about-setting-label{
-    // flex: 0.5;
-    // text-align: right;
-    margin-bottom: 1rem;
-    color: var(--label-color);
 }
 .about-setting-item > * {
     margin-top: 0;
@@ -98,14 +101,6 @@ $about-width: 80vw;
 }
 .about-setting-input-wrap{
     flex: 1;
-}
-.about-setting-input{
-    border: none;
-    border-bottom: 1px solid var(--input-border);
-    font-size: 1rem;
-    width: 100%;
-    background: transparent;
-    color: var(--input-color);
 }
 .about-setting-note{
     margin: 0;
@@ -163,11 +158,6 @@ $about-width: 80vw;
     font-weight: normal;
     border-radius: 0.1rem;
     box-shadow: 0 0 1px var(--input-border);
-}
-
-.about-add-input{
-    // padding: 1rem;
-    // background-color: var(--state-selected-bg);
 }
 
 .subscription-list{

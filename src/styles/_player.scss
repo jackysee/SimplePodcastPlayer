@@ -10,19 +10,30 @@
     margin-top: 0;
 }
 
+$player-height-sm: 10rem;
 $player-height: 5rem;
 $player-top-padding : 0.5rem;
 
 .player-wrap.is-show{
-    height: $player-height;
+    height: $player-height-sm;
     padding-top: $player-top-padding;
+
+    @include tablet{
+        height: $player-height;
+    }
 }
 
 .player{
-    height: $player-height - $player-top-padding;
+    height: $player-height-sm - $player-top-padding;
     /*margin-top: 5px;*/
     margin:0 5px 0 5px;
-    padding: 1rem;
+    padding: 0.5rem;
+    padding-top: 1.5rem;
+
+    @include tablet{
+        padding: 1rem;
+        height: $player-height - $player-top-padding;
+    }
 }
 
 .player-control{
@@ -30,6 +41,11 @@ $player-top-padding : 0.5rem;
     display: flex;
     align-items: center;
     height: 100%;
+    flex-wrap: wrap;
+
+    @include tablet{
+        font-weight: normal;
+    }
 }
 
 .player-control > *{
@@ -40,6 +56,11 @@ $player-top-padding : 0.5rem;
     position: relative;
     display: flex;
     align-items: center;
+    flex: 1;
+
+    @include tablet{
+        flex: 0;
+    }
 }
 
 .player-btn{
@@ -53,7 +74,15 @@ $player-top-padding : 0.5rem;
     width: 100%;
 }
 
-.player-rate{
+.player-btn-restart{
+    display: none;
+
+    @include tablet{
+        display: block;
+    }
+}
+
+.player-rate, .player-progress{
     // margin-top: 0.3rem;
     width: 4rem;
     text-align: center;
@@ -70,9 +99,19 @@ $player-top-padding : 0.5rem;
 
 .progress{
     position: relative;
-    flex: 1;
     margin-top: 0.2rem;
     margin-left: 0.5rem;
+    order: -1;
+    width: 100%;
+
+    @include tablet{
+        flex: 1;
+        order: 0;
+    }
+
+    &.player-time-progress{
+        margin-top: 0rem;
+    }
 }
 
 .player-progress{
@@ -134,7 +173,7 @@ $player-top-padding : 0.5rem;
 .player-title{
     overflow: hidden;
     position: absolute;
-    top: -1.2rem;
+    top: -1.65rem;
     width: 100%;
 }
 

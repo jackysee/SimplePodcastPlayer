@@ -117,7 +117,10 @@ viewAddInput : Model -> Html Msg
 viewAddInput model =
     div
         [ class "add-input" ]
-        [ input
+        [ div
+            [ class "field-label" ]
+            [ text "Add podcast feed:" ]
+        , input
             [ id "add-feed"
             , class "add-feed input-text"
             , onKeyup
@@ -132,7 +135,8 @@ viewAddInput model =
                 ]
             , onInput (\s -> AddFeed <| SetUrl s)
             , value model.view.urlToAdd
-            , placeholder "Input Podcast Feed and ENTER to Add"
+
+            --, placeholder "Input Podcast Feed and ENTER to Add"
             , disabled <| model.view.loadFeedState == Loading
             ]
             []

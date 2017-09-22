@@ -307,16 +307,21 @@ viewItem model feed ( index, item ) =
                 ]
                 [ viewItemInfo model feed item ]
             , viewItemQueued model item
-            , renderQueueControl item model.view.listView
-            , viewItemControl listened model item
-            , div [ class "item-date-time" ]
+            , div []
                 [ div
-                    [ class "item-date"
-                    , title <| format item.pubDate model.view.currentTime True
+                    [ class "item-control" ]
+                    [ renderQueueControl item model.view.listView
+                    , viewItemControl listened model item
                     ]
-                    [ text <| format item.pubDate model.view.currentTime False ]
-                , div [ class "item-progress" ]
-                    [ text <| formatDurationShort item.duration ]
+                , div [ class "item-date-time" ]
+                    [ div
+                        [ class "item-date"
+                        , title <| format item.pubDate model.view.currentTime True
+                        ]
+                        [ text <| format item.pubDate model.view.currentTime False ]
+                    , div [ class "item-progress" ]
+                        [ text <| formatDurationShort item.duration ]
+                    ]
                 ]
             ]
 
@@ -355,10 +360,17 @@ viewItemInfo model feed item =
             ]
         , let
             description_ =
-                item.description
-                    |> Maybe.map stripHtml
-                    >> Maybe.withDefault ""
-                    >> String.slice 0 300
+                case item.description of
+                    Just description ->
+                        String.slice 0 300 description
+                            ++ (if String.length description > 300 then
+                                    "..."
+                                else
+                                    ""
+                               )
+
+                    Nothing ->
+                        ""
           in
             div
                 [ class "item-description-text"
@@ -495,7 +507,7 @@ viewItemControl listened model item =
     in
         if List.length menusItems > 0 then
             div
-                [ class "item-control" ]
+                [ class "item-control-more" ]
                 [ div
                     [ class "feed-more-btn" ]
                     [ button

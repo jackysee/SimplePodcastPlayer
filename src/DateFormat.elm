@@ -96,7 +96,7 @@ format time currentTime showYear =
             , "/"
             , Date.month date |> printMonthInNum
             , if showYear then
-                "" ++ (toString currentYear)
+                "/" ++ (toString dateYear)
               else
                 ""
             ]

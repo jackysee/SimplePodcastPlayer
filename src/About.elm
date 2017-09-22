@@ -219,14 +219,14 @@ viewSettingFallbackUrl fallbackRssServiceUrl =
     div
         [ class "about-setting-item" ]
         [ div
-            [ class "about-setting-label" ]
+            [ class "field-label" ]
             [ text "Fallback rss service" ]
         , div
             [ class "about-setting-input-wrap" ]
             [ div
                 []
                 [ input
-                    [ class "about-setting-input"
+                    [ class "input-text"
                     , onInput (\s -> UpdateSetting <| SetFallbackRssServiceUrl s)
                     , value (Maybe.withDefault "" fallbackRssServiceUrl)
                     ]
@@ -250,7 +250,7 @@ viewSettingFontSize fontSize =
     div
         [ class "about-setting-item" ]
         [ div
-            [ class "about-setting-label" ]
+            [ class "field-label" ]
             [ text "Font Size" ]
         , div
             [ class "input-boxes about-setting-input-wrap" ]
@@ -280,7 +280,7 @@ viewSettingTheme theme =
     div
         [ class "about-setting-item" ]
         [ div
-            [ class "about-setting-label" ]
+            [ class "field-label" ]
             [ text "Theme" ]
         , div
             [ class "input-boxes about-setting-input-wrap" ]
