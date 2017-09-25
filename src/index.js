@@ -12,7 +12,6 @@ store.get(function(_model){
     var sound;
 
     function playUrl(playLoad){
-        console.log('playLoad', playLoad);
         if(sound){
             sound.unload();
         }
@@ -31,11 +30,16 @@ store.get(function(_model){
                     sound.seek(playLoad.seek);
                 }
             },
-            onloaderror: function(){
+            onloaderror: function(id, error){
+                console.log('load error', id, error);
                 if(sound){
                     sound.unload();
                     sound = undefined;
                 }
+                app.ports.playError.send(playLoad.url);
+            },
+            onplayerror: function(soundId, error){
+                console.log('play error', soundId, error);
                 app.ports.playError.send(playLoad.url);
             },
             onend: function(){

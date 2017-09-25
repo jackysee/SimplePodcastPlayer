@@ -14,9 +14,6 @@ import Return exposing (Return)
 import Storage exposing (..)
 
 
---import Dom
-
-
 updatePlayer : PlayerMsg -> Model -> Return Msg Model
 updatePlayer msg model =
     case msg of
@@ -47,7 +44,6 @@ updatePlayer msg model =
 
         Pause item ->
             model
-                |> updateView (\v -> { v | playerState = Paused })
                 |> Return.singleton
                 |> Return.command (pause "")
 
@@ -134,9 +130,13 @@ updatePlayer msg model =
                 |> Return.effect_ saveView
 
         PlayerPaused stopped ->
-            getCurrentItem model
-                |> Maybe.map (\item -> updatePlayer (Pause item) model)
-                |> Maybe.withDefault (Return.singleton model)
+            Return.singleton <|
+                case getCurrentItem model of
+                    Just item ->
+                        updateView (\v -> { v | playerState = Paused }) model
+
+                    Nothing ->
+                        model
 
 
 range : Float -> Float -> Float -> Float -> Bool -> (Float -> msg) -> Html msg
