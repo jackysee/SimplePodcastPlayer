@@ -80,7 +80,7 @@ decodeLinkList =
 decodeItem : String -> Json.Decoder Item
 decodeItem feedUrl =
     decode Item
-        |> required "title" Json.string
+        |> required "title" stringListHead
         |> required "pubDate" jsonDate
         |> custom (Json.maybe (Json.field "link" Json.string))
         |> custom decodeEnclosure
@@ -90,6 +90,21 @@ decodeItem feedUrl =
         |> hardcoded 0
         |> hardcoded -1
         |> hardcoded feedUrl
+
+
+stringListHead : Json.Decoder String
+stringListHead =
+    Json.oneOf
+        [ Json.string
+        , Json.list Json.string
+            |> Json.andThen
+                (\list ->
+                    list
+                        |> List.head
+                        |> Maybe.map Json.succeed
+                        |> Maybe.withDefault (Json.fail "no string")
+                )
+        ]
 
 
 decodeEnclosure : Json.Decoder String

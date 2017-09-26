@@ -355,7 +355,7 @@ viewItemInfo model feed item =
             , div
                 [ class "item-title" ]
                 [ renderItemState item model.view.currentItem model.view.playerState
-                , text item.title
+                , div [ class "item-title-text" ] [ text item.title ]
                 ]
             ]
         , let
@@ -364,7 +364,7 @@ viewItemInfo model feed item =
                     Just description ->
                         String.slice 0 300 description
                             ++ (if String.length description > 300 then
-                                    "..."
+                                    "&hellip;"
                                 else
                                     ""
                                )
