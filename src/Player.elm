@@ -1,4 +1,15 @@
-port module Player exposing (viewPlayer, updatePlayer, playError, paused, playEnd, soundLoaded, updateProgress, stop)
+port module Player
+    exposing
+        ( viewPlayer
+        , updatePlayer
+        , playError
+        , paused
+        , stopped
+        , playEnd
+        , onPlay
+        , updateProgress
+        , stop
+        )
 
 import Html exposing (Html, text, div, img, button, input)
 import Html.Attributes exposing (class, style, src, classList, type_, value)
@@ -37,7 +48,7 @@ updatePlayer msg model =
                     )
                 |> Return.effect_ saveView
 
-        SoundLoaded loaded ->
+        OnPlay loaded ->
             model
                 |> updateView (\v -> { v | playerState = Playing })
                 |> Return.singleton
@@ -49,7 +60,7 @@ updatePlayer msg model =
 
         Stop item ->
             model
-                |> updateView (\v -> { v | playerState = Stopped })
+                --|> updateView (\v -> { v | playerState = Stopped })
                 |> Return.singleton
                 |> Return.command (stop "")
 
@@ -129,11 +140,20 @@ updatePlayer msg model =
                 |> Return.singleton
                 |> Return.effect_ saveView
 
-        PlayerPaused stopped ->
+        PlayerPaused _ ->
             Return.singleton <|
                 case getCurrentItem model of
                     Just item ->
                         updateView (\v -> { v | playerState = Paused }) model
+
+                    Nothing ->
+                        model
+
+        PlayerStopped _ ->
+            Return.singleton <|
+                case getCurrentItem model of
+                    Just item ->
+                        updateView (\v -> { v | playerState = Stopped }) model
 
                     Nothing ->
                         model
@@ -365,7 +385,7 @@ port pause : String -> Cmd msg
 port updateProgress : (Progress -> msg) -> Sub msg
 
 
-port soundLoaded : (Bool -> msg) -> Sub msg
+port onPlay : (Bool -> msg) -> Sub msg
 
 
 port seek : Float -> Cmd msg
@@ -384,3 +404,6 @@ port playError : (String -> msg) -> Sub msg
 
 
 port paused : (Bool -> msg) -> Sub msg
+
+
+port stopped : (Bool -> msg) -> Sub msg

@@ -307,7 +307,7 @@ viewItem model feed ( index, item ) =
                 ]
                 [ viewItemInfo model feed item ]
             , viewItemQueued model item
-            , div []
+            , div [ class "item-meta" ]
                 [ div
                     [ class "item-control" ]
                     [ renderQueueControl item model.view.listView
@@ -355,20 +355,22 @@ viewItemInfo model feed item =
             , div
                 [ class "item-title" ]
                 [ renderItemState item model.view.currentItem model.view.playerState
-                , div [ class "item-title-text" ] [ text item.title ]
+                , div
+                    [ class "item-title-text" ]
+                    [ text item.title ]
                 ]
             ]
         , let
             description_ =
                 case item.description of
                     Just description ->
-                        String.slice 0 300 description
-                            ++ (if String.length description > 300 then
-                                    "&hellip;"
-                                else
-                                    ""
-                               )
+                        String.slice 0 400 description
 
+                    --++ (if String.length description > 300 then
+                    --        "&hellip;"
+                    --    else
+                    --        ""
+                    --   )
                     Nothing ->
                         ""
           in

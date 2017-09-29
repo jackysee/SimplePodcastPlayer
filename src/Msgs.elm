@@ -41,7 +41,7 @@ type GotoMsg
 
 type PlayerMsg
     = Play Item
-    | SoundLoaded Bool
+    | OnPlay Bool
     | Pause Item
     | Stop Item
     | UpdateProgress Progress
@@ -52,6 +52,7 @@ type PlayerMsg
     | SetVol Float
     | SetPlayerShowTimeLeft Bool
     | PlayerPaused Bool
+    | PlayerStopped Bool
 
 
 type UpdateFeedMsg

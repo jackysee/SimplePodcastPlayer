@@ -13,19 +13,27 @@ store.get(function(_model){
 
     function playUrl(playLoad){
         if(sound){
+            if(sound._src === playLoad.url){
+                sound.play();
+                return;
+            }
             sound.unload();
         }
         sound = new Howl({
             src:[playLoad.url],
             html5: true,
             onplay: function() {
+                app.ports.onPlay.send(true);
                 requestAnimationFrame(updateProgress);
             },
             onpause: function(){
                 app.ports.paused.send(true);
             },
+            onstop: function(){
+                app.ports.stopped.send(true);
+            },
             onload: function(){
-                app.ports.soundLoaded.send(true);
+                // app.ports.soundLoaded.send(true);
                 if(playLoad.seek !== -1){
                     sound.seek(playLoad.seek);
                 }
@@ -48,7 +56,7 @@ store.get(function(_model){
                     return;
                 }
                 if(sound){
-                    console.log('playnext');
+                    console.log('playend');
                     app.ports.playEnd.send(sound._src);
                     sound.unload();
                     sound = undefined;
@@ -91,12 +99,13 @@ store.get(function(_model){
     app.ports.stop.subscribe(function() {
         if(sound){
             clearTimeout(updateProgressTimer);
-            app.ports.updateProgress.send({
-                progress: sound.seek(),
-                duration: sound.duration()
-            });
+            // app.ports.updateProgress.send({
+            //     progress: sound.seek(),
+            //     duration: sound.duration()
+            // });
             sound.unload();
             sound = undefined;
+            app.ports.stopped.send(true);
         }
     });
 
@@ -104,6 +113,7 @@ store.get(function(_model){
         if(sound){
             sound.pause();
             clearTimeout(updateProgressTimer);
+            app.ports.paused.send(true);
         }
     });
 

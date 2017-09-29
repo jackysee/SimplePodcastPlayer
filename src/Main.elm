@@ -23,7 +23,7 @@ import DecodeStoreModel exposing (decodeStoreValue)
 import Return exposing (Return)
 import AddFeed exposing (updateAddFeed)
 import Storage exposing (..)
-import Player exposing (updatePlayer, playError, paused, playEnd, soundLoaded, updateProgress)
+import Player exposing (updatePlayer, playError, paused, stopped, playEnd, onPlay, updateProgress)
 import ItemList exposing (updateItemList, updateUpdateItem)
 import About exposing (updateSettings)
 import Goto exposing (updateGoto)
@@ -129,6 +129,7 @@ update msg model =
                         model_
                             |> updateView (\v -> { v | currentItem = Nothing })
                             |> Return.singleton
+                            |> Return.map updateViewItems
                             |> Return.effect_ saveView
 
         UpdateFeed msg ->
@@ -198,11 +199,12 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ updateProgress (Player << UpdateProgress)
-        , soundLoaded (Player << SoundLoaded)
+        , onPlay (Player << OnPlay)
         , playEnd PlayEnd
         , keyUp <| keyMap model
         , playError (Player << PlayError)
         , paused (Player << PlayerPaused)
+        , stopped (Player << PlayerStopped)
         ]
 
 

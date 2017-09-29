@@ -51,7 +51,8 @@ var codes = {
     '40':'down',
     '38':'up',
     '188':'<',
-    '191':'?'
+    '191':'?',
+    '32':'space'
 };
 
 function getSpecialKey(keyCode){

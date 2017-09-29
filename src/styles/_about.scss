@@ -148,6 +148,11 @@ $about-width: 80vw;
     margin: 0.3rem;
 }
 
+.about-subscriptions{
+    display: flex;
+    flex-direction: column;
+}
+
 .about-key{
     display: inline-block;
     border: 1px solid var(--input-border);
@@ -164,8 +169,8 @@ $about-width: 80vw;
     list-style: none;
     margin: 0;
     padding: 0;
-    max-height: 60vh;
     overflow: auto;
+    flex: 1;
 
     > li {
         margin: 0;

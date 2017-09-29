@@ -45,7 +45,7 @@ shortcuts =
                             |> Maybe.withDefault NoOp
                     )
                 |> Maybe.withDefault NoOp
-    , [ "p" ]
+    , [ "space" ]
         => \model ->
             model.view.currentItem
                 |> Maybe.map
@@ -63,6 +63,9 @@ shortcuts =
                                         Stopped ->
                                             Player <| Play item
 
+                                        SoundLoading ->
+                                            Player <| Pause item
+
                                         _ ->
                                             NoOp
                                 )
@@ -72,7 +75,20 @@ shortcuts =
     , [ "enter" ]
         => \model ->
             getSelectedItem model
-                |> Maybe.map (\item -> Player <| Play item)
+                |> Maybe.map
+                    (\item ->
+                        if
+                            isCurrent item model
+                                && (model.view.playerState
+                                        == Playing
+                                        || model.view.playerState
+                                        == SoundLoading
+                                   )
+                        then
+                            Player <| Stop item
+                        else
+                            Player <| Play item
+                    )
                 |> Maybe.withDefault NoOp
     , [ "n" ]
         => \_ -> AddFeed ShowAddPanel
