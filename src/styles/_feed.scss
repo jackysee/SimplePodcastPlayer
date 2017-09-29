@@ -151,9 +151,11 @@
     flex: 1;
     overflow: hidden;
     cursor: pointer;
+    margin-right: 0;
 
     @include tablet{
         display: inline-flex;
+        // margin-right: 1rem;
     }
 }
 
@@ -204,7 +206,7 @@
 
 .item > * {
     margin-top: 0;
-    margin-right: 1rem;
+    // margin-right: 1rem;
 }
 
 .item > *:last-child{
@@ -215,9 +217,19 @@
     background: var(--state-current-bg);
 }
 
+.has-title .item-meta{
+
+    @include tablet{
+        position: relative;
+        top: 1rem;
+        // top: 0.875rem;
+    }
+}
+
 
 .item-control{
-    display: inline-block;
+    // display: inline-block;
+    display: inline-flex;
     float: right;
 
     @include tablet{
@@ -292,18 +304,22 @@
     display: inline-flex;
     flex: 1;
     margin-top: 0;
+    margin-right: 0;
 
-    @include tablet{
-        padding-right: 1rem;
-    }
+    // @include tablet{
+        // padding-right: 1rem;
+    // }
     // margin-bottom: .3rem;
     // white-space: nowrap;
 }
 
 .item-title-text{
     margin-top: 0;
-    display: inline-block;
     width: calc(100% - 1.5rem);
+    // width: 100%;
+    // display: inline-flex;
+    // justify-content: space-between;
+    // align-content: space-between;
 }
 
 .item-description-text{
@@ -358,6 +374,8 @@
 }
 
 .item-queued{
+    margin: 0;
+    margin-left: .5rem;
     font-size: 0.6rem;
     color: var(--button-color);
     background: var(--button-bg);

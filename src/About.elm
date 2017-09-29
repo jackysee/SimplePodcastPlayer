@@ -74,7 +74,7 @@ shortcutContent =
     - Mark selected item as listened : **m**
 - Actions
     - Refresh selected feed / all feeds : **r r**
-    - Play / Pause player item : **p**
+    - Play / Pause player item : **space**
     - Toggle player rate : **s**
 - Queue
     - move selected item Up : **u**

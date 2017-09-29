@@ -84,7 +84,7 @@ decodeItem feedUrl =
         |> required "pubDate" jsonDate
         |> custom (Json.maybe (Json.field "link" Json.string))
         |> custom decodeEnclosure
-        |> custom (Json.maybe (Json.field "description" Json.string))
+        |> custom (Json.maybe decodeDescription)
         |> optional "duration" decodeDuration -1
         |> hardcoded -1
         |> hardcoded 0
@@ -104,6 +104,14 @@ stringListHead =
                         |> Maybe.map Json.succeed
                         |> Maybe.withDefault (Json.fail "no string")
                 )
+        ]
+
+
+decodeDescription : Json.Decoder String
+decodeDescription =
+    Json.oneOf
+        [ Json.field "summary" Json.string
+        , Json.field "description" Json.string
         ]
 
 

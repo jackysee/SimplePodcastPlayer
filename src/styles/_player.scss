@@ -118,10 +118,12 @@ $player-top-padding : 0.5rem;
     margin-left: 1rem;
     text-align: right;
     /*margin-top: 0.4rem;*/
-    min-width: 5rem;
+    // min-width: 5rem;
     // height: 1rem;
     vertical-align: middle;
     cursor: pointer;
+    min-width: 0;
+    width: auto;
 }
 
 .player-close{

@@ -257,17 +257,6 @@ viewFeedTitle model feed =
                     ]
                     [ text feed.title ]
                 ]
-            , case feed.link of
-                Just link ->
-                    a
-                        [ class "btn btn-icon feed-control-btn"
-                        , href link
-                        , target "_blank"
-                        ]
-                        [ Icons.externalLink ]
-
-                _ ->
-                    text ""
             , button
                 [ class "btn btn-icon feed-control feed-control-btn"
                 , onInternalClick <| EditFeed <| ShowEditFeed feed
@@ -295,6 +284,7 @@ viewItem model feed ( index, item ) =
                 , ( "is-played", listened )
                 , ( "is-selected", index == model.view.itemSelected )
                 , ( "is-enqueued", inPlayList item model )
+                , ( "has-title", feed /= Nothing )
                 ]
 
             --, onMouseEnter (ItemAction <| SelectItem index)
@@ -306,7 +296,6 @@ viewItem model feed ( index, item ) =
                 , toggleItem model item
                 ]
                 [ viewItemInfo model feed item ]
-            , viewItemQueued model item
             , div [ class "item-meta" ]
                 [ div
                     [ class "item-control" ]
@@ -357,7 +346,9 @@ viewItemInfo model feed item =
                 [ renderItemState item model.view.currentItem model.view.playerState
                 , div
                     [ class "item-title-text" ]
-                    [ text item.title ]
+                    [ span [] [ text item.title ]
+                    , viewItemQueued model item
+                    ]
                 ]
             ]
         , let

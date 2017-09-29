@@ -2,8 +2,8 @@ port module EditFeed exposing (viewEditFeed, updateEditFeed)
 
 import Models exposing (..)
 import Msgs exposing (..)
-import Html exposing (Html, div, text, button, input)
-import Html.Attributes exposing (classList, class, readonly, value, id, tabindex, disabled)
+import Html exposing (Html, div, text, button, input, a, span)
+import Html.Attributes exposing (classList, class, readonly, value, id, tabindex, disabled, target, href)
 import Icons
 import Html.Events exposing (onClick, onInput)
 import Events exposing (onKeyup, onInternalClick)
@@ -158,7 +158,19 @@ viewEditFeed model =
                     [ Icons.close ]
                 , div
                     [ class "feed-title edit-feed-title" ]
-                    [ text feed.title ]
+                    [ span [] [ text feed.title ]
+                    , case feed.link of
+                        Just link ->
+                            a
+                                [ class "btn btn-icon"
+                                , href link
+                                , target "_blank"
+                                ]
+                                [ Icons.externalLink ]
+
+                        _ ->
+                            text ""
+                    ]
                 , input
                     [ class "edit-input feed-url"
                     , id "edit-feed-url"

@@ -108,7 +108,8 @@ update msg model =
 
                 nextItem =
                     if currentInQueue then
-                        getNext (\( url_, feedUrl ) -> url == url_) model.view.playList
+                        model.view.playList
+                            |> getNext (\( url_, _ ) -> url == url_)
                             |> Maybe.map (getItemByUrl model)
                             |> Maybe.withDefault Nothing
                     else

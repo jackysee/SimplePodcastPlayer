@@ -71,10 +71,9 @@ updateAddFeed msg model =
                         { view
                             | loadFeedState = Empty
                             , urlToAdd = ""
-
-                            --, floatPanel = Hidden
-                            --, listView = ViewFeed feed.url
-                            --, itemFilter = Unlistened
+                            , floatPanel = Hidden
+                            , listView = ViewFeed feed.url
+                            , itemFilter = Unlistened
                         }
                 }
                     |> Return.singleton

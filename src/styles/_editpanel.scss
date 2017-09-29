@@ -9,6 +9,13 @@
 }
 .edit-feed-title{
     margin-top: 1rem;
+    display: flex;
+    align-items: center;
+
+    .btn{
+        margin-top: 0;
+        margin-left: 0.5rem;
+    }
 }
 
 .feed-url{

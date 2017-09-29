@@ -328,19 +328,7 @@ viewPlayer model =
                                     [ class "btn"
                                     , onClick (Player (SetPlayerShowTimeLeft <| not model.view.playerShowTimeLeft))
                                     ]
-                                    [ text <|
-                                        let
-                                            progress_ =
-                                                if item_.progress == -1 then
-                                                    0
-                                                else
-                                                    item_.progress
-                                        in
-                                            if model.view.playerShowTimeLeft then
-                                                "-" ++ formatDuration (item_.duration - progress_)
-                                            else
-                                                formatDuration progress_
-                                    ]
+                                    [ text <| viewProgress item_ model.view.playerShowTimeLeft ]
                                 ]
                             , div
                                 [ class "player-close" ]
@@ -371,6 +359,21 @@ marquee txt isPlaying =
             ]
         ]
         [ text txt ]
+
+
+viewProgress : Item -> Bool -> String
+viewProgress item_ showTimeLeft =
+    let
+        progress_ =
+            if item_.progress == -1 then
+                0
+            else
+                item_.progress
+    in
+        if showTimeLeft then
+            "-" ++ formatDuration (item_.duration - progress_)
+        else
+            formatDuration progress_
 
 
 port play : PlayLoad -> Cmd msg
