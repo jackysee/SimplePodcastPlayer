@@ -292,26 +292,77 @@ viewItem model feed ( index, item ) =
             , id ("item-" ++ toString index)
             ]
             [ div
-                [ class "item-info-state"
+                [ class "item-title-wrap"
                 , toggleItem model item
                 ]
-                [ viewItemInfo model feed item ]
-            , div [ class "item-meta" ]
                 [ div
+                    [ class "item-title" ]
+                    [ renderItemState item model.view.currentItem model.view.playerState
+                    , div
+                        [ class "item-title-text" ]
+                        [ text item.title ]
+                    ]
+                , div
                     [ class "item-control" ]
-                    [ renderQueueControl item model.view.listView
+                    [ viewItemQueued model item
+                    , div
+                        [ class "item-meta" ]
+                        [ case feed of
+                            Just feed_ ->
+                                div
+                                    [ class "item-feed-title"
+                                    , onInternalClick (ItemList <| SetListView <| ViewFeed feed_.url)
+                                    ]
+                                    [ text feed_.title ]
+
+                            Nothing ->
+                                text ""
+                        , div
+                            [ class "item-date"
+                            , title <| format item.pubDate model.view.currentTime True
+                            ]
+                            [ text <| format item.pubDate model.view.currentTime False ]
+                        , div [ class "item-progress" ]
+                            [ text <| formatDurationShort item.duration ]
+                        ]
+                    , renderQueueControl item model.view.listView
                     , viewItemControl listened model item
                     ]
-                , div [ class "item-date-time" ]
-                    [ div
-                        [ class "item-date"
-                        , title <| format item.pubDate model.view.currentTime True
-                        ]
-                        [ text <| format item.pubDate model.view.currentTime False ]
-                    , div [ class "item-progress" ]
-                        [ text <| formatDurationShort item.duration ]
-                    ]
                 ]
+            , let
+                description_ =
+                    item.description
+                        |> Maybe.map (String.slice 0 400)
+                        |> Maybe.withDefault ""
+              in
+                div
+                    [ class "item-description-text"
+
+                    --, title <| Escape.unEsc description_
+                    ]
+                    [ description_ |> Escape.text_ ]
+
+            --div
+            --    [ class "item-info-state"
+            --    , toggleItem model item
+            --    ]
+            --    [ viewItemInfo model feed item ]
+            --, div [ class "item-meta" ]
+            --    [ div
+            --        [ class "item-control" ]
+            --        [ renderQueueControl item model.view.listView
+            --        , viewItemControl listened model item
+            --        ]
+            --    , div [ class "item-date-time" ]
+            --        [ div
+            --            [ class "item-date"
+            --            , title <| format item.pubDate model.view.currentTime True
+            --            ]
+            --            [ text <| format item.pubDate model.view.currentTime False ]
+            --        , div [ class "item-progress" ]
+            --            [ text <| formatDurationShort item.duration ]
+            --        ]
+            --    ]
             ]
 
 
@@ -376,20 +427,22 @@ viewItemInfo model feed item =
 
 renderItemState : Item -> Maybe ItemId -> PlayerState -> Html Msg
 renderItemState item currentItem playerState =
-    if Just ( item.url, item.feedUrl ) == currentItem then
-        div
-            [ class "item-state" ]
-            [ if playerState == SoundLoading then
-                Icons.loadingSpin
-              else if playerState == Playing then
-                Icons.equalizerPlaying
-              else
-                Icons.equalizerStop
-            ]
-    else
-        div
-            [ class "item-state" ]
-            [ Icons.play ]
+    div [ class "item-state-wrap" ]
+        [ if Just ( item.url, item.feedUrl ) == currentItem then
+            div
+                [ class "item-state" ]
+                [ if playerState == SoundLoading then
+                    Icons.loadingSpin
+                  else if playerState == Playing then
+                    Icons.equalizerPlaying
+                  else
+                    Icons.equalizerStop
+                ]
+          else
+            div
+                [ class "item-state" ]
+                [ Icons.play ]
+        ]
 
 
 stripHtml : String -> String
